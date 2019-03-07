@@ -20,7 +20,7 @@ def resnet2_50(x):
         x = stack(x, 256, 6, name='conv4')
         x = stack(x, 512, 3, stride1=1, name='conv5')
         return x
-    return resnet2(x, stack_fn)
+    return resnet2(stack_fn)(x)
 
 
 def resnet2_101(x):
@@ -30,7 +30,7 @@ def resnet2_101(x):
         x = stack(x, 256, 23, name='conv4')
         x = stack(x, 512, 3, stride1=1, name='conv5')
         return x
-    return resnet2(x, stack_fn)
+    return resnet2(stack_fn)(x)
 
 
 def resnet2_152(x):
@@ -40,33 +40,34 @@ def resnet2_152(x):
         x = stack(x, 256, 36, name='conv4')
         x = stack(x, 512, 3, stride1=1, name='conv5')
         return x
-    return resnet2(x, stack_fn)
+    return resnet2(stack_fn)(x)
 
 
-def resnet2(x, stack_fn):
-    bn_axis = 3 if K.image_data_format() == 'channels_last' else 1
+def resnet2(stack_fn):
+    def build(x):
+        bn_axis = 3 if K.image_data_format() == 'channels_last' else 1
 
-    # First conv layer
-    with K.name_scope('conv1'):
-        x = layers.ZeroPadding2D(padding=((3, 3), (3, 3)), name='conv1_pad')(x)
-        x = layers.Conv2D(64, 7, strides=2, use_bias=True,
-                          name='conv1_conv')(x)
+        # First conv layer
+        with K.name_scope('conv1'):
+            x = layers.ZeroPadding2D(padding=((3, 3), (3, 3)), name='conv1_pad')(x)
+            x = layers.Conv2D(64, 7, strides=2, use_bias=True,
+                            name='conv1_conv')(x)
 
-    # First Max-Pool
-    with K.name_scope('pool1'):
-        x = layers.ZeroPadding2D(padding=((1, 1), (1, 1)), name='pool1_pad')(x)
-        x = layers.MaxPooling2D(3, strides=2, name='pool1_pool')(x)
+        # First Max-Pool
+        with K.name_scope('pool1'):
+            x = layers.ZeroPadding2D(padding=((1, 1), (1, 1)), name='pool1_pad')(x)
+            x = layers.MaxPooling2D(3, strides=2, name='pool1_pool')(x)
 
-    # Residual stacks
-    x = stack_fn(x)
+        # Residual stacks
+        x = stack_fn(x)
 
-    # Post activation
-    with K.name_scope('post'):
-        x = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5,
-                                      name='post_bn')(x)
-        x = layers.Activation('relu', name='post_relu')(x)
+        # Post activation
+        with K.name_scope('post'):
+            x = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5,
+                                        name='post_bn')(x)
+            x = layers.Activation('relu', name='post_relu')(x)
 
-    return x
+    return build
 
 
 ##############################################################################
