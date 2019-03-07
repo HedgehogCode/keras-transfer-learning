@@ -5,11 +5,11 @@ from keras import models
 import keras.backend as K
 
 from keras_transfer_learning.utils.tensorboard import write_graph_to_tensorboard
-from keras_transfer_learning.backbones.resnet import resnet_50
+from keras_transfer_learning.backbones.unet import unet
 
 # Build the model
-inp = layers.Input(shape=(224, 224, 3))
-oup = resnet_50(inp)
+inp = layers.Input(shape=(None, None, 1))
+oup = unet()(inp)
 
 m = models.Model(inp, oup)
 
@@ -18,4 +18,4 @@ m = models.Model(inp, oup)
 
 # Print a summary and write to tensorboard
 m.summary()
-write_graph_to_tensorboard(log_dir='models/my-resnet50-graph/')
+write_graph_to_tensorboard(log_dir='models/my-unet-graph/')
