@@ -68,6 +68,7 @@ def resnet2(stack_fn):
             x = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5,
                                           name='post_bn')(x)
             x = layers.Activation('relu', name='post_relu')(x)
+        return x
 
     return build
 
@@ -124,6 +125,7 @@ def block(filters, kernel_size=3, stride=1,
 
             x = layers.Conv2D(4 * filters, 1, name=name + '_3_conv')(x)
             x = layers.Add(name=name + '_out')([shortcut, x])
+        return x
 
     return build
 
@@ -153,4 +155,5 @@ def stack(filters, blocks, stride1=2, name=None):
                 x = block(filters, name=name + '_block' + str(i))(x)
             x = block(filters, stride=stride1,
                       name=name + '_block' + str(blocks))(x)
+        return x
     return build

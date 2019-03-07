@@ -13,7 +13,7 @@ import keras.backend as K
 #     MODELS
 ##############################################################################
 
-def resnet_38(x):
+def resnet_38(y):
     # NOTE: This is none of the original models from the paper
     def stack_fn(x):
         x = stack(64, 3, stride1=1, name='conv2')(x)
@@ -21,37 +21,38 @@ def resnet_38(x):
         x = stack(256, 3, name='conv4')(x)
         x = stack(512, 3, name='conv5')(x)
         return x
-    return resnet(x, stack_fn)
+    return resnet(stack_fn)(y)
 
 
-def resnet_50(x):
+def resnet_50(y):
     def stack_fn(x):
+        print("Print 1:", x)
         x = stack(64, 3, stride1=1, name='conv2')(x)
         x = stack(128, 4, name='conv3')(x)
         x = stack(256, 6, name='conv4')(x)
         x = stack(512, 3, name='conv5')(x)
         return x
-    return resnet(stack_fn)(x)
+    return resnet(stack_fn)(y)
 
 
-def resnet_101(x):
+def resnet_101(y):
     def stack_fn(x):
         x = stack(64, 3, stride1=1, name='conv2')(x)
         x = stack(128, 4, name='conv3')(x)
         x = stack(256, 23, name='conv4')(x)
         x = stack(512, 3, name='conv5')(x)
         return x
-    return resnet(stack_fn)(x)
+    return resnet(stack_fn)(y)
 
 
-def resnet_152(x):
+def resnet_152(y):
     def stack_fn(x):
         x = stack(64, 3, stride1=1, name='conv2')(x)
         x = stack(128, 8, name='conv3')(x)
         x = stack(256, 36, name='conv4')(x)
         x = stack(512, 3, name='conv5')(x)
         return x
-    return resnet(stack_fn)(x)
+    return resnet(stack_fn)(y)
 
 
 def resnet(stack_fn):
@@ -76,6 +77,7 @@ def resnet(stack_fn):
 
         # Residual stacks
         x = stack_fn(x)
+        return x
 
     return build
 
@@ -129,6 +131,7 @@ def block(filters, kernel_size=3, stride=1,
 
             x = layers.Add(name=name + '_add')([shortcut, x])
             x = layers.Activation('relu', name=name + '_out')(x)
+        return x
 
     return build
 
@@ -155,4 +158,5 @@ def stack(filters, blocks, stride1=2, name=None):
             for i in range(2, blocks + 1):
                 x = block(filters, conv_shortcut=False,
                           name=name + '_block' + str(i))(x)
+        return x
     return build

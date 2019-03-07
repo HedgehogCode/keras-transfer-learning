@@ -33,7 +33,7 @@ def resnext_101(x):
     return resnext(stack_fn)(x)
 
 
-def resnext(x, stack_fn):
+def resnext(stack_fn):
     def build(x):
         bn_axis = 3 if K.image_data_format() == 'channels_last' else 1
 
@@ -55,6 +55,7 @@ def resnext(x, stack_fn):
 
         # Residual stacks
         x = stack_fn(x)
+        return x
 
     return build
 
@@ -121,6 +122,7 @@ def block(filters, kernel_size=3, stride=1, groups=32,
 
             x = layers.Add(name=name + '_add')([shortcut, x])
             x = layers.Activation('relu', name=name + '_out')(x)
+        return x
 
     return build
 
@@ -150,4 +152,5 @@ def stack(filters, blocks, stride1=2, groups=32, name=None):
             for i in range(2, blocks + 1):
                 x = block(filters, groups=groups, conv_shortcut=False,
                           name=name + '_block' + str(i))(x)
+        return x
     return build
