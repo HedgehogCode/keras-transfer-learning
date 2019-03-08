@@ -1,3 +1,10 @@
 {
-    "python.pythonPath": "/home/bw/apps/miniconda/envs/bachelorthesis/bin/python"
+    "python.pythonPath": "/home/bw/apps/miniconda/envs/bachelorthesis/bin/python",
+    "python.linting.enabled": true,
+    "python.unitTest.pyTestArgs": [
+        "tests"
+    ],
+    "python.unitTest.unittestEnabled": false,
+    "python.unitTest.nosetestsEnabled": false,
+    "python.unitTest.pyTestEnabled": true
 }

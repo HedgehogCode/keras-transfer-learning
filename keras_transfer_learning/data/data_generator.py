@@ -16,7 +16,7 @@ class DataGenerator(keras.utils.Sequence):
         self.shuffle = shuffle
         self.random_state = seed
         # NOTE: epoch_len is the number of samples per epoch not number of batches
-        if (epoch_len != None):
+        if epoch_len is not None:
             self.epoch_len = epoch_len
         else:
             self.epoch_len = len(ids)
@@ -34,7 +34,7 @@ class DataGenerator(keras.utils.Sequence):
 
         # Prepare the indexes for this epoch
         self.indexes = np.arange(len(self.ids))
-        if self.shuffle == True:
+        if self.shuffle is True:
             np.random.RandomState(self.random_state).shuffle(self.indexes)
 
     def __getitem__(self, index):
