@@ -8,11 +8,8 @@ import keras.backend as K
 from keras import layers
 
 
-def unet():
+def unet(filters=[64, 128, 256, 512, 1024], kernel_size=(3, 3), activation='relu'):
     # TODO implement unet from csbdeep
-    filters = [64, 128, 256, 512, 1024]
-    kernel_size = (3, 3)
-    activation = 'relu'
 
     def build(x):
         # Downsample
@@ -21,11 +18,11 @@ def unet():
         for idx, f in enumerate(down_filters):
             x = conv_block_2d(f, kernel_size=kernel_size,
                               activation=activation, name='conv_down_' + str(idx))(x)
-            x = downsample_block_2d(name='downsample_' + str(idx))(x)
             xs.insert(0, x)
+            x = downsample_block_2d(name='downsample_' + str(idx))(x)
 
         # Middle
-        x = conv_block_2d(f, kernel_size=kernel_size,
+        x = conv_block_2d(filters[-1], kernel_size=kernel_size,
                           activation=activation, name='conv_middle_' + str(idx))(x)
 
         # Upsample
@@ -43,9 +40,9 @@ def conv_block_2d(filters, kernel_size=(3, 3), padding='same', activation='relu'
     # TODO name and scope
     def build(x):
         with K.name_scope(name):
-            x = layers.Conv2D(64, (3, 3), padding=padding)(x)
+            x = layers.Conv2D(filters, kernel_size, padding=padding)(x)
             x = layers.Activation(activation)(x)
-            x = layers.Conv2D(64, (3, 3), padding=padding)(x)
+            x = layers.Conv2D(filters, kernel_size, padding=padding)(x)
             x = layers.Activation(activation)(x)
         return x
     return build
@@ -55,8 +52,8 @@ def upsample_block_2d(filters, size=(2, 2), padding='same', name=None):
     # TODO name and scope
     def build(x):
         with K.name_scope(name):
-            x = layers.UpSampling2D((2, 2))(x)
-            x = layers.Conv2D(512, (2, 2), padding='same')(x)
+            x = layers.UpSampling2D(size)(x)
+            x = layers.Conv2D(filters, size, padding=padding)(x)
         return x
     return build
 
@@ -64,6 +61,6 @@ def upsample_block_2d(filters, size=(2, 2), padding='same', name=None):
 def downsample_block_2d(size=(2, 2), name=None):
     def build(x):
         with K.name_scope(name):
-            x = layers.MaxPool2D((2, 2))(x)
+            x = layers.MaxPool2D(size)(x)
         return x
     return build
