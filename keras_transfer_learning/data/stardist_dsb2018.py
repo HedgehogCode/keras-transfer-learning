@@ -22,6 +22,10 @@ def loadTrain(data_dir='data/stardist-dsb2018', seed=42, train_val_split=0.9):
 
     return get(X, train_idxs), get(Y, train_idxs), get(X, val_idxs), get(Y, val_idxs)
 
+def loadTest(data_dir='data/stardist-dsb2018'):
+    test_dir = os.path.join(data_dir, 'test')
+    X, Y = _loadImagesAndMasks(test_dir)
+    return X, Y
 
 def _loadImagesAndMasks(folder):
     images_dir = os.path.join(folder, 'images')

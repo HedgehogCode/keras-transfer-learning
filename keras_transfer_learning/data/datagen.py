@@ -6,6 +6,8 @@ from imgaug import augmenters as iaa
 
 
 class DataGenerator(keras.utils.Sequence):
+    """A generic keras data generator. Handle shuffeling, reproducability and batches."""
+
 
     def __init__(self, ids, batch_size, data_fn, shuffle=True, seed=42, epoch_len=None):
         self.ids = ids
@@ -45,28 +47,35 @@ class DataGenerator(keras.utils.Sequence):
 
         # Apply data augmentation
         dataug_seed = self.random_state * (index + 2)
-        x, y = self.data_fn(ids, dataug_seed)
+        batch_x, batch_y = self.data_fn(ids, dataug_seed)
 
-        return x, y
+        return batch_x, batch_y
 
 
-def data_generator_from_lists(batch_size, data_X, data_Y, dataaug_fn, prepare_fn, **kwargs):
-    ids = list(range(len(data_X)))
-    data_fn = data_fn_from_lists(data_X, data_Y, dataaug_fn, prepare_fn)
+def data_generator_from_lists(batch_size, data_x, data_y, dataaug_fn, prepare_fn, **kwargs):
+    ids = list(range(len(data_x)))
+    data_fn = data_fn_from_lists(data_x, data_y, dataaug_fn, prepare_fn)
     return DataGenerator(ids, batch_size, data_fn, **kwargs)
 
 
-def data_fn_from_lists(data_X, data_Y, dataaug_fn, prepare_fn):
+def data_generator_for_validation(val_x, val_y, prepare_fn):
+    ids = list(range(len(val_x)))
+    data_fn = data_fn_from_lists(
+        val_x, val_y, lambda x, y, seed: (x, y), prepare_fn)
+    return DataGenerator(ids, 1, data_fn, shuffle=False)
+
+
+def data_fn_from_lists(data_x, data_y, dataaug_fn, prepare_fn):
     def data_fn(ids, seed):
         # Loading
-        X = [data_X[id] for id in ids]
-        Y = [data_Y[id] for id in ids]
+        batch_x = [data_x[id] for id in ids]
+        batch_y = [data_y[id] for id in ids]
 
         # Dataaug
-        X, Y = dataaug_fn(X, Y, seed)
+        batch_x, batch_y = dataaug_fn(batch_x, batch_y, seed)
 
         # Prepare for training
-        return prepare_fn(X, Y)
+        return prepare_fn(batch_x, batch_y)
     return data_fn
 
 
@@ -77,10 +86,10 @@ def dataug_fn_crop_flip_2d(width, height):
         iaa.Flipud(0.5)
     ])
 
-    def dataaug_fn(X, Y, seed):
+    def dataaug_fn(batch_x, batch_y, seed):
         # TODO use seed
         aug_det = aug.to_deterministic()
-        X = aug_det.augment_images(X)
-        Y = aug_det.augment_images(Y)
-        return X, Y
+        batch_x = aug_det.augment_images(batch_x)
+        batch_y = aug_det.augment_images(batch_y)
+        return batch_x, batch_y
     return dataaug_fn
