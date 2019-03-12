@@ -8,11 +8,11 @@ from keras import layers
 from keras import models
 
 from skimage.measure import label
-from scipy.ndimage import find_objects
 
 from keras_transfer_learning.backbones.unet import unet
 from keras_transfer_learning.data.stardist_dsb2018 import loadTest
 from keras_transfer_learning.utils.mean_average_precision import ap_segm
+from keras_transfer_learning.heads.segm import segm
 
 
 threshold = 0.5
@@ -22,8 +22,7 @@ model_dir = os.path.join('.', 'models', model_name)
 # Build the model
 inp = layers.Input(shape=(None, None, 1))
 x = unet([32, 64, 128])(inp)
-x = layers.Conv2D(2, (1, 1))(x)
-oup = layers.Activation('softmax')(x)
+oup = segm(2)(x)
 
 m = models.Model(inp, oup)
 

@@ -11,6 +11,7 @@ from keras_transfer_learning.data.datagen import data_generator_from_lists
 from keras_transfer_learning.data.datagen import data_generator_for_validation
 from keras_transfer_learning.data.datagen import dataug_fn_crop_flip_2d
 from keras_transfer_learning.data.stardist_dsb2018 import loadTrain
+from keras_transfer_learning.heads.segm import segm
 
 model_name = 'unet-small-dsb2018'
 model_dir = os.path.join('.', 'models', model_name)
@@ -19,8 +20,7 @@ os.makedirs(model_dir, exist_ok=True)
 # Build the model
 inp = layers.Input(shape=(None, None, 1))
 x = unet([32, 64, 128])(inp)
-x = layers.Conv2D(2, (1, 1))(x)
-oup = layers.Activation('softmax')(x)
+oup = segm(2)(x)
 
 m = models.Model(inp, oup)
 
