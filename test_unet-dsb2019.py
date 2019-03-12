@@ -12,6 +12,7 @@ from scipy.ndimage import find_objects
 
 from keras_transfer_learning.backbones.unet import unet
 from keras_transfer_learning.data.stardist_dsb2018 import loadTest
+from keras_transfer_learning.utils.mean_average_precision import ap_segm
 
 
 threshold = 0.5
@@ -43,31 +44,5 @@ for x in test_X:
     preds.append(pred)
     segmentations.append(label(np.array(pred > threshold, dtype='uint8')))
 
-# Compute mean average precision
-def overlaps_1d(first, second, size):
-    """Computes if slice first and second overlap for the size of the dimension"""
-    first_min, first_max, _ = first.indices(size)
-    second_min, second_max, _ = second.indices(size)
-    return first_max >= second_min and second_max >= first_min
-
-def overlaps(firsts, seconds, shape):
-    """Computes if slices firsts and seconds all overlap for the given shape"""
-    for first, second, size in zip(firsts, seconds, shape):
-        if not overlaps_1d(first, second, size):
-            return False
-    return True
-
 print('Running evaluation...')
-segments = []
-for i, (pred, gt) in enumerate(zip(segmentations, test_Y)):
-    pred_segments = find_objects(pred)
-    gt_segments = find_objects(gt)
-
-    for pred_segment in pred_segments:
-        best_gt = None
-        best_gt_iou = 0
-        for gt_segment in gt_segments:
-            if overlaps(pred_segment, gt_segment, shape)
-
-
-
+ap = ap_segm(pred, test_Y, [0.5])

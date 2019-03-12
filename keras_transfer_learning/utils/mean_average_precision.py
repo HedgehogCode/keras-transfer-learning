@@ -9,23 +9,81 @@ from operator import itemgetter
 
 import numpy as np
 
+from scipy.ndimage import find_objects
 
-def _overlaps_1d(first, second, size):
+
+def _union_1d(first, second, size):
     """Computes if slice first and second overlap for the size of the dimension"""
     first_min, first_max, _ = first.indices(size)
     second_min, second_max, _ = second.indices(size)
-    return first_max >= second_min and second_max >= first_min
+    if first_max >= second_min and second_max >= first_min:
+        return slice(min(first_min, second_min), max(first_max, second_max))
+    else:
+        return None
 
 
-def _overlaps(firsts, seconds, shape):
+def _union(firsts, seconds, shape):
     """Computes if slices firsts and seconds all overlap for the given shape"""
+    union = []
     for first, second, size in zip(firsts, seconds, shape):
-        if not _overlaps_1d(first, second, size):
-            return False
-    return True
+        union_1d = _union(first, second, size)
+        if union_1d is None:
+            return None
+        union.append(union_1d)
+    return union
 
-# def ap_segm(preds, labelings, iou_thresholds):
-#     for i, (pred, labeling) in enumerate(zip(preds, labelings)):
+
+def _iou(first, second, first_label, second_label):
+    first_segm = first == first_label
+    second_segm = second == second_label
+
+    intersection = np.logical_and(first_segm, second_segm)
+    union = np.logical_or(first_segm, second_segm)
+
+    return np.sum(intersection) / np.sum(union)
+
+
+def ap_segm(preds, labelings, iou_thresholds):
+    pred_matchings = []
+    gt_segments = set()
+
+    def gt_id(img_id, label_id):
+        return 'img{}_lab{}'.format(img_id, label_id)
+
+    for i, (pred, labeling) in enumerate(zip(preds, labelings)):
+        pred_objects = find_objects(pred)
+        gt_objects = find_objects(labeling)
+
+        # Loop over predicted objects
+        for pred_label, pred_slice in enumerate(pred_objects, 1):
+            # If there is no prediction with this id
+            if pred_slice is None:
+                break
+
+            score = 1.  # TODO different scores for different segments?
+            best_iou = 0
+            best_gt = None
+
+            # Loop over ground truth objects
+            for gt_label, gt_slice in enumerate(gt_objects, 1):
+                # Check if they intersect and get the union if they do
+                union = _union(pred_slice, gt_slice, pred.shape)
+                if union is None:
+                    break
+
+                # Compute the IoU and check if it is the best match
+                iou = _iou(pred[union], labeling[union], pred_label, gt_label)
+                if iou > best_iou:
+                    best_iou = iou
+                    best_gt = gt_id(i, gt_label)
+
+            pred_matchings.append((score, best_gt, best_iou))
+
+        # Loop over gt objects
+        for gt_label, gt_slice in enumerate(gt_objects, 1):
+            gt_segments.add(gt_id(i, gt_label))
+
+    return ap_matched_ious(pred_matchings, gt_segments, iou_thresholds)
 
 
 def ap_matched_ious(preds, gt_segments, iou_thresholds):

@@ -10,7 +10,7 @@ from keras_transfer_learning.backbones.unet import unet
 from keras_transfer_learning.data.datagen import data_generator_from_lists
 from keras_transfer_learning.data.datagen import data_generator_for_validation
 from keras_transfer_learning.data.datagen import dataug_fn_crop_flip_2d
-from keras_transfer_learning.data.stardist_dsb2018 import loadTrain, loadTest
+from keras_transfer_learning.data.stardist_dsb2018 import loadTrain
 
 model_name = 'unet-small-dsb2018'
 model_dir = os.path.join('.', 'models', model_name)
