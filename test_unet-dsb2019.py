@@ -22,8 +22,8 @@ model_dir = os.path.join('.', 'models', model_name)
 # Build the model
 inp = layers.Input(shape=(None, None, 1))
 x = unet([32, 64, 128])(inp)
-x = layers.Conv2D(1, (1, 1))(x)
-oup = layers.Activation('sigmoid')(x)
+x = layers.Conv2D(2, (1, 1))(x)
+oup = layers.Activation('softmax')(x)
 
 m = models.Model(inp, oup)
 

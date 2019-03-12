@@ -19,8 +19,8 @@ os.makedirs(model_dir, exist_ok=True)
 # Build the model
 inp = layers.Input(shape=(None, None, 1))
 x = unet([32, 64, 128])(inp)
-x = layers.Conv2D(1, (1, 1))(x)
-oup = layers.Activation('sigmoid')(x)
+x = layers.Conv2D(2, (1, 1))(x)
+oup = layers.Activation('softmax')(x)
 
 m = models.Model(inp, oup)
 
@@ -34,7 +34,8 @@ train_X, train_Y, val_X, val_Y = loadTrain()
 
 def prepare_fn(X, Y):
     X = (np.array(X, dtype='float32') / 255)[..., None]
-    Y = (np.array(np.array(Y) > 0, dtype='float32'))[..., None]
+    y_val = np.array(Y) > 0
+    Y = (np.array(np.stack([y_val, np.logical_not(y_val)], -1), dtype='float32'))
     return X, Y
 
 
