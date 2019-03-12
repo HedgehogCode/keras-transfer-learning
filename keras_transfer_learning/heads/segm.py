@@ -38,7 +38,7 @@ def segm(num_classes, out_activation='softmax', feature_layer=0, feature_kernel_
                 x = layers.BatchNormalization()(x)
             x = layers.Activation(feature_activation)(x)
 
-        x = conv(num_classes, 1)(x)
+        x = conv(num_classes, 1, padding='same')(x)
         x = layers.Activation(out_activation)(x)
         return x
     return build
