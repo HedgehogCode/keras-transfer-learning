@@ -26,7 +26,7 @@ def _union(firsts, seconds, shape):
     """Computes if slices firsts and seconds all overlap for the given shape"""
     union = []
     for first, second, size in zip(firsts, seconds, shape):
-        union_1d = _union(first, second, size)
+        union_1d = _union_1d(first, second, size)
         if union_1d is None:
             return None
         union.append(union_1d)
@@ -72,7 +72,7 @@ def ap_segm(preds, labelings, iou_thresholds):
                     break
 
                 # Compute the IoU and check if it is the best match
-                iou = _iou(pred[union], labeling[union], pred_label, gt_label)
+                iou = _iou(pred[tuple(union)], labeling[tuple(union)], pred_label, gt_label)
                 if iou > best_iou:
                     best_iou = iou
                     best_gt = gt_id(i, gt_label)
@@ -89,7 +89,7 @@ def ap_segm(preds, labelings, iou_thresholds):
 def ap_matched_ious(preds, gt_segments, iou_thresholds):
     ap = []
     for iou_th in iou_thresholds:
-        ap.append(ap_matched(preds, gt_segments, iou_th))
+        ap.append(ap_matched(preds, gt_segments, iou_th)[0])
     return np.mean(ap), ap
 
 

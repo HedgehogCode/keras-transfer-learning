@@ -45,4 +45,6 @@ for x in test_X:
     segmentations.append(label(np.array(pred > threshold, dtype='uint8')))
 
 print('Running evaluation...')
-ap = ap_segm(pred, test_Y, [0.5])
+ap = ap_segm(segmentations, test_Y, [0.5])
+
+print("The average precision is {}".format(ap))
