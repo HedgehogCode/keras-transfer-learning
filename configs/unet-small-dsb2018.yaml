@@ -1,0 +1,11 @@
+backbone:
+  type: 'unet'
+  args:
+    filters: [32, 64, 128]
+  weights: None
+
+head:
+  type: 'segm'
+  args:
+    num_classes: 2
+
