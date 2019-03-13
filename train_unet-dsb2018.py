@@ -10,7 +10,7 @@ from keras_transfer_learning.backbones.unet import unet
 from keras_transfer_learning.data.datagen import data_generator_from_lists
 from keras_transfer_learning.data.datagen import data_generator_for_validation
 from keras_transfer_learning.data.datagen import dataug_fn_crop_flip_2d
-from keras_transfer_learning.data.stardist_dsb2018 import loadTrain
+from keras_transfer_learning.data.stardist_dsb2018 import load_train
 from keras_transfer_learning.heads.segm import segm
 
 model_name = 'unet-small-dsb2018'
@@ -29,7 +29,7 @@ m = models.Model(inp, oup)
 
 # Prepare the data
 
-train_X, train_Y, val_X, val_Y = loadTrain()
+train_X, train_Y, val_X, val_Y = load_train()
 
 
 def prepare_fn(X, Y):

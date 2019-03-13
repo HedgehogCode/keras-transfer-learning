@@ -10,7 +10,7 @@ from keras import models
 from skimage.measure import label
 
 from keras_transfer_learning.backbones.unet import unet
-from keras_transfer_learning.data.stardist_dsb2018 import loadTest
+from keras_transfer_learning.data.stardist_dsb2018 import load_test
 from keras_transfer_learning.utils.mean_average_precision import ap_segm
 from keras_transfer_learning.heads.segm import segm
 
@@ -33,7 +33,7 @@ m = models.Model(inp, oup)
 m.load_weights(os.path.join(model_dir, 'weights_final.h5'))
 
 # Run on test data
-test_X, test_Y = loadTest()
+test_X, test_Y = load_test()
 
 segmentations = []
 preds = []

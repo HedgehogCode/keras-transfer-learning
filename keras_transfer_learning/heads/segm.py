@@ -42,3 +42,9 @@ def segm(num_classes, out_activation='softmax', feature_layer=0, feature_kernel_
         x = layers.Activation(out_activation)(x)
         return x
     return build
+
+
+def prepare_for_training(model, optimizer='adam', loss='binary_crossentropy'):
+    # Compile the model
+    model.compile(optimizer, loss=loss)
+    return model

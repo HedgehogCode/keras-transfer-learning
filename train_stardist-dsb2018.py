@@ -12,7 +12,7 @@ from keras_transfer_learning.backbones.unet import unet
 from keras_transfer_learning.data.datagen import data_generator_from_lists
 from keras_transfer_learning.data.datagen import data_generator_for_validation
 from keras_transfer_learning.data.datagen import dataug_fn_crop_flip_2d
-from keras_transfer_learning.data.stardist_dsb2018 import loadTrain
+from keras_transfer_learning.data.stardist_dsb2018 import load_train
 from keras_transfer_learning.heads.stardist import stardist, prepare_for_training
 
 model_name = 'stardist-small-dsb2018'
@@ -31,7 +31,7 @@ oups = stardist(n_rays, feature_layer=128)(x)
 m = models.Model(inp, oups)
 
 # Prepare the data
-train_x, train_y, val_x, val_y = loadTrain()
+train_x, train_y, val_x, val_y = load_train()
 
 # TODO move to stardist module?
 def prepare_fn(batch_x, batch_y):
