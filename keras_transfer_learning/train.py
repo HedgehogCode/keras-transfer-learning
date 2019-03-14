@@ -1,5 +1,7 @@
 import os
 
+import pandas as pd
+
 from keras import layers
 from keras import callbacks
 from keras import models
@@ -75,8 +77,9 @@ def train(conf: config.Config, epochs: int):
     history = model.fit_generator(train_generator, epochs=epochs,
                                   callbacks=training_callbacks, validation_data=val_generator)
 
-    # TODO Save the history
-    print(history)
+    # Save the history
+    history_df = pd.DataFrame(history.history)
+    history_df.to_csv(os.path.join(model_dir, 'history.csv'))
 
     # Save the final weights
     model.save_weights(os.path.join(model_dir, 'weights_final.h5'))

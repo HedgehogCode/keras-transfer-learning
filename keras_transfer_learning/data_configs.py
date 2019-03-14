@@ -26,24 +26,26 @@ class StarDistDSB2018DataConfig(DataConfig):
             'val_y': val_y
         }
 
+    def _normalize_prepare(self, prepare_fn):
+        def apply(batch_x, batch_y):
+            return prepare_fn(self._normalizer(np.array(batch_x)), batch_y)
+        return apply
+
     def create_train_datagen(self, batch_size, prepare_fn, seed):
         # TODO make data augmentation configurable
         dataaug_fn = datagen.dataaug_fn_crop_flip_2d(
             self._training_size[0], self._training_size[1])
-
-        def normalize_prepare(batch_x, batch_y):
-            return prepare_fn(self._normalizer(np.array(batch_x)), batch_y)
 
         return datagen.data_generator_from_lists(
             batch_size=batch_size,
             data_x=self._data['train_x'],
             data_y=self._data['train_y'],
             dataaug_fn=dataaug_fn,
-            prepare_fn=normalize_prepare,
+            prepare_fn=self._normalize_prepare(prepare_fn),
             seed=seed)
 
     def create_val_datagen(self, prepare_fn):
         return datagen.data_generator_for_validation(
             val_x=self._data['val_x'],
             val_y=self._data['val_y'],
-            prepare_fn=prepare_fn)
+            prepare_fn=self._normalize_prepare(prepare_fn))

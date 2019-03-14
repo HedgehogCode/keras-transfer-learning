@@ -45,7 +45,7 @@ class TrainingConfig(Namespace):
     def create_callbacks(self):
         created = []
         for callback in self.callbacks:
-            created.append(CALLBACK_FNS[callback['name']](callback['args']))
+            created.append(CALLBACK_FNS[callback['name']](**callback['args']))
         return created
 
 
