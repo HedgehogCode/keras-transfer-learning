@@ -3,6 +3,8 @@ from abc import abstractmethod
 
 import numpy as np
 
+from imgaug import augmenters as iaa
+
 from .config_holder import ConfigHolder
 from ..data import stardist_dsb2018, datagen
 
@@ -30,6 +32,13 @@ class Normalizer(ConfigHolder):
         raise NotImplementedError
 
 
+class DataAugmenter(ConfigHolder):
+
+    @abstractmethod
+    def __call__(self, batch_x, batch_y, seed):
+        raise NotImplementedError
+
+
 # Static config parser
 
 def get_config(conf) -> DataConfig:
@@ -40,11 +49,20 @@ def get_config(conf) -> DataConfig:
         raise NotImplementedError(
             'The normalizer {} is not implemented.'.format(conf['normalizer']))
 
+    # Define the augmentor
+    conf_dataaug = conf['dataaug']
+    if conf_dataaug['name'] == 'imgaug':
+        dataaug = ImageAugDataAugmenter(conf_dataaug['augmentors'])
+    else:
+        raise NotImplementedError(
+            'The data augmentor {} is not implemented.'.format(conf_dataaug['name']))
+
     # Define the data config
     if conf['name'] == 'stardist-dsb2018':
         return StarDistDSB2018DataConfig(
             train_val_split=conf['train_val_split'],
             training_size=conf['training_size'],
+            dataaug=dataaug,
             normalizer=normalizer)
     raise NotImplementedError(
         'The data {} is not implemented.'.format(conf['name']))
@@ -61,13 +79,36 @@ class UInt8RangeNormalizer(Normalizer):
         return 'uint8-range'
 
 
+class ImageAugDataAugmenter(DataAugmenter):
+
+    def __init__(self, augmentors):
+        self.augmentors = augmentors
+        augs = []
+        for aug in self.augmentors:
+            augs.append(getattr(iaa, aug['name'])(**aug['args']))
+        self.augmentor = iaa.Sequential(augs)
+
+    def __call__(self, batch_x, batch_y, seed):
+        aug_det = self.augmentor.to_deterministic()
+        batch_x = aug_det.augment_images(batch_x)
+        batch_y = aug_det.augment_images(batch_y)
+        return batch_x, batch_y
+
+    def get_as_dict(self):
+        return {
+            'name': 'imgaug',
+            'augmentors': self.augmentors
+        }
+
+
 class StarDistDSB2018DataConfig(DataConfig):
 
-    def __init__(self, train_val_split, training_size, normalizer,
+    def __init__(self, train_val_split, training_size, dataaug, normalizer,
                  data_dir=os.path.join('data', 'stardist-dsb2018')):
         self.train_val_split = train_val_split
         self.data_dir = data_dir
         self.training_size = training_size
+        self.dataaug = dataaug
         self.normalizer = normalizer
         self._data = None
 
@@ -87,15 +128,11 @@ class StarDistDSB2018DataConfig(DataConfig):
         return apply
 
     def create_train_datagen(self, batch_size, prepare_fn, seed):
-        # TODO make data augmentation configurable
-        dataaug_fn = datagen.dataaug_fn_crop_flip_2d(
-            self.training_size[0], self.training_size[1])
-
         return datagen.data_generator_from_lists(
             batch_size=batch_size,
             data_x=self._data['train_x'],
             data_y=self._data['train_y'],
-            dataaug_fn=dataaug_fn,
+            dataaug_fn=self.dataaug,
             prepare_fn=self._normalize_prepare(prepare_fn),
             seed=seed)
 
@@ -111,5 +148,6 @@ class StarDistDSB2018DataConfig(DataConfig):
             'train_val_split': self.train_val_split,
             'training_size': self.training_size,
             'data_dir': self.data_dir,
+            'dataaug': self.dataaug.get_as_dict(),
             'normalizer': self.normalizer.get_as_dict()
         }

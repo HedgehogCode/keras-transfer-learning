@@ -4,7 +4,6 @@ A library for transfer learning and fine-tuning using Keras. Provides utilities 
 
 ## TODOs
 
-- Configurable augmentation
 - Add seed everywhere
 - Enable continuing with training
 - Enable overwrite protection

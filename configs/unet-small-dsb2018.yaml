@@ -28,3 +28,12 @@ data:
   train_val_split: 0.9
   training_size: [128, 128]
   normalizer: 'uint8-range'
+  dataaug:
+    name: 'imgaug'
+    augmentors:
+      - name: 'CropToFixedSize'
+        args: { width: 128, height: 128 }
+      - name: 'Fliplr'
+        args: { p: 0.5 }
+      - name: 'Flipud'
+        args: { p: 0.5 }
