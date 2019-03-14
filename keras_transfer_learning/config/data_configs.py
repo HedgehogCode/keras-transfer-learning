@@ -61,7 +61,6 @@ def get_config(conf) -> DataConfig:
     if conf['name'] == 'stardist-dsb2018':
         return StarDistDSB2018DataConfig(
             train_val_split=conf['train_val_split'],
-            training_size=conf['training_size'],
             dataaug=dataaug,
             normalizer=normalizer)
     raise NotImplementedError(
@@ -103,11 +102,10 @@ class ImageAugDataAugmenter(DataAugmenter):
 
 class StarDistDSB2018DataConfig(DataConfig):
 
-    def __init__(self, train_val_split, training_size, dataaug, normalizer,
+    def __init__(self, train_val_split, dataaug, normalizer,
                  data_dir=os.path.join('data', 'stardist-dsb2018')):
         self.train_val_split = train_val_split
         self.data_dir = data_dir
-        self.training_size = training_size
         self.dataaug = dataaug
         self.normalizer = normalizer
         self._data = None
@@ -146,7 +144,6 @@ class StarDistDSB2018DataConfig(DataConfig):
         return {
             'name': 'stardist-dsb2018',
             'train_val_split': self.train_val_split,
-            'training_size': self.training_size,
             'data_dir': self.data_dir,
             'dataaug': self.dataaug.get_as_dict(),
             'normalizer': self.normalizer.get_as_dict()
