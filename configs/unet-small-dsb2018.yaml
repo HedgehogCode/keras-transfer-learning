@@ -1,4 +1,4 @@
-name: unet-small-dsb2018-2
+name: unet-small-dsb2018-5
 
 input_shape: [null, null, 1]
 
@@ -27,6 +27,7 @@ data:
   name: 'stardist-dsb2018'
   train_val_split: 0.9
   normalizer: 'uint8-range'
+  datasplit_seed: 42
   dataaug:
     name: 'imgaug'
     augmentors:

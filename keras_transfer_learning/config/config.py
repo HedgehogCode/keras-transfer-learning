@@ -24,5 +24,5 @@ class Config(ConfigHolder):
             'backbone': self.backbone.get_as_dict(),
             'head': self.head.get_as_dict(),
             'training': self.training.get_as_dict(),
-            'data': self.data.get_as_dict()
+            'data': self.data.get_as_dict(),
         }
