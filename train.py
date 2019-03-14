@@ -30,7 +30,7 @@ HEAD_FNS = {
     'segm': heads.segm.segm
 }
 
-PREPARE_FNS = {
+PREPARE_MODEL_FNS = {
     'segm': heads.segm.prepare_for_training
 }
 
@@ -41,6 +41,10 @@ CALLBACK_FNS = {
 
 LOAD_DATA_FNS = {
     'stardist-dsb2018': data.stardist_dsb2018.load_train
+}
+
+PREPARE_DATA_FNS = {
+    'segm': heads.segm.prepare_data_fn
 }
 
 GENERATOR_FNS = {
@@ -118,15 +122,19 @@ def main(args):
     # TODO Prepare the data generators
     dataset = LOAD_DATA_FNS[config_data['name']](config_data['load_args'])
     generator_fns = GENERATOR_FNS[config_data['name']]
-    dataaug_fn = data.datagen.dataug_fn_crop_flip_2d(128, 128) # TODO make configurable
-    train_generator = generator_fns[0](dataset, config_training['batch_size'], )
-    val_generator = None
+    dataaug_fn = data.datagen.dataug_fn_crop_flip_2d(
+        128, 128)  # TODO make configurable
+    prepare_fn = PREPARE_DATA_FNS[config_head['name']](
+        config_head['prepare_data_args'])
+    train_generator = generator_fns[0](
+        dataset, config_training['batch_size'], dataaug_fn, prepare_fn, config_data['seed'])
+    val_generator = generator_fns[1](dataset, prepare_fn)
     # TODO CONTINUE HERE
 
     # Prepare for training
     # TODO should these functions also return a function?
-    model = PREPARE_FNS[config_head['type']](
-        model, **config_head['prepare_args'])
+    model = PREPARE_MODEL_FNS[config_head['type']](
+        model, **config_head['prepare_model_args'])
 
     # Create the callbacks
     training_callbacks = []
