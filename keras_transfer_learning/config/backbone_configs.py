@@ -38,7 +38,7 @@ class UnetBackboneConfig(BackboneConfig):
 
     def load_weights(self, model):
         if self.weights is not None:
-            model.load_weights(self.weights)
+            model.load_weights(self.weights, by_name=True)
 
     def get_as_dict(self):
         return {
