@@ -11,7 +11,7 @@ from stardist.utils import edt_prob, star_dist
 from keras_transfer_learning.backbones.unet import unet
 from keras_transfer_learning.data.datagen import data_generator_from_lists
 from keras_transfer_learning.data.datagen import data_generator_for_validation
-from keras_transfer_learning.data.datagen import dataug_fn_crop_flip_2d
+from keras_transfer_learning.data.datagen import dataaug_fn_crop_flip_2d
 from keras_transfer_learning.data.stardist_dsb2018 import load_train
 from keras_transfer_learning.heads.stardist import stardist, prepare_for_training
 
@@ -42,7 +42,7 @@ def prepare_fn(batch_x, batch_y):
     return [img, dist_mask], [prob, dist]
 
 
-dataaug_fn = dataug_fn_crop_flip_2d(128, 128)
+dataaug_fn = dataaug_fn_crop_flip_2d(128, 128)
 
 batch_size = 8
 epochs = 10

@@ -79,7 +79,7 @@ def data_fn_from_lists(data_x, data_y, dataaug_fn, prepare_fn):
     return data_fn
 
 
-def dataug_fn_crop_flip_2d(width, height):
+def dataaug_fn_crop_flip_2d(width, height):
     aug = iaa.Sequential([
         iaa.CropToFixedSize(width, height),
         iaa.Fliplr(0.5),

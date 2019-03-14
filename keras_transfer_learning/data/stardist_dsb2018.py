@@ -5,7 +5,8 @@ from glob import glob
 import numpy as np
 from tifffile import imread
 
-def load_train(data_dir='data/stardist-dsb2018', seed=42, train_val_split=0.9):
+
+def load_train(data_dir=os.path.join('data', 'stardist-dsb2018'), seed=42, train_val_split=0.9):
     train_dir = os.path.join(data_dir, 'train')
     X, Y = _load_images_and_masks(train_dir)
 
@@ -21,10 +22,12 @@ def load_train(data_dir='data/stardist-dsb2018', seed=42, train_val_split=0.9):
 
     return get(X, train_idxs), get(Y, train_idxs), get(X, val_idxs), get(Y, val_idxs)
 
+
 def load_test(data_dir='data/stardist-dsb2018'):
     test_dir = os.path.join(data_dir, 'test')
     X, Y = _load_images_and_masks(test_dir)
     return X, Y
+
 
 def _load_images_and_masks(folder):
     images_dir = os.path.join(folder, 'images')
