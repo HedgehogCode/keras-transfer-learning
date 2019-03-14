@@ -10,48 +10,12 @@ import sys
 import argparse
 import yaml
 
-from keras_transfer_learning import config
-from keras_transfer_learning import backbone_configs
-from keras_transfer_learning import head_configs
-from keras_transfer_learning import data_configs
+from keras_transfer_learning.config import config
+from keras_transfer_learning.config import backbone_configs
+from keras_transfer_learning.config import head_configs
+from keras_transfer_learning.config import training_configs
+from keras_transfer_learning.config import data_configs
 from keras_transfer_learning import train
-
-
-def _parse_backbone_config(conf) -> config.BackboneConfig:
-    if conf['name'] == 'unet':
-        return backbone_configs.UnetBackboneConfig(conf['args'], conf['weights'])
-    raise NotImplementedError(
-        'The backbone {} is not implemented.'.format(conf['name']))
-
-
-def _parse_head_config(conf) -> config.HeadConfig:
-    if conf['name'] == 'fgbg-segm':
-        return head_configs.FgBgSegmHeadConfig(conf['args'], conf['prepare_model_args'])
-    raise NotImplementedError(
-        'The head {} is not implemented.'.format(conf['name']))
-
-
-def _parse_training_config(conf) -> config.TrainingConfig:
-    return config.TrainingConfig(conf['batch_size'], conf['callbacks'])
-
-
-def _parse_data_config(conf) -> config.DataConfig:
-    # Define the normalizer
-    if conf['normalizer'] == 'uint8-range':
-        def normalizer(data):
-            return data / 255
-    else:
-        raise NotImplementedError(
-            'The normalizer {} is not implemented.'.format(conf['normalizer']))
-
-    # Define the data config
-    if conf['name'] == 'stardist-dsb2018':
-        return data_configs.StarDistDSB2018DataConfig(
-            train_val_split=conf['train_val_split'],
-            training_size=conf['training_size'],
-            normalizer=normalizer)
-    raise NotImplementedError(
-        'The data {} is not implemented.'.format(conf['name']))
 
 
 def main(arguments):
@@ -69,15 +33,14 @@ def main(arguments):
 
     # Load the config yaml
     conf = yaml.load(args.configfile)
-    print(conf)
 
     # Create the config objects
-    conf_backbone = _parse_backbone_config(conf['backbone'])
-    conf_head = _parse_head_config(conf['head'])
-    conf_training = _parse_training_config(conf['training'])
-    conf_data = _parse_data_config(conf['data'])
+    conf_backbone = backbone_configs.get_config(conf['backbone'])
+    conf_head = head_configs.get_config(conf['head'])
+    conf_training = training_configs.get_config(conf['training'])
+    conf_data = data_configs.get_config(conf['data'])
     conf_all = config.Config(conf['name'], conf['input_shape'],
-                  conf_backbone, conf_head, conf_training, conf_data)
+                             conf_backbone, conf_head, conf_training, conf_data)
 
     # Run the training
     train.train(conf_all, args.epochs)

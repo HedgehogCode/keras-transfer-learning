@@ -6,7 +6,7 @@ from keras import layers
 from keras import callbacks
 from keras import models
 
-from keras_transfer_learning import config
+from keras_transfer_learning.config import config
 
 
 def _checkpoints_callback(model_dir):
@@ -40,6 +40,9 @@ def train(conf: config.Config, epochs: int):
     #     raise ValueError(
     #         "A model with the name {} already exists.".format(config_name))
     # os.makedirs(model_dir)
+
+    # Save the config
+    conf.to_yaml(os.path.join(model_dir, 'config.yaml'))
 
     # Create the input
     inp = layers.Input(conf.input_shape)
