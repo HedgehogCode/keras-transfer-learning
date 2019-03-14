@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 
 """Train a deep learning model according to a configuration file.
-
-TODO enable continuing with training
-TODO add seed
 """
 
 import sys
