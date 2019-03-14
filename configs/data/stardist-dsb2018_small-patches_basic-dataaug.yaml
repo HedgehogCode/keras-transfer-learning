@@ -1,0 +1,13 @@
+name: 'stardist-dsb2018'
+train_val_split: 0.9
+normalizer: 'uint8-range'
+datasplit_seed: 42
+dataaug:
+  name: 'imgaug'
+  augmentors:
+    - name: 'CropToFixedSize'
+      args: { width: 128, height: 128 }
+    - name: 'Fliplr'
+      args: { p: 0.5 }
+    - name: 'Flipud'
+      args: { p: 0.5 }

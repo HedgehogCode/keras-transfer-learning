@@ -1,0 +1,4 @@
+name: 'unet'
+args:
+  filters: [32, 64, 128]
+weights: models/small-unet_stardist-dsb2018/weights_final.h5

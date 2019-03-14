@@ -1,0 +1,4 @@
+name: 'unet'
+args:
+  filters: [32, 64, 128]
+weights: null

@@ -1,0 +1,6 @@
+callbacks:
+- name: early_stopping
+  args: {}
+- name: reduce_lr_on_plateau
+  args: {}
+batch_size: 8

@@ -25,11 +25,10 @@ def _tensorboard_callback(model_name, batch_size):
 def train(conf: config.Config, epochs: int):
     # Prepare the model directory
     model_dir = os.path.join('.', 'models', conf.name)
-    # TODO uncomment
-    # if os.path.exists(model_dir):
-    #     raise ValueError(
-    #         "A model with the name {} already exists.".format(conf.name))
-    # os.makedirs(model_dir)
+    if os.path.exists(model_dir):
+        raise ValueError(
+            "A model with the name {} already exists.".format(conf.name))
+    os.makedirs(model_dir)
 
     # Save the config
     conf.to_yaml(os.path.join(model_dir, 'config.yaml'))

@@ -20,27 +20,34 @@ def main(arguments):
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('configfile', help='Config file',
-                        type=argparse.FileType('r'))
-    parser.add_argument(
-        '-e', '--epochs', help='Number of epochs', type=int, required=True)
+    parser.add_argument('-b', '--backbone', help='Backbone config file',
+                        type=argparse.FileType('r'), required=True)
+    parser.add_argument('--head', help='Head config file',
+                        type=argparse.FileType('r'), required=True)
+    parser.add_argument('-t', '--training', help='Training config file',
+                        type=argparse.FileType('r'), required=True)
+    parser.add_argument('-d', '--data', help='Data config file',
+                        type=argparse.FileType('r'), required=True)
+    parser.add_argument('-n', '--name', help='Name of the model',
+                        type=str, required=True)
+    parser.add_argument('-i', '--input_shape', help='Input shape of the model (yaml)',
+                        type=str, required=True)
+    parser.add_argument('-e', '--epochs', help='Number of epochs',
+                        type=int, required=True)
     # TODO add other arguments to control training
     # Especially continue training
     args = parser.parse_args(arguments)
 
-    # Load the config yaml
-    conf = yaml.load(args.configfile)
-
     # Create the config objects
-    conf_backbone = backbone_configs.get_config(conf['backbone'])
-    conf_head = head_configs.get_config(conf['head'])
-    conf_training = training_configs.get_config(conf['training'])
-    conf_data = data_configs.get_config(conf['data'])
-    conf_all = config.Config(conf['name'], conf['input_shape'],
-                             conf_backbone, conf_head, conf_training, conf_data)
+    conf_backbone = backbone_configs.get_config(yaml.load(args.backbone))
+    conf_head = head_configs.get_config(yaml.load(args.head))
+    conf_training = training_configs.get_config(yaml.load(args.training))
+    conf_data = data_configs.get_config(yaml.load(args.data))
+    conf = config.Config(args.name, yaml.load(args.input_shape),
+                         conf_backbone, conf_head, conf_training, conf_data)
 
     # Run the training
-    train.train(conf_all, args.epochs)
+    train.train(conf, args.epochs)
 
 
 if __name__ == '__main__':

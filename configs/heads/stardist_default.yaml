@@ -1,0 +1,7 @@
+name: 'stardist'
+args:
+  n_rays: 32
+  feature_layer: 128
+prepare_model_args:
+  optimizer: adam
+  dist_loss: mae
