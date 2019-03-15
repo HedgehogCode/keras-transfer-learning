@@ -1,5 +1,19 @@
 """U-Net models for Keras
 
+The original U-Net is implemented with slight modifications in the function `unet`.
+Paper:
+- Ronneberger, O., Fischer, P., & Brox, T. (2015). U-net: Convolutional networks for biomedical
+  image segmentation. In International Conference on Medical image computing and computer-assisted
+  intervention (pp. 234–241).
+
+The U-Net used in CSBDeep and StarDist is implemented in the function `unet_csbdeep`.
+Papers:
+- Weigert, M., Schmidt, U., Boothe, T., Müller, A., Dibrov, A., Jain, A., … Myers, E. W. (2018).
+  Content-aware image restoration: pushing the limits of fluorescence microscopy. Nature Methods,
+  15(12), 1090–1097. https://doi.org/10.1038/s41592-018-0216-7
+- Schmidt, U., Weigert, M., Broaddus, C., & Myers, G. (2018). Cell Detection with Star-convex
+  Polygons. ArXiv Preprint ArXiv:1806.03535.
+
 TODO valid paddding
 """
 import keras.backend as K
@@ -59,7 +73,17 @@ def unet(filters=None, kernel_size=3, activation='relu', batch_norm=False, ndims
 
 def unet_csbdeep(filter_base=32, depth=3, conv_per_depth=2, kernel_size=3, activation='relu',
                  batch_norm=False, ndims=2):
-    """Creates a U-Net TODO
+    """Creates a U-Net like the U-Nets used in the CSBDeep/CARE paper and StarDist paper.
+
+    Keyword Arguments:
+        filter_base {int} -- number of the filters on the first level (default: {32})
+        depth {int} -- depth of the U-Net (how many downsampling blocks will be created)
+                       (default: {3})
+        conv_per_depth {int} -- number of convolutional layers per block (default: {2})
+        kernel_size {int} -- kernel size of the convolutional layers (default: {3})
+        activation {str} -- activation function after the convolutional layers (default: {'relu'})
+        batch_norm {bool} -- if batch normalization should be added (default: {False})
+        ndims {int} -- number of dimensions (default: {2})
 
     Returns:
         function -- a function which applies a U-Net to an input tensor
