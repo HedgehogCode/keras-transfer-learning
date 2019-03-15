@@ -4,8 +4,6 @@ A library for transfer learning and fine-tuning using Keras. Provides utilities 
 
 ## TODOs
 
-- Enable overwrite protection
-- U-Net name scopes and layer names
 - U-Net valid padding?
 - Evaluation scripts
 
