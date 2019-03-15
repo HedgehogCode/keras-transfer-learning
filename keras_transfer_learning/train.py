@@ -1,4 +1,6 @@
 import os
+import re
+from glob import glob
 
 import pandas as pd
 
@@ -11,7 +13,7 @@ from keras_transfer_learning.config import config
 
 def _checkpoints_callback(model_dir):
     checkpoint_filename = os.path.join(
-        model_dir, 'weights_{epoch:02d}_{val_loss:.2f}.h5')
+        model_dir, 'weights_{epoch:04d}_{val_loss:.4f}.h5')
     return callbacks.ModelCheckpoint(
         checkpoint_filename, save_weights_only=True)
 
@@ -22,13 +24,26 @@ def _tensorboard_callback(model_name, batch_size):
         tensorboard_logdir, batch_size=batch_size, write_graph=True)
 
 
-def train(conf: config.Config, epochs: int):
+def train(conf: config.Config, epochs: int, initial_epoch: int = 0):
     # Prepare the model directory
     model_dir = os.path.join('.', 'models', conf.name)
-    if os.path.exists(model_dir):
-        raise ValueError(
-            "A model with the name {} already exists.".format(conf.name))
-    os.makedirs(model_dir)
+    if initial_epoch == 0:
+        if os.path.exists(model_dir):
+            raise ValueError(
+                "A model with the name {} already exists.".format(conf.name))
+        os.makedirs(model_dir)
+    else:
+        weights = sorted(glob(os.path.join(model_dir, 'weights_[0-9]*_*.h5')))
+        if weights == []:
+            raise ValueError('Did not find a valid weights file.')
+        last_weights = weights[-1]
+        matches = re.match(r'.*_(\d{4})_\d+\.\d{4}\.h5', last_weights)
+        if matches is None:
+            raise ValueError('Did not find a valid weights file.')
+        last_epoch = int(matches.group(1))
+        if last_epoch != initial_epoch:
+            raise ValueError('Cannot continue with after epoch {}. Last epoch was {}.'.format(
+                initial_epoch, last_epoch))
 
     # Save the config
     conf.to_yaml(os.path.join(model_dir, 'config.yaml'))
@@ -40,14 +55,19 @@ def train(conf: config.Config, epochs: int):
     backbone = conf.backbone.create_backbone(inp)
 
     # Load pretrained weights
-    backbone_model = models.Model(inputs=inp, outputs=backbone)
-    conf.backbone.load_weights(backbone_model)
+    if initial_epoch == 0:
+        backbone_model = models.Model(inputs=inp, outputs=backbone)
+        conf.backbone.load_weights(backbone_model)
 
     # Create the head
     oups = conf.head.create_head(backbone)
 
     # Create the model
     model = models.Model(inputs=inp, outputs=oups)
+
+    # Continue with the training
+    if initial_epoch != 0:
+        model.load_weights(last_weights)
 
     # Prepare the data generators
     conf.data.load_data()
@@ -66,8 +86,9 @@ def train(conf: config.Config, epochs: int):
     training_callbacks.extend(conf.training.create_callbacks())
 
     # Train the model
-    history = model.fit_generator(train_generator, epochs=epochs,
-                                  callbacks=training_callbacks, validation_data=val_generator)
+    history = model.fit_generator(train_generator, validation_data=val_generator,
+                                  epochs=epochs, initial_epoch=initial_epoch,
+                                  callbacks=training_callbacks)
 
     # Save the history
     history_df = pd.DataFrame(history.history)

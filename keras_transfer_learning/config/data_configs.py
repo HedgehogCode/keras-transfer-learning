@@ -148,5 +148,6 @@ class StarDistDSB2018DataConfig(DataConfig):
             'train_val_split': self.train_val_split,
             'data_dir': self.data_dir,
             'dataaug': self.dataaug.get_as_dict(),
-            'normalizer': self.normalizer.get_as_dict()
+            'normalizer': self.normalizer.get_as_dict(),
+            'datasplit_seed': self.datasplit_seed
         }

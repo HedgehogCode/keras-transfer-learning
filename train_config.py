@@ -21,9 +21,11 @@ def main(arguments):
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('configfile', help='Config file',
-                        type=argparse.FileType('r'), required=False)
+                        type=argparse.FileType('r'))
     parser.add_argument('-e', '--epochs', help='Number of epochs',
                         type=int, required=True)
+    parser.add_argument('-i', '--initial_epoch', help='The initial epoch',
+                        type=int, default=0)
     # TODO add other arguments to control training
     # Especially continue training
     args = parser.parse_args(arguments)
@@ -40,7 +42,7 @@ def main(arguments):
                              conf_backbone, conf_head, conf_training, conf_data)
 
     # Run the training
-    train.train(conf_all, args.epochs)
+    train.train(conf_all, epochs=args.epochs, initial_epoch=args.initial_epoch)
 
 
 if __name__ == '__main__':
