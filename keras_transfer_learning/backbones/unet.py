@@ -35,8 +35,8 @@ def unet(filters=None, kernel_size=3, activation='relu', batch_norm=False, ndims
                                 activation=activation, batch_norm=batch_norm,
                                 name='features_down' + str(idx))(tensor)
             tensors.insert(0, tensor)
-            tensor = downsample_block(
-                ndims, name='downsample' + str(idx))(tensor)
+            tensor = downsample_block(ndims,
+                                      name='downsample' + str(idx))(tensor)
 
         # Middle
         tensor = conv_block(ndims, filters[-1], kernel_size=kernel_size,
@@ -46,9 +46,10 @@ def unet(filters=None, kernel_size=3, activation='relu', batch_norm=False, ndims
         # Upsample
         up_filters = filters[-2::-1]
         for idx, filt in enumerate(up_filters):
-            tensor = upsample_block(
-                ndims, filt, name='upsample' + str(idx))(tensor)
-            tensor = layers.Concatenate(axis=-1, name='concat' + str(idx))([tensors.pop(0), tensor])
+            tensor = upsample_conv_block(ndims, filt,
+                                         name='upsample' + str(idx))(tensor)
+            tensor = layers.Concatenate(axis=-1,
+                                        name='concat' + str(idx))([tensors.pop(0), tensor])
             tensor = conv_block(ndims, filt, kernel_size=kernel_size,
                                 activation=activation, batch_norm=batch_norm,
                                 name='features_up' + str(idx))(tensor)
@@ -56,13 +57,58 @@ def unet(filters=None, kernel_size=3, activation='relu', batch_norm=False, ndims
     return build
 
 
-def conv_block(ndims, filters, kernel_size=3, padding='same', activation='relu', batch_norm=False,
-               name=None):
+def unet_csbdeep(filter_base=32, depth=3, conv_per_depth=2, kernel_size=3, activation='relu',
+                 batch_norm=False, ndims=2):
+    """Creates a U-Net TODO
+
+    Returns:
+        function -- a function which applies a U-Net to an input tensor
+    """
+    def _upsample_filters(idx):
+        filt = [filter_base * 2 ** idx] * conv_per_depth
+        filt[-1] = int(filt[-1] / 2)
+        return filt
+
+    def build(tensor):
+        # Downsample
+        tensors = []
+        for idx in range(depth):
+            filt = filter_base * 2 ** idx
+            tensor = conv_block(ndims, filt, num=conv_per_depth, kernel_size=kernel_size,
+                                activation=activation, batch_norm=batch_norm,
+                                name='features_down' + str(idx))(tensor)
+            tensors.insert(0, tensor)
+            tensor = downsample_block(ndims,
+                                      name='downsample' + str(idx))(tensor)
+
+        # Middle
+        filt = _upsample_filters(depth)
+        tensor = conv_block(ndims, filt, num=conv_per_depth, kernel_size=kernel_size,
+                            activation=activation, batch_norm=batch_norm,
+                            name='features_middle')(tensor)
+
+        # Upsample
+        for idx in range(depth):
+            filt = _upsample_filters(idx)
+            tensor = upsample_block(ndims,
+                                    name='upsample' + str(idx))(tensor)
+            tensor = layers.Concatenate(axis=-1,
+                                        name='concat' + str(idx))([tensors.pop(0), tensor])
+            tensor = conv_block(ndims, filt, num=conv_per_depth, kernel_size=kernel_size,
+                                activation=activation, batch_norm=batch_norm,
+                                name='features_up' + str(idx))(tensor)
+        return tensor
+    return build
+
+
+def conv_block(ndims, filters, num=2, kernel_size=3, padding='same', activation='relu',
+               batch_norm=False, name=None):
     """Creates a block of two convolutional layers with actitivations after the convolutions.
 
     Arguments:
         ndims {int} -- number of dimensions
-        filters {int} -- number of filters for both convolutional layers.
+        filters {int or list} -- number of filters for both convolutional layers.
+        num {int} -- number of convolutional layers
 
     Keyword Arguments:
         kernel_size {tuple} -- size of the convolutional kernels (default: {(3, 3)})
@@ -77,25 +123,26 @@ def conv_block(ndims, filters, kernel_size=3, padding='same', activation='relu',
     """
     conv_fn = layers.Conv2D if ndims == 2 else layers.Conv3D
 
+    if isinstance(filters, list):
+        assert len(filters) == num
+    if isinstance(filters, int):
+        filters = [filters] * num
+
     def build(tensor):
         with K.name_scope(name):
-            tensor = conv_fn(filters, kernel_size, padding=padding,
-                             name=name + '_conv1')(tensor)
-            if batch_norm:
-                tensor = layers.BatchNormalization(name=name + '_bn1')(tensor)
-            tensor = layers.Activation(activation,
-                                       name=name + '_' + activation + '1')(tensor)
-            tensor = conv_fn(filters, kernel_size, padding=padding,
-                             name=name + '_conv2')(tensor)
-            if batch_norm:
-                tensor = layers.BatchNormalization(name=name + '_bn2')(tensor)
-            tensor = layers.Activation(activation,
-                                       name=name + '_' + activation + '2')(tensor)
+            for idx, filt in enumerate(filters, 1):
+                tensor = conv_fn(filt, kernel_size, padding=padding,
+                                 name=name + '_conv' + str(idx))(tensor)
+                if batch_norm:
+                    tensor = layers.BatchNormalization(
+                        name=name + '_bn' + str(idx))(tensor)
+                tensor = layers.Activation(activation,
+                                           name=name + '_' + activation + str(idx))(tensor)
         return tensor
     return build
 
 
-def upsample_block(ndims, filters, size=2, padding='same', name=None):
+def upsample_conv_block(ndims, filters, size=2, padding='same', name=None):
     """Creates an upsample block which consists of a upsampling layer and a convolutional layer
     with the number of filters.
 
@@ -119,6 +166,28 @@ def upsample_block(ndims, filters, size=2, padding='same', name=None):
             tensor = upsampling_fn(size, name=name + '_upsample')(tensor)
             tensor = conv_fn(filters, size, padding=padding,
                              name=name + '_conv_up')(tensor)
+        return tensor
+    return build
+
+
+def upsample_block(ndims, size=2, name=None):
+    """Creates an upsample block which consists of a upsampling layer.
+
+    Arguments:
+        ndims {int} -- number of dimensions
+
+    Keyword Arguments:
+        size {tuple} -- size of the upsampling and convolutional kernels (default: {(2, 2, 2)})
+        name {[type]} -- name of the block (default: {None})
+
+    Returns:
+        function -- a function which applies this block to a tensor
+    """
+    upsampling_fn = layers.UpSampling2D if ndims == 2 else layers.UpSampling3D
+
+    def build(tensor):
+        with K.name_scope(name):
+            tensor = upsampling_fn(size, name=name + '_upsample')(tensor)
         return tensor
     return build
 

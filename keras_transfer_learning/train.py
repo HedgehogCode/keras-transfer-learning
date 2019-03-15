@@ -25,28 +25,8 @@ def _tensorboard_callback(model_name, batch_size):
 
 
 def train(conf: config.Config, epochs: int, initial_epoch: int = 0):
-    # Prepare the model directory
+    # Get the model directory
     model_dir = os.path.join('.', 'models', conf.name)
-    if initial_epoch == 0:
-        if os.path.exists(model_dir):
-            raise ValueError(
-                "A model with the name {} already exists.".format(conf.name))
-        os.makedirs(model_dir)
-    else:
-        weights = sorted(glob(os.path.join(model_dir, 'weights_[0-9]*_*.h5')))
-        if weights == []:
-            raise ValueError('Did not find a valid weights file.')
-        last_weights = weights[-1]
-        matches = re.match(r'.*_(\d{4})_\d+\.\d{4}\.h5', last_weights)
-        if matches is None:
-            raise ValueError('Did not find a valid weights file.')
-        last_epoch = int(matches.group(1))
-        if last_epoch != initial_epoch:
-            raise ValueError('Cannot continue with after epoch {}. Last epoch was {}.'.format(
-                initial_epoch, last_epoch))
-
-    # Save the config
-    conf.to_yaml(os.path.join(model_dir, 'config.yaml'))
 
     # Create the input
     inp = layers.Input(conf.input_shape)
@@ -67,6 +47,18 @@ def train(conf: config.Config, epochs: int, initial_epoch: int = 0):
 
     # Continue with the training
     if initial_epoch != 0:
+        weights = sorted(glob(os.path.join(model_dir, 'weights_[0-9]*_*.h5')))
+        if weights == []:
+            raise ValueError('Did not find a valid weights file.')
+        last_weights = weights[-1]
+        matches = re.match(r'.*_(\d{4})_\d+\.\d{4}\.h5', last_weights)
+        if matches is None:
+            raise ValueError('Did not find a valid weights file.')
+        last_epoch = int(matches.group(1))
+        if last_epoch != initial_epoch:
+            raise ValueError('Cannot continue with after epoch {}. Last epoch was {}.'.format(
+                initial_epoch, last_epoch))
+
         model.load_weights(last_weights)
 
     # Prepare the data generators
@@ -84,6 +76,17 @@ def train(conf: config.Config, epochs: int, initial_epoch: int = 0):
     training_callbacks.append(_tensorboard_callback(
         conf.name, conf.training.batch_size))
     training_callbacks.extend(conf.training.create_callbacks())
+
+    # Prepare the model directory
+    if initial_epoch == 0:
+        if os.path.exists(model_dir):
+            raise ValueError(
+                "A model with the name {} already exists.".format(conf.name))
+        os.makedirs(model_dir)
+
+        # Save the config
+        conf.to_yaml(os.path.join(model_dir, 'config.yaml'))
+
 
     # Train the model
     history = model.fit_generator(train_generator, validation_data=val_generator,

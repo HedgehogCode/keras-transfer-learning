@@ -20,14 +20,16 @@ class BackboneConfig(ConfigHolder):
 
 def get_config(conf) -> BackboneConfig:
     if conf['name'] == 'unet':
-        return UnetBackboneConfig(conf['args'], conf['weights'])
+        return UNetBackboneConfig(conf['args'], conf['weights'])
+    if conf['name'] == 'unet-csbdeep':
+        return UNetCSBDeepBackboneConfig(conf['args'], conf['weights'])
     raise NotImplementedError(
         'The backbone {} is not implemented.'.format(conf['name']))
 
 
 # Implementations
 
-class UnetBackboneConfig(BackboneConfig):
+class UNetBackboneConfig(BackboneConfig):
 
     def __init__(self, args, weights):
         self.args = args
@@ -43,6 +45,26 @@ class UnetBackboneConfig(BackboneConfig):
     def get_as_dict(self):
         return {
             'name': 'unet',
+            'args': self.args,
+            'weights': self.weights
+        }
+
+class UNetCSBDeepBackboneConfig(BackboneConfig):
+
+    def __init__(self, args, weights):
+        self.args = args
+        self.weights = weights
+
+    def create_backbone(self, inp):
+        return unet.unet_csbdeep(**self.args)(inp)
+
+    def load_weights(self, model):
+        if self.weights is not None:
+            model.load_weights(self.weights, by_name=True)
+
+    def get_as_dict(self):
+        return {
+            'name': 'unet-csbdeep',
             'args': self.args,
             'weights': self.weights
         }

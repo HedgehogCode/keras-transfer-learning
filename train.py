@@ -47,7 +47,7 @@ def main(arguments):
                          conf_backbone, conf_head, conf_training, conf_data)
 
     # Run the training
-    train.train(conf, args.epochs)
+    train.train(conf, epochs=args.epochs)
 
 
 if __name__ == '__main__':
