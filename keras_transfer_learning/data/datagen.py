@@ -64,7 +64,7 @@ def data_fn_from_lists(data_x, data_y, dataaug_fn, prepare_fn):
         batch_y = [data_y[id] for id in ids]
 
         # Dataaug
-        batch_x, batch_y = dataaug_fn(batch_x, batch_y)
+        batch_x, batch_y = dataaug_fn([batch_x, batch_y])
 
         # Prepare for training
         return prepare_fn(batch_x, batch_y)

@@ -35,7 +35,7 @@ class Normalizer(ConfigHolder):
 class DataAugmenter(ConfigHolder):
 
     @abstractmethod
-    def __call__(self, batch_x, batch_y):
+    def __call__(self, data):
         raise NotImplementedError
 
 
@@ -88,11 +88,12 @@ class ImageAugDataAugmenter(DataAugmenter):
             augs.append(getattr(iaa, aug['name'])(**aug['args']))
         self.augmentor = iaa.Sequential(augs)
 
-    def __call__(self, batch_x, batch_y):
+    def __call__(self, data):
         aug_det = self.augmentor.to_deterministic()
-        batch_x = aug_det.augment_images(batch_x)
-        batch_y = aug_det.augment_images(batch_y)
-        return batch_x, batch_y
+        augmented = []
+        for batch in data:
+            augmented.append(aug_det.augment_images(batch))
+        return augmented
 
     def get_as_dict(self):
         return {
