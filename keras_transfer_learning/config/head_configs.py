@@ -5,7 +5,7 @@ import numpy as np
 from stardist.utils import edt_prob, star_dist
 
 from .config_holder import ConfigHolder
-from ..heads import segm, stardist
+from ..heads import segm, stardist, classification
 
 
 # Abstract definition
@@ -31,6 +31,8 @@ def get_config(conf) -> HeadConfig:
         return FgBgSegmHeadConfig(conf['args'], conf['prepare_model_args'])
     if conf['name'] == 'stardist':
         return StarDistHeadConfig(conf['args'], conf['prepare_model_args'])
+    if conf['name'] == 'classification':
+        return ClassificationHeadConfig(conf['args'], conf['prepare_model_args'])
     raise NotImplementedError(
         'The head {} is not implemented.'.format(conf['name']))
 
@@ -88,6 +90,29 @@ class StarDistHeadConfig(HeadConfig):
     def get_as_dict(self):
         return {
             'name': 'stardist',
+            'args': self.args,
+            'prepare_model_args': self.prepare_model_args
+        }
+
+
+class ClassificationHeadConfig(HeadConfig):
+
+    def __init__(self, args, prepare_model_args):
+        self.args = args
+        self.prepare_model_args = prepare_model_args
+
+    def create_head(self, backbone):
+        return classification.classification(**self.args)(backbone)
+
+    def prepare_model(self, model):
+        return stardist.prepare_for_training(model, **self.prepare_model_args)
+
+    def prepare_data(self, batch_x, batch_y):
+        return np.array(batch_x), np.array(batch_y)
+
+    def get_as_dict(self):
+        return {
+            'name': 'classification',
             'args': self.args,
             'prepare_model_args': self.prepare_model_args
         }
