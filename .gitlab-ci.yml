@@ -1,0 +1,6 @@
+image: python:3.6
+test:
+  script:
+  - pip install numpy
+  - pip install -r requirements.txt
+  - pytest
