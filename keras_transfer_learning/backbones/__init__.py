@@ -3,3 +3,4 @@ from . import resnet2
 from . import resnext
 
 from . import unet
+from . import convnet

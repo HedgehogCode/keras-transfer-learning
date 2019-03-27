@@ -1,7 +1,7 @@
 from abc import abstractmethod
 
 from .config_holder import ConfigHolder
-from ..backbones import unet
+from ..backbones import unet, convnet
 
 
 # Abstract definition
@@ -23,6 +23,8 @@ def get_config(conf) -> BackboneConfig:
         return UNetBackboneConfig(conf['args'], conf['weights'])
     if conf['name'] == 'unet-csbdeep':
         return UNetCSBDeepBackboneConfig(conf['args'], conf['weights'])
+    if conf['name'] == 'convnet':
+        return ConvNetBackboneConfig(conf['args'], conf['weights'])
     raise NotImplementedError(
         'The backbone {} is not implemented.'.format(conf['name']))
 
@@ -49,6 +51,7 @@ class UNetBackboneConfig(BackboneConfig):
             'weights': self.weights
         }
 
+
 class UNetCSBDeepBackboneConfig(BackboneConfig):
 
     def __init__(self, args, weights):
@@ -65,6 +68,27 @@ class UNetCSBDeepBackboneConfig(BackboneConfig):
     def get_as_dict(self):
         return {
             'name': 'unet-csbdeep',
+            'args': self.args,
+            'weights': self.weights
+        }
+
+
+class ConvNetBackboneConfig(BackboneConfig):
+
+    def __init__(self, args, weights):
+        self.args = args
+        self.weights = weights
+
+    def create_backbone(self, inp):
+        return convnet.convnet(**self.args)(inp)
+
+    def load_weights(self, model):
+        if self.weights is not None:
+            model.load_weights(self.weights, by_name=True)
+
+    def get_as_dict(self):
+        return {
+            'name': 'convnet',
             'args': self.args,
             'weights': self.weights
         }
