@@ -9,7 +9,7 @@
     "python.unitTest.pyTestEnabled": true,
     "spellright.language": [],
     "spellright.documentTypes": [
-        "latex",
-        "plaintext"
-    ]
+        "markdown"
+    ],
+    "editor.rulers": [100]
 }

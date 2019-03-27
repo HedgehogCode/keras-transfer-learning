@@ -1,0 +1,18 @@
+; Top level editor config.
+root = true
+
+; All files
+[*]
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+; Python
+[*.py]
+indent_style = space
+indent_size = 4
+
+; YAML
+[*.yaml, *.yml]
+indent_style = space
+indent_size = 2
