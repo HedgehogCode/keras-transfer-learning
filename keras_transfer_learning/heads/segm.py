@@ -1,5 +1,9 @@
+import numpy as np
 import tensorflow as tf
+from scipy.ndimage import morphology
+from skimage import measure
 
+import keras.backend as K
 from keras import layers
 
 
@@ -48,3 +52,48 @@ def prepare_for_training(model, optimizer='adam', loss='binary_crossentropy'):
     # Compile the model
     model.compile(optimizer, loss=loss)
     return model
+
+
+def weighted_crossentropy(y_true, y_pred):
+    # TODO check if this is correct
+    # TODO not testet!!!!
+    [seg, weight] = tf.unstack(y_true, 2, axis=-1)
+    fg_bg = K.stack(seg, 1 - seg, -1)
+
+    # Compute the cross-entropy loss
+    # TODO check if the orignal paper really uses binary crossentropy
+    crossentropy = K.binary_crossentropy(fg_bg, y_pred)
+
+    # Weight pixel-wise crossentropy loss and sum up
+    return K.sum(weight * crossentropy)
+
+
+def unet_weight_map(y, wc=None, w0=10, sigma=5):
+    # Copied from https://stackoverflow.com/a/53179982
+
+    labels = measure.label(y)
+    no_labels = labels == 0
+    label_ids = sorted(np.unique(labels))[1:]
+
+    if len(label_ids) > 1:
+        distances = np.zeros((y.shape[0], y.shape[1], len(label_ids)))
+
+        for i, label_id in enumerate(label_ids):
+            distances[:, :, i] = morphology.distance_transform_edt(
+                labels != label_id)
+
+        distances = np.sort(distances, axis=2)
+        d1 = distances[:, :, 0]
+        d2 = distances[:, :, 1]
+        # TODO check if the weight map is only computed for background pixels
+        w = w0 * np.exp(-1/2*((d1 + d2) / sigma)**2) * no_labels
+
+        if wc:
+            class_weights = np.zeros_like(y)
+            for k, v in wc.items():
+                class_weights[y == k] = v
+            w = w + class_weights
+    else:
+        w = np.zeros_like(y)
+
+    return w
