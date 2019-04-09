@@ -1,0 +1,14 @@
+name: 'cytogen'
+data_dir: 'data/cytogen_hl60_low-noise'
+train_val_split: 0.9
+normalizer: 'min-max'
+datasplit_seed: 42
+dataaug:
+  name: 'imgaug'
+  augmentors:
+    - name: 'CropToFixedSize'
+      args: { width: 256, height: 256 }
+    - name: 'Fliplr'
+      args: { p: 0.5 }
+    - name: 'Flipud'
+      args: { p: 0.5 }
