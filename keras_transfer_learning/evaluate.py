@@ -1,4 +1,7 @@
 import os
+import math
+
+import numpy as np
 
 from keras import layers
 from keras import models
@@ -7,10 +10,11 @@ import stardist.utils
 import stardist.nms
 
 from keras_transfer_learning.utils import utils, mean_average_precision
-from keras_transfer_learning import config
+from keras_transfer_learning.config import config
+from keras_transfer_learning.backbones import unet
 
 
-def evaluate(conf: config.config.Config):
+def evaluate(conf: config.Config):
     # Get the model directory
     model_dir = os.path.join('.', 'models', conf.name)
 
@@ -39,7 +43,19 @@ def evaluate(conf: config.config.Config):
 
     predictions = []
     for x in test_x:
-        prob, dist = model.predict(x[None, ..., None])
+        # Padding
+        pad_0 = 8 * math.ceil(x.shape[0] / 8) - x.shape[0]
+        pad_1 = 8 * math.ceil(x.shape[1] / 8) - x.shape[1]
+        img = np.pad(x, ((0, pad_0), (0, pad_1)), mode='constant')
+
+        prob, dist = model.predict(img[None, ..., None])
+
+        # Remove padding
+        prob = np.take(prob[0], range(0, x.shape[0]), axis=0)
+        prob = np.take(prob, range(0, x.shape[1]), axis=1)
+        dist = np.take(dist[0], range(0, x.shape[0]), axis=0)
+        dist = np.take(dist, range(0, x.shape[1]), axis=1)
+
         coord = stardist.utils.dist_to_coord(dist)
         points = stardist.nms.non_maximum_suppression(
             coord, prob, prob_thresh=0.4)
