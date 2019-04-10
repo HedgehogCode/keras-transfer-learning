@@ -9,6 +9,7 @@ from keras import callbacks
 from keras import models
 
 from keras_transfer_learning.config import config
+from keras_transfer_learning.utils import utils
 
 
 def _checkpoints_callback(model_dir):
@@ -47,18 +48,7 @@ def train(conf: config.Config, epochs: int, initial_epoch: int = 0):
 
     # Continue with the training
     if initial_epoch != 0:
-        weights = sorted(glob(os.path.join(model_dir, 'weights_[0-9]*_*.h5')))
-        if weights == []:
-            raise ValueError('Did not find a valid weights file.')
-        last_weights = weights[-1]
-        matches = re.match(r'.*_(\d{4})_\d+\.\d{4}\.h5', last_weights)
-        if matches is None:
-            raise ValueError('Did not find a valid weights file.')
-        last_epoch = int(matches.group(1))
-        if last_epoch != initial_epoch:
-            raise ValueError('Cannot continue with after epoch {}. Last epoch was {}.'.format(
-                initial_epoch, last_epoch))
-
+        last_weights = utils.get_last_weights(model_dir, initial_epoch)
         model.load_weights(last_weights)
 
     # Prepare the data generators

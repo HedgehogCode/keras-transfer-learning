@@ -2,7 +2,6 @@ import os
 from abc import abstractmethod
 
 import numpy as np
-from tifffile import imread
 
 from imgaug import augmenters as iaa
 
