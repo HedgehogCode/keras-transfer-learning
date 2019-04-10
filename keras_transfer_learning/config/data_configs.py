@@ -24,6 +24,10 @@ class DataConfig(ConfigHolder):
     def create_val_datagen(self, prepare_fn):
         raise NotImplementedError
 
+    @abstractmethod
+    def create_test_dataset(self):
+        raise NotImplementedError
+
 
 class Normalizer(ConfigHolder):
 
@@ -91,6 +95,7 @@ class UInt8RangeNormalizer(Normalizer):
 class MinMaxNormalizer(Normalizer):
 
     def __call__(self, data):
+        # TODO only on one image not the whole batch?
         return data - np.min(data) / np.max(data)
 
     def get_as_dict(self):
@@ -161,6 +166,11 @@ class StarDistDSB2018DataConfig(DataConfig):
             val_y=self._data['val_y'],
             prepare_fn=self._normalize_prepare(prepare_fn))
 
+    def create_test_dataset(self):
+        test_x, test_y = stardist_dsb2018.load_test(self.data_dir)
+        test_x = [self.normalizer(x) for x in test_x]
+        return test_x, test_y
+
     def get_as_dict(self):
         return {
             'name': 'stardist-dsb2018',
@@ -211,6 +221,11 @@ class CytogenDataConfig(DataConfig):
             val_x=self._data['val_x'],
             val_y=self._data['val_y'],
             prepare_fn=self._normalize_prepare(prepare_fn))
+
+    def create_test_dataset(self):
+        test_x, test_y = cytogen.load_test(self.data_dir)
+        test_x = [self.normalizer(x) for x in test_x]
+        return test_x, test_y
 
     def get_as_dict(self):
         return {
