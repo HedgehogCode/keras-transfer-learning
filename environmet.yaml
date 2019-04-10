@@ -84,6 +84,7 @@ dependencies:
     - python-dateutil==2.8.0
     - pytz==2019.1
     - pywavelets==1.0.3
+    - rope==0.14.0
     - scikit-image==0.15.0
     - shapely==1.6.4.post2
     - stardist==0.2.0
