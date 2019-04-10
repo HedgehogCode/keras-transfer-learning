@@ -52,16 +52,15 @@ def data_generator_from_lists(batch_size, data_x, data_y, dataaug_fn, prepare_fn
 
 def data_generator_for_validation(val_x, val_y, prepare_fn):
     ids = list(range(len(val_x)))
-    data_fn = data_fn_from_lists(
-        val_x, val_y, lambda x, y: (x, y), prepare_fn)
+    data_fn = data_fn_from_lists(val_x, val_y, lambda x: x, prepare_fn)
     return DataGenerator(ids, 1, data_fn, shuffle=False)
 
 
 def data_fn_from_lists(data_x, data_y, dataaug_fn, prepare_fn):
     def data_fn(ids):
         # Loading
-        batch_x = [data_x[id] for id in ids]
-        batch_y = [data_y[id] for id in ids]
+        batch_x = [data_x[i] for i in ids]
+        batch_y = [data_y[i] for i in ids]
 
         # Dataaug
         batch_x, batch_y = dataaug_fn([batch_x, batch_y])
