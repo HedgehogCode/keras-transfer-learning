@@ -62,17 +62,24 @@ dependencies:
   - tensorflow-estimator=1.13.0=py_0
   - tensorflow-gpu=1.13.1=h0d30ee6_0
   - pip:
+    - astroid==2.2.5
+    - autopep8==1.4.3
     - csbdeep==0.3.0
     - cycler==0.10.0
     - decorator==4.4.0
     - imageio==2.5.0
     - imgaug==0.2.8
+    - isort==4.3.17
     - kiwisolver==1.0.1
+    - lazy-object-proxy==1.3.1
     - matplotlib==3.0.3
+    - mccabe==0.6.1
     - networkx==2.2
     - opencv-python==4.0.1.24
     - pandas==0.24.2
     - pillow==6.0.0
+    - pycodestyle==2.5.0
+    - pylint==2.3.1
     - pyparsing==2.4.0
     - python-dateutil==2.8.0
     - pytz==2019.1
@@ -82,5 +89,7 @@ dependencies:
     - stardist==0.2.0
     - tifffile==2019.3.18
     - tqdm==4.31.1
+    - typed-ast==1.3.1
+    - wrapt==1.11.1
 prefix: /home/benjamin/miniconda3/envs/bachelorthesis
 
