@@ -6,6 +6,7 @@ from stardist.utils import edt_prob, star_dist
 
 from .config_holder import ConfigHolder
 from ..heads import segm, stardist, classification
+from ..backbones import unet
 
 
 # Abstract definition
@@ -80,6 +81,10 @@ class StarDistHeadConfig(HeadConfig):
         return stardist.prepare_for_training(model, **self.prepare_model_args)
 
     def prepare_data(self, batch_x, batch_y):
+        # TODO should this (especially factor) be somewhere in the config?
+        # It depends on the backbone...
+        batch_x = unet.crop_data(np.array(batch_x), factor=8)
+        batch_y = unet.crop_data(np.array(batch_y), factor=8)
         prob = np.stack([edt_prob(lbl) for lbl in batch_y])[..., None]
         dist = np.stack([star_dist(lbl, self.args['n_rays'])
                          for lbl in batch_y])

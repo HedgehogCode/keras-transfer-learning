@@ -16,6 +16,8 @@ Papers:
 
 TODO valid paddding
 """
+import numpy as np
+
 import keras.backend as K
 from keras import layers
 
@@ -236,3 +238,28 @@ def downsample_block(ndims, size=2, name=None):
             tensor = maxpool_fn(size, name=name + '_maxpool')(tensor)
         return tensor
     return build
+
+
+def crop_data(data, factor: int = 8):
+    """Crops the numpy data arrays such that the spatial dimensions (1 and 2) are a multiple of
+    the factor argument.
+
+    Arguments:
+        data {ndarray} -- the data with the dimensions (batch,width,height,...)
+
+    Keyword Arguments:
+        factor {int} -- each spatial dimension is a muliple of factor after the crop
+
+    Returns:
+        ndarray -- the cropped data
+    """
+    cropped = data
+    cropped = _crop_axis(cropped, factor, 1)
+    cropped = _crop_axis(cropped, factor, 2)
+    return cropped
+
+
+def _crop_axis(data, factor: int, axis: int):
+    size = data.shape[axis]
+    cropped_size = factor * (size // factor)
+    return np.take(data, range(cropped_size), axis=axis)
