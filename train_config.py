@@ -5,7 +5,7 @@
 
 import sys
 import argparse
-import yaml
+from yaml import safe_load as yaml_load
 
 from keras_transfer_learning.config import config
 from keras_transfer_learning.config import backbone_configs
@@ -31,7 +31,7 @@ def main(arguments):
     args = parser.parse_args(arguments)
 
     # Load the config yaml
-    conf = yaml.load(args.configfile)
+    conf = yaml_load(args.configfile)
 
     # Create the config objects
     conf_backbone = backbone_configs.get_config(conf['backbone'])
