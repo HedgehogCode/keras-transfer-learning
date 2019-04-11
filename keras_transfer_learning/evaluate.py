@@ -2,6 +2,7 @@ import os
 import math
 
 import numpy as np
+import tqdm
 
 from keras import layers
 from keras import models
@@ -42,7 +43,7 @@ def evaluate(conf: config.Config):
     test_x, test_y = conf.data.create_test_dataset()
 
     predictions = []
-    for x in test_x:
+    for x in tqdm.tqdm(test_x):
         # Padding
         pad_0 = 8 * math.ceil(x.shape[0] / 8) - x.shape[0]
         pad_1 = 8 * math.ceil(x.shape[1] / 8) - x.shape[1]
@@ -51,7 +52,7 @@ def evaluate(conf: config.Config):
         prob, dist = model.predict(img[None, ..., None])
 
         # Remove padding
-        prob = np.take(prob[0], range(0, x.shape[0]), axis=0)
+        prob = np.take(prob[0, ..., 0], range(0, x.shape[0]), axis=0)
         prob = np.take(prob, range(0, x.shape[1]), axis=1)
         dist = np.take(dist[0], range(0, x.shape[0]), axis=0)
         dist = np.take(dist, range(0, x.shape[1]), axis=1)
