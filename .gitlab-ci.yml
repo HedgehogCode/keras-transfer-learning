@@ -1,6 +1,7 @@
 image: continuumio/miniconda3:latest
 test:
   script:
+  - sudo apt install -yq build-essential
   - conda env create -f environment.yaml
   - conda activate bachelorthesis
   - pytest
