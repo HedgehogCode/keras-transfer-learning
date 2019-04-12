@@ -4,5 +4,5 @@ test:
   - apt update
   - apt install -yq build-essential
   - conda env create -f environment.yaml
-  - conda activate bachelorthesis
+  - source activate bachelorthesis
   - pytest
