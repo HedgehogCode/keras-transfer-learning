@@ -1,4 +1,4 @@
-image: miniconda:latest
+image: continuumio/miniconda3:latest
 test:
   script:
   - conda env create -f environment.yaml
