@@ -7,11 +7,6 @@ import sys
 import argparse
 from yaml import safe_load as yaml_load
 
-from keras_transfer_learning.config import config
-from keras_transfer_learning.config import backbone_configs
-from keras_transfer_learning.config import head_configs
-from keras_transfer_learning.config import training_configs
-from keras_transfer_learning.config import data_configs
 from keras_transfer_learning import train
 
 
@@ -38,13 +33,15 @@ def main(arguments):
     # Especially continue training
     args = parser.parse_args(arguments)
 
-    # Create the config objects
-    conf_backbone = backbone_configs.get_config(yaml_load(args.backbone))
-    conf_head = head_configs.get_config(yaml_load(args.head))
-    conf_training = training_configs.get_config(yaml_load(args.training))
-    conf_data = data_configs.get_config(yaml_load(args.data))
-    conf = config.Config(args.name, yaml_load(args.input_shape),
-                         conf_backbone, conf_head, conf_training, conf_data)
+    # Create the config dict
+    conf = {
+        'name': args.name
+        'input_shape': yaml_load(args.input_shape),
+        'backbone': yaml_load(args.backbone),
+        'head': yaml_load(args.head),
+        'training': yaml_load(args.training),
+        'data': yaml_load(args.data)
+    }
 
     # Run the training
     train.train(conf, epochs=args.epochs)

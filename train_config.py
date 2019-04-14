@@ -33,16 +33,8 @@ def main(arguments):
     # Load the config yaml
     conf = yaml_load(args.configfile)
 
-    # Create the config objects
-    conf_backbone = backbone_configs.get_config(conf['backbone'])
-    conf_head = head_configs.get_config(conf['head'])
-    conf_training = training_configs.get_config(conf['training'])
-    conf_data = data_configs.get_config(conf['data'])
-    conf_all = config.Config(conf['name'], conf['input_shape'],
-                             conf_backbone, conf_head, conf_training, conf_data)
-
     # Run the training
-    train.train(conf_all, epochs=args.epochs, initial_epoch=args.initial_epoch)
+    train.train(conf, epochs=args.epochs, initial_epoch=args.initial_epoch)
 
 
 if __name__ == '__main__':

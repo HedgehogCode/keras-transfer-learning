@@ -1,6 +1,7 @@
 import os
 import re
 from glob import glob
+import yaml
 
 import pandas as pd
 
@@ -12,6 +13,7 @@ from keras_transfer_learning.config import config
 from keras_transfer_learning.utils import utils
 from keras_transfer_learning.backbones import unet, convnet
 from keras_transfer_learning.heads import segm, stardist, classification
+from keras_transfer_learning.data import dataaug
 
 
 ###################################################################################################
@@ -58,6 +60,17 @@ def _prepare_model(conf, model):
 ###################################################################################################
 
 def _create_data_generators(conf):
+    # TODO make more general
+    # TODO datasplit seed + smaller datasets
+    train_x, train_y, val_x, val_y = stardist_dsb2018.load_train(data_dir=conf['data']['data_dir'],
+                train_val_split=conf['data']['train_val_split'])
+
+    train_gen = datagen.data_generator_from_lists(batch_size=conf['training']['batch_size'],
+                data_x=train_x, data_y=train_y,
+                dataaug_fn=_create_dataaug_fn(conf),
+                prepare_fn=_create_prepare_fn(conf))
+
+
     # FIXME: Create data generators for different datasets
     # load_data()
     # train_generator = conf.data.create_train_datagen(
@@ -65,6 +78,16 @@ def _create_data_generators(conf):
     # val_generator = conf.data.create_val_datagen(conf.head.prepare_data)
     return None, None
 
+
+def _create_dataaug_fn(conf):
+    return {
+        'imgaug': lambda: dataaug.create_imgaug_augmentor(conf['data']['dataaug']['augmentors']),
+    }[conf['data']['dataaug']['name']]()
+
+
+def _create_prepare_fn(conf):
+    # TODO
+    return None
 
 ###################################################################################################
 #     TRAINING HELPERS
@@ -143,8 +166,6 @@ def train(conf: dict, epochs: int, initial_epoch: int = 0):
     # Create the callbacks
     training_callbacks = _create_callbacks(conf, model_dir)
 
-    # TODO: WIP CONTINUE HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
     # Prepare the model directory
     if initial_epoch == 0:
         if os.path.exists(model_dir):
@@ -153,7 +174,7 @@ def train(conf: dict, epochs: int, initial_epoch: int = 0):
         os.makedirs(model_dir)
 
         # Save the config
-        conf.to_yaml(os.path.join(model_dir, 'config.yaml'))
+        yaml.dump(conf, os.path.join(model_dir, 'config.yaml'))
 
     # Train the model
     history = model.fit_generator(train_generator, validation_data=val_generator,

@@ -1,6 +1,6 @@
 import os
 
-from .uttils import load_and_split, load_images_and_masks
+from .utils import load_and_split, load_images_and_masks
 
 
 def load_train(data_dir, seed=42, train_val_split=0.9):
