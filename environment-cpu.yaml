@@ -1,0 +1,28 @@
+name: bachelorthesis
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.6
+  - pip=19.0
+  - numpy=1.16
+  - scipy=1.2
+  - scikit-image=0.15
+  - pandas=0.24
+  - matplotlib=3.0
+  - yaml=0.1
+  - tensorflow=1.13
+  - cudatoolkit=10.0
+  - cudnn=7.3
+  - keras=2.2.4
+  - tqdm=4.31
+  - tifffile==0.15
+  - pip:
+    - stardist==0.2.0
+    - csbdeep==0.3.0
+    - imgaug==0.2.8
+    - pytest==4.4.0
+    - pylint==2.3.1
+    - autopep8==1.4.3
+    - pycodestyle==2.5.0
+    - pyparsing==2.4.0

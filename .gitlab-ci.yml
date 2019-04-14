@@ -3,6 +3,6 @@ test:
   script:
   - apt update
   - apt install -yq build-essential
-  - conda env create -f environment.yaml
+  - conda env create -f environment-cpu.yaml
   - source activate bachelorthesis
   - pytest
