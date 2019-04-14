@@ -2,7 +2,7 @@ image: continuumio/miniconda3:latest
 test:
   script:
   - apt update
-  - apt install -yq build-essential
+  - apt install -yq build-essential libsm6 libxext6
   - conda env create -f environment-cpu.yaml
   - source activate bachelorthesis
   - pytest
