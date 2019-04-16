@@ -2,7 +2,6 @@
 data.
 
 LIST OF TODOS:
-TODO Fix unet image size limitation
 TODO Add unet with border (head)
 """
 import os
