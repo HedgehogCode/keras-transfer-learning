@@ -1,11 +1,14 @@
 import struct
+import math
 
 import numpy as np
 import keras
 
 
 class DataGenerator(keras.utils.Sequence):
-    """A generic keras data generator. Handle shuffeling, reproducability and batches."""
+    """A generic keras data generator. Handles shuffeling and batches. Also allowes to set the
+    epoch length independend from the number of data samples.
+    """
 
     def __init__(self, ids, batch_size, data_fn, shuffle=True, epoch_len=None):
         self.ids = ids
@@ -19,18 +22,40 @@ class DataGenerator(keras.utils.Sequence):
             self.epoch_len = epoch_len
         else:
             self.epoch_len = len(ids)
+        # Round epoch length down according to the batch size
+        self.epoch_len = batch_size * (self.epoch_len // batch_size)
         self.on_epoch_end()
 
     def __len__(self):
         """Denotes the number of batches per epoch"""
-        return int(np.floor(self.epoch_len / self.batch_size))
+        return self.epoch_len // self.batch_size
 
     def on_epoch_end(self):
         """Updates indexes after each epoch"""
         # Prepare the indexes for this epoch
-        self.indexes = np.arange(len(self.ids))
+        num_samples = len(self.ids)
+        epoch_len = self.epoch_len
+        if num_samples <= epoch_len:
+            # Less samples than needed per epoch
+            all_indexes = []
+            # Repeat all indices
+            for _ in range(math.ceil(epoch_len / num_samples)):
+                all_indexes.extend(self._create_indexes_array())
+            self.indexes = all_indexes
+        else:
+            # More samples than needed per epoch
+            if hasattr(self, 'indexes') and len(self.indexes) >= epoch_len * 2:
+                # Enough samples left for one mor epoch
+                self.indexes = self.indexes[epoch_len:]
+            else:
+                # Not enough samples left
+                self.indexes = self._create_indexes_array()
+
+    def _create_indexes_array(self):
+        indexes = np.arange(len(self.ids))
         if self.shuffle is True:
-            np.random.shuffle(self.indexes)
+            np.random.shuffle(indexes)
+        return indexes
 
     def __getitem__(self, index):
         """Generate one batch of data"""
