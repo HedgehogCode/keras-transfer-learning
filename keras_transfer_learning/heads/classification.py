@@ -1,3 +1,5 @@
+import numpy as np
+
 import tensorflow as tf
 
 import keras.backend as K
@@ -51,5 +53,8 @@ def classification(n_classes: int, flatten: bool = True, feature_layer: int = 0,
 
 def prepare_for_training(model, optimizer='adam', loss='categorical_crossentropy'):
     # Compile the model
-    m.compile(optimizer, loss=loss)
-    return m
+    model.compile(optimizer, loss=loss)
+    return model
+
+def prepare_data(batch_x, batch_y):
+    return np.array(batch_x), np.array(batch_y)

@@ -54,6 +54,15 @@ def prepare_for_training(model, optimizer='adam', loss='binary_crossentropy'):
     return model
 
 
+def prepare_data_fgbg(batch_x, batch_y):
+    out_x = batch_x[..., None]  # TODO input with channels?
+    foreground = np.array(batch_y) > 0
+    background = np.logical_not(foreground)
+    out_y = np.array(
+        np.stack([foreground, background], axis=-1), dtype='float32')
+    return out_x, out_y
+
+
 def weighted_crossentropy(y_true, y_pred):
     # TODO check if this is correct
     # TODO not testet!!!!

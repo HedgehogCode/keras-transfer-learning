@@ -1,6 +1,11 @@
+"""General training script. Uses a config dictionary to create the model and train it on configured
+data.
+
+LIST OF TODOS:
+TODO Fix unet image size limitation
+TODO Add unet with border (head)
+"""
 import os
-import re
-from glob import glob
 import yaml
 
 import pandas as pd
@@ -12,7 +17,7 @@ from keras import models
 from keras_transfer_learning.utils import utils
 from keras_transfer_learning.backbones import unet, convnet
 from keras_transfer_learning.heads import segm, stardist, classification
-from keras_transfer_learning.data import dataaug
+from keras_transfer_learning.data import dataaug, datagen, stardist_dsb2018, cytogen
 
 
 ###################################################################################################
@@ -38,7 +43,6 @@ def _load_weights(conf, model):
 ###################################################################################################
 
 def _create_head(conf, backbone):
-    # FIXME Add unet with border?
     return {
         'fgbg-segm': lambda: segm.segm(num_classes=2, **conf['head']['args'])(backbone),
         'stardist': lambda: stardist.stardist(**conf['head']['args'])(backbone),
@@ -59,23 +63,41 @@ def _prepare_model(conf, model):
 ###################################################################################################
 
 def _create_data_generators(conf):
-    # TODO make more general
-    # TODO datasplit seed + smaller datasets
-    train_x, train_y, val_x, val_y = stardist_dsb2018.load_train(data_dir=conf['data']['data_dir'],
-                train_val_split=conf['data']['train_val_split'])
-
-    train_gen = datagen.data_generator_from_lists(batch_size=conf['training']['batch_size'],
-                data_x=train_x, data_y=train_y,
-                dataaug_fn=_create_dataaug_fn(conf),
-                prepare_fn=_create_prepare_fn(conf))
+    # Decide which function is appropriate
+    return {
+        'stardist_dsb2018': _create_data_generators_from_lists,
+        'cytogen': _create_data_generators_from_lists
+    }[conf['data']['name']](conf)
 
 
-    # FIXME: Create data generators for different datasets
-    # load_data()
-    # train_generator = conf.data.create_train_datagen(
-    #     conf.training.batch_size, conf.head.prepare_data)
-    # val_generator = conf.data.create_val_datagen(conf.head.prepare_data)
-    return None, None
+def _create_data_generators_from_lists(conf):
+    # Find the appropriate load function
+    load_fn = {
+        'stardist_dsb2018': stardist_dsb2018.load_train,
+        'cytogen': cytogen.load_train
+    }[conf['data']['name']]
+
+    # Load the data
+    seed = conf['data'].get('datasplit_seed', 42)
+    train_val_split = conf['data'].get('train_val_split', 0.9)
+    num_train = conf['data'].get('num_train', None)
+    part = conf['data'].get('part', 0)
+    train_x, train_y, val_x, val_y = load_fn(
+        data_dir=conf['data']['data_dir'], seed=seed, train_val_split=train_val_split,
+        num_train=num_train, part=part)
+
+    # Create the prepare and dataaug functions
+    prepare_fn = _create_prepare_fn(conf)
+    dataaug_fn = _create_dataaug_fn(conf)
+
+    # Create the generators
+    train_gen = datagen.data_generator_from_lists(
+        batch_size=conf['training']['batch_size'], data_x=train_x, data_y=train_y,
+        dataaug_fn=dataaug_fn, prepare_fn=prepare_fn)
+    val_gen = datagen.data_generator_for_validation(
+        val_x=val_x, val_y=val_y, prepare_fn=prepare_fn)
+
+    return train_gen, val_gen
 
 
 def _create_dataaug_fn(conf):
@@ -85,8 +107,12 @@ def _create_dataaug_fn(conf):
 
 
 def _create_prepare_fn(conf):
-    # TODO
-    return None
+    return {
+        'stardist': lambda x, y: stardist.prepare_data(conf['head']['args']['n_rays'], x, y),
+        'fgbg-segm': segm.prepare_data_fgbg,
+        'classification': classification.prepare_data
+    }[conf['head']['name']]
+
 
 ###################################################################################################
 #     TRAINING HELPERS
@@ -96,8 +122,8 @@ def _create_callbacks(conf, model_dir):
     training_callbacks = []
 
     callback_fns = {
-        'early_stopping': keras.callbacks.EarlyStopping,
-        'reduce_lr_on_plateau': keras.callbacks.ReduceLROnPlateau
+        'early_stopping': callbacks.EarlyStopping,
+        'reduce_lr_on_plateau': callbacks.ReduceLROnPlateau
     }
 
     # Default callbackse

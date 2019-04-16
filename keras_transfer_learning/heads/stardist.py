@@ -1,9 +1,12 @@
+import numpy as np
+
 import tensorflow as tf
 
 from keras import layers
 from keras import models
 
 from stardist.model import masked_loss_mae, masked_loss_mse
+from stardist.utils import edt_prob, star_dist
 
 
 def stardist(n_rays, feature_layer=0, feature_kernel_size=3, feature_activation='relu',
@@ -64,3 +67,12 @@ def prepare_for_training(model, optimizer='adam', dist_loss='mae'):
     # Compile the model
     m.compile(optimizer, loss=['binary_crossentropy', dist_loss_fn])
     return m
+
+
+def prepare_data(n_rays, batch_x, batch_y):
+    prob = np.stack([edt_prob(lbl) for lbl in batch_y])[..., None]
+    dist = np.stack([star_dist(lbl, n_rays=n_rays)
+                     for lbl in batch_y])
+    dist_mask = prob
+    img = (np.array(batch_x, dtype='float32') / 255)[..., None]
+    return [img, dist_mask], [prob, dist]
