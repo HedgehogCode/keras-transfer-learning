@@ -11,11 +11,10 @@ import stardist.utils
 import stardist.nms
 
 from keras_transfer_learning.utils import utils, mean_average_precision
-from keras_transfer_learning.config import config
 from keras_transfer_learning.backbones import unet
 
 
-def evaluate(conf: config.Config):
+def evaluate(conf):
     # Get the model directory
     model_dir = os.path.join('.', 'models', conf.name)
 

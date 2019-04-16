@@ -9,7 +9,6 @@ from keras import layers
 from keras import callbacks
 from keras import models
 
-from keras_transfer_learning.config import config
 from keras_transfer_learning.utils import utils
 from keras_transfer_learning.backbones import unet, convnet
 from keras_transfer_learning.heads import segm, stardist, classification
