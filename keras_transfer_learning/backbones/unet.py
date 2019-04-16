@@ -74,7 +74,7 @@ def unet(filters=None, kernel_size=3, activation='relu', batch_norm=False, ndims
                                          name='upsample' + str(idx))(tensor)
             skip_tensor = tensors.pop(0)
             if padding_fix:
-                _CropLike()([tensor, skip_tensor])
+                tesor = _CropLike()([tensor, skip_tensor])
             tensor = layers.Concatenate(axis=-1,
                                         name='concat' + str(idx))([skip_tensor, tensor])
             tensor = conv_block(ndims, filt, kernel_size=kernel_size,
@@ -135,7 +135,7 @@ def unet_csbdeep(filter_base=32, depth=3, conv_per_depth=2, kernel_size=3, activ
                                     name='upsample' + str(idx))(tensor)
             skip_tensor = tensors.pop(0)
             if padding_fix:
-                _CropLike()([tensor, skip_tensor])
+                tensor = _CropLike()([tensor, skip_tensor])
             tensor = layers.Concatenate(axis=-1,
                                         name='concat' + str(idx))([skip_tensor, tensor])
             tensor = conv_block(ndims, filt, num=conv_per_depth, kernel_size=kernel_size,
@@ -295,15 +295,16 @@ class _PadToMultiple(layers.Layer):
         super(_PadToMultiple, self).build(input_shape)
 
     def call(self, t_x):
-        ndims = t_x.numDimensions() - 2  # - (batch dim + channel dim)
+        ndims = len(t_x.shape) - 2  # - (batch dim + channel dim)
         factors = [1] + ([self.factor] * ndims) + \
             [1]  # Factor 1 for batch + channels
 
-        t_shape = tf.shape(t_x, out_type=tf.dtypes.int32)
+        t_shape = tf.dtypes.cast(tf.shape(t_x, out_type=tf.dtypes.int32), dtype=tf.dtypes.float32)
         t_factors = tf.constant(factors, dtype=tf.dtypes.float32)
         t_padded_shape = tf.math.ceil(t_shape / t_factors) * t_factors
-        t_paddings = tf.stack(
-            [tf.zeros_like(t_shape), t_padded_shape - t_shape], axis=0)
+        t_paddings = tf.dtypes.cast(
+            tf.stack( [tf.zeros_like(t_shape), t_padded_shape - t_shape], axis=1),
+            dtype=tf.dtypes.int32)
         return tf.pad(t_x, t_paddings)
 
     def compute_output_shape(self, input_shape):
@@ -319,7 +320,7 @@ class _PadToMultiple(layers.Layer):
             'Must be a 1D, 2D or 3D input. Was {}D.'.format(ndims))
 
     def _pad_axis(self, size):
-        return self.factor * math.ceil(size / self.factor)
+        return None if size is None else self.factor * math.ceil(size / self.factor)
 
 
 class _CropLike(layers.Layer):
@@ -335,7 +336,7 @@ class _CropLike(layers.Layer):
     def call(self, x):
         assert isinstance(x, list)
         t_x, t_like = x
-        ndims = t_x.numDimensions() - 2  # - (batch dim + channel dim)
+        ndims = len(t_x.shape) - 2  # - (batch dim + channel dim)
         t_like_shape = tf.shape(t_like)
         if ndims == 1:
             return t_x[:, :t_like_shape[1], :]

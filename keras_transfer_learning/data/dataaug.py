@@ -13,3 +13,4 @@ def create_imgaug_augmentor(augmentors):
         for batch in data:
             augmented.append(aug_det.augment_images(batch))
         return augmented
+    return augment

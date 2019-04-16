@@ -198,7 +198,8 @@ def train(conf: dict, epochs: int, initial_epoch: int = 0):
         os.makedirs(model_dir)
 
         # Save the config
-        yaml.dump(conf, os.path.join(model_dir, 'config.yaml'))
+        with open(os.path.join(model_dir, 'config.yaml'), 'w') as file:
+            yaml.dump(conf, file)
 
     # Train the model
     history = model.fit_generator(train_generator, validation_data=val_generator,

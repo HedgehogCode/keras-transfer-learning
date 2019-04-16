@@ -3,4 +3,5 @@ args:
   filter_base: 32
   depth: 3
   conv_per_depth: 2
+  padding_fix: true
 weights: null

@@ -35,7 +35,7 @@ def main(arguments):
 
     # Create the config dict
     conf = {
-        'name': args.name
+        'name': args.name,
         'input_shape': yaml_load(args.input_shape),
         'backbone': yaml_load(args.backbone),
         'head': yaml_load(args.head),
