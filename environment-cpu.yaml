@@ -15,6 +15,7 @@ dependencies:
   - keras=2.2.4
   - tqdm=4.31
   - tifffile==0.15
+  - jupyter=1.0.0
   - pip:
     - stardist==0.2.0
     - csbdeep==0.3.0
@@ -24,3 +25,4 @@ dependencies:
     - autopep8==1.4.3
     - pycodestyle==2.5.0
     - pyparsing==2.4.0
+    - rope==0.14.0
