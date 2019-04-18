@@ -1,6 +1,7 @@
 import os
 import yaml
 from yaml import safe_load as yaml_load
+from tqdm import tqdm
 
 from keras import layers, models
 
@@ -132,7 +133,7 @@ class Model:
         in_shape = self.model.input.shape[1:]  # - batch dimension
 
         preds = []
-        for sample in data:
+        for sample in tqdm(data):
             # Fix shape of the data
             for _ in range(len(in_shape) - len(sample.shape)):
                 sample = sample[..., None]
@@ -158,3 +159,6 @@ class Model:
             processed.append(_process_prediction(self.config, pred))
 
         return processed
+
+    def predict_and_process(self, data):
+        return self.process_prediction(self.predict(data))

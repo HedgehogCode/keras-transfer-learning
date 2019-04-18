@@ -5,7 +5,7 @@ import numpy as np
 import tifffile
 
 from keras_transfer_learning.heads import segm, stardist, classification
-from keras_transfer_learning.data import dataaug, datagen, stardist_dsb2018, cytogen
+from keras_transfer_learning.data import dataaug, datagen, stardist_dsb2018, cytogen, utils
 
 
 def _create_data_generators(conf):
@@ -97,3 +97,7 @@ class Dataset():
         img = _create_normalize_fn(self.config)(img)
 
         return img, mask
+
+    def create_test_dataset(self):
+        data_dir = os.path.join(self.config['data']['data_dir'], 'test')
+        return utils.load_images_and_masks(data_dir)
