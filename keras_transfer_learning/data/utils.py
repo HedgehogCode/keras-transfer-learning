@@ -51,7 +51,7 @@ def load_images_and_masks(folder, ids=None):
     images_dir = os.path.join(folder, 'images')
     masks_dir = os.path.join(folder, 'masks')
     images = _load_tifs_from_dir_sorted(images_dir, ids=ids)
-    masks = _load_tifs_from_dir_sorted(masks_dir)
+    masks = _load_tifs_from_dir_sorted(masks_dir, ids=ids)
     return images, masks
 
 

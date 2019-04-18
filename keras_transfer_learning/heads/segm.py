@@ -55,7 +55,7 @@ def prepare_for_training(model, optimizer='adam', loss='binary_crossentropy'):
 
 
 def prepare_data_fgbg(batch_x, batch_y):
-    out_x = batch_x[..., None]  # TODO input with channels?
+    out_x = np.array(batch_x)[..., None]  # TODO input with channels?
     foreground = np.array(batch_y) > 0
     background = np.logical_not(foreground)
     out_y = np.array(
