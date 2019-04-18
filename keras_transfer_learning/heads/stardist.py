@@ -6,7 +6,8 @@ from keras import layers
 from keras import models
 
 from stardist.model import masked_loss_mae, masked_loss_mse
-from stardist.utils import edt_prob, star_dist
+from stardist.utils import edt_prob, star_dist, dist_to_coord, polygons_to_label
+from stardist.nms import non_maximum_suppression
 
 
 def stardist(n_rays, feature_layer=0, feature_kernel_size=3, feature_activation='relu',
@@ -76,3 +77,14 @@ def prepare_data(n_rays, batch_x, batch_y):
     dist_mask = prob
     img = (np.array(batch_x, dtype='float32') / 255)[..., None]
     return [img, dist_mask], [prob, dist]
+
+
+def process_prediction(pred, prob_thresh=0.4):
+    prob = pred[0][..., 0]
+    dist = pred[1]
+
+    coord = dist_to_coord(dist)
+    points = non_maximum_suppression(coord, prob, prob_thresh=prob_thresh)
+    labels = polygons_to_label(coord, prob, points)
+
+    return labels

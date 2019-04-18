@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from scipy.ndimage import morphology
+from scipy.ndimage import morphology, label
 from skimage import measure
 
 import keras.backend as K
@@ -61,6 +61,16 @@ def prepare_data_fgbg(batch_x, batch_y):
     out_y = np.array(
         np.stack([foreground, background], axis=-1), dtype='float32')
     return out_x, out_y
+
+
+def process_prediction_fgbg(pred, prob_thresh=0.5, do_labeling=True):
+    fg_prob = pred[..., 0]
+
+    fg = np.array(fg_prob > prob_thresh, dtype=np.int)
+
+    if do_labeling:
+        return label(fg)[0]
+    return fg
 
 
 def weighted_crossentropy(y_true, y_pred):

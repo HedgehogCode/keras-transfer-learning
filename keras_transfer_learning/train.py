@@ -118,6 +118,8 @@ def _tensorboard_callback(model_name, batch_size):
 ###################################################################################################
 
 def train(conf: dict, epochs: int, initial_epoch: int = 0):
+    print('\n\nStarting training of model {}\n'.format(conf['name']))
+    print('Creating the model...')
     if initial_epoch == 0:
         load_weights = 'pretrained'
     else:
@@ -127,6 +129,7 @@ def train(conf: dict, epochs: int, initial_epoch: int = 0):
     m.prepare_for_training()
 
     # Prepare the data generators
+    print('Preparing data...')
     train_generator, val_generator = _create_data_generators(conf)
 
     # Create the callbacks
@@ -137,13 +140,16 @@ def train(conf: dict, epochs: int, initial_epoch: int = 0):
         m.create_model_dir()
 
     # Train the model
+    print('Training the model...')
     history = m.model.fit_generator(train_generator, validation_data=val_generator,
                                     epochs=epochs, initial_epoch=initial_epoch,
                                     callbacks=training_callbacks)
 
     # Save the history
+    print('Saving the history...')
     history_df = pd.DataFrame(history.history)
     history_df.to_csv(os.path.join(m.model_dir, 'history.csv'))
 
     # Save the final weights
+    print('Saving the final weights...')
     m.model.save_weights(os.path.join(m.model_dir, 'weights_final.h5'))

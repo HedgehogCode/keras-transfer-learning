@@ -41,6 +41,16 @@ def _prepare_model(conf, model):
     }[conf['head']['name']](model, **conf['head']['prepare_model_args'])
 
 
+def _process_prediction(conf, pred):
+    # TODO stardist: support custom prob threshold in config
+    # TODO fgbg: support setting do label
+    return {
+        'stardist': lambda: stardist.process_prediction(pred),
+        'fgbg-segm': lambda: segm.process_prediction_fgbg(pred),
+        'classification': lambda: pred
+    }[conf['head']['name']]()
+
+
 ###################################################################################################
 #     MODEL CLASS
 ###################################################################################################
@@ -76,7 +86,10 @@ class Model:
             backbone_model = models.Model(inputs=inp, outputs=backbone)
             weights = self.config['backbone']['weights']
             if weights is not None:
+                print('Loading weights {}...'.format(weights))
                 backbone_model.load_weights(weights, by_name=True)
+            else:
+                print('Loaded no backbone weights')
 
         # Create the head
         oups = _create_head(self.config, backbone)
@@ -88,6 +101,7 @@ class Model:
         if load_weights == 'last':
             last_weights = utils.get_last_weights(self.model_dir, epoch=epoch)
             self.model.load_weights(last_weights, by_name=True)
+        # TODO allow loading weights of one specific epoch
 
     def prepare_for_training(self):
         self.model = _prepare_model(self.config, self.model)
@@ -101,3 +115,40 @@ class Model:
         # Save the config
         with open(os.path.join(self.model_dir, 'config.yaml'), 'w') as f:
             yaml.dump(self.config, f)
+
+    def predict(self, data):
+        """Runs inference of the model on the given data
+
+        Arguments:
+            data {list or ndarray} -- A data sample or list of data samples
+
+        Returns:
+            list -- A list of predictions
+        """
+
+        if not isinstance(data, list):
+            data = [data]
+
+        in_shape = self.model.input.shape[1:]  # - batch dimension
+
+        preds = []
+        for sample in data:
+            # Fix shape of the data
+            for _ in range(len(in_shape) - len(sample.shape)):
+                sample = sample[..., None]
+
+            # TODO check the shape of the data
+
+            preds.append(self.model.predict(sample[None, ...])[0, ...])
+
+        return preds
+
+    def process_prediction(self, preds):
+        if not isinstance(preds, list):
+            preds = [preds]
+
+        processed = []
+        for pred in preds:
+            processed.append(_process_prediction(self.config, pred))
+
+        return processed
