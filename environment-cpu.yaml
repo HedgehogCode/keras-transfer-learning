@@ -1,22 +1,22 @@
 name: bachelorthesis
 channels:
-  - conda-forge
+  - anaconda
   - defaults
 dependencies:
   - python=3.6
   - pip=19.0
   - numpy=1.16
   - scipy=1.2
-  - scikit-image=0.15
+  - scikit-image=0.14
   - pandas=0.24
   - matplotlib=3.0
   - pyyaml=5.1
   - tensorflow=1.13
   - keras=2.2.4
   - tqdm=4.31
-  - tifffile==0.15
   - jupyter=1.0.0
   - pip:
+    - tifffile==2019.3.18
     - stardist==0.2.0
     - csbdeep==0.3.0
     - imgaug==0.2.8
