@@ -75,7 +75,7 @@ def prepare_data(n_rays, batch_x, batch_y):
     dist = np.stack([star_dist(lbl, n_rays=n_rays)
                      for lbl in batch_y])
     dist_mask = prob
-    img = (np.array(batch_x, dtype='float32') / 255)[..., None]
+    img = np.array(batch_x, dtype='float32')[..., None]
     return [img, dist_mask], [prob, dist]
 
 

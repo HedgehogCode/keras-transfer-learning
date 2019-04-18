@@ -139,7 +139,13 @@ class Model:
 
             # TODO check the shape of the data
 
-            preds.append(self.model.predict(sample[None, ...])[0, ...])
+            pred = self.model.predict(sample[None, ...])
+            if isinstance(pred, list):
+                pred = tuple(p[0, ...] for p in pred)
+            else:
+                pred = pred[0, ...]
+
+            preds.append(pred)
 
         return preds
 

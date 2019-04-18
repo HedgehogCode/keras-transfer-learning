@@ -1,4 +1,8 @@
+import os
+import glob
 import numpy as np
+
+import tifffile
 
 from keras_transfer_learning.heads import segm, stardist, classification
 from keras_transfer_learning.data import dataaug, datagen, stardist_dsb2018, cytogen
@@ -75,3 +79,21 @@ class Dataset():
 
     def create_data_generators(self):
         return _create_data_generators(self.config)
+
+    def get_random_test_img(self, seed=None):
+        data_dir = os.path.join(self.config['data']['data_dir'], 'test')
+        img_dir = os.path.join(data_dir, 'images')
+        mask_dir = os.path.join(data_dir, 'masks')
+
+        img_files = sorted(glob.glob(os.path.join(img_dir, '*.tif')))
+        mask_files = sorted(glob.glob(os.path.join(mask_dir, '*.tif')))
+
+        idx = np.random.RandomState(seed).choice(len(img_files))
+
+        img = tifffile.imread(img_files[idx])
+        mask = tifffile.imread(mask_files[idx])
+
+        # Normalize the image
+        img = _create_normalize_fn(self.config)(img)
+
+        return img, mask
