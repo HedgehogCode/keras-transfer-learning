@@ -16,7 +16,8 @@ def evaluate(conf):
 
     # TODO allow for different evaluations
     # Evaluate
-    ap = mean_average_precision.ap_segm(pred, test_y, [0.5])
+    iou_thresholds = [0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95]
+    ap = mean_average_precision.ap_segm(pred, test_y, iou_thresholds)
 
     print("The average precision is {}".format(ap))
     return ap
