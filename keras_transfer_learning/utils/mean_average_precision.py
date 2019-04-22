@@ -58,7 +58,7 @@ def ap_segm(preds, labelings, iou_thresholds):
         for pred_label, pred_slice in enumerate(pred_objects, 1):
             # If there is no prediction with this id
             if pred_slice is None:
-                break
+                continue
 
             score = 1.  # TODO different scores for different segments?
             best_iou = 0
@@ -69,7 +69,7 @@ def ap_segm(preds, labelings, iou_thresholds):
                 # Check if they intersect and get the union if they do
                 union = _union(pred_slice, gt_slice, pred.shape)
                 if union is None:
-                    break
+                    continue
 
                 # Compute the IoU and check if it is the best match
                 iou = _iou(pred[tuple(union)], labeling[tuple(union)], pred_label, gt_label)
