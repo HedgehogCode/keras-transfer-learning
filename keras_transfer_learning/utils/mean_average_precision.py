@@ -30,7 +30,7 @@ def _union(firsts, seconds, shape):
         if union_1d is None:
             return None
         union.append(union_1d)
-    return union
+    return tuple(union)
 
 
 def _iou(first, second, first_label, second_label):
@@ -72,7 +72,7 @@ def ap_segm(preds, labelings, iou_thresholds):
                     continue
 
                 # Compute the IoU and check if it is the best match
-                iou = _iou(pred[tuple(union)], labeling[tuple(union)], pred_label, gt_label)
+                iou = _iou(pred[union], labeling[union], pred_label, gt_label)
                 if iou > best_iou:
                     best_iou = iou
                     best_gt = gt_id(i, gt_label)
@@ -113,6 +113,7 @@ def ap_matched(preds, gt_segments, iou_threshold):
         gt_segments {set} -- A set of identifiers for the ground truth segments
         iou_threshold {float} -- The IoU threshold
     """
+    print(preds)
     recall_ths = [.0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1.]
 
     # Sort the predictions by score

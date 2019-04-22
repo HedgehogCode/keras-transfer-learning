@@ -100,4 +100,8 @@ class Dataset():
 
     def create_test_dataset(self):
         data_dir = os.path.join(self.config['data']['data_dir'], 'test')
-        return utils.load_images_and_masks(data_dir)
+        imgs, masks = utils.load_images_and_masks(data_dir)
+
+        normalize_fn = _create_normalize_fn(self.config)
+        normalized_imgs = [normalize_fn(img) for img in imgs]
+        return normalized_imgs, masks
