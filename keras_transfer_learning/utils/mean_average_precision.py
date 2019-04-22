@@ -113,7 +113,6 @@ def ap_matched(preds, gt_segments, iou_threshold):
         gt_segments {set} -- A set of identifiers for the ground truth segments
         iou_threshold {float} -- The IoU threshold
     """
-    print(preds)
     recall_ths = [.0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1.]
 
     # Sort the predictions by score
