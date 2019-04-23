@@ -4,7 +4,7 @@ from scipy.ndimage import morphology, label
 from skimage import measure
 
 import keras.backend as K
-from keras import layers
+from keras import layers, models
 
 
 def segm(num_classes, out_activation='softmax', feature_layer=0, feature_kernel_size=3,
@@ -48,6 +48,10 @@ def segm(num_classes, out_activation='softmax', feature_layer=0, feature_kernel_
     return build
 
 
+# =================================================================================================
+#     2 CLASS FOREGROUND/BACKGROUND - NOT WEIGHTED
+# =================================================================================================
+
 def prepare_for_training(model, optimizer='adam', loss='binary_crossentropy'):
     # Compile the model
     model.compile(optimizer, loss=loss)
@@ -72,6 +76,33 @@ def process_prediction_fgbg(pred, prob_thresh=0.5, do_labeling=True):
         return label(fg)[0]
     return fg
 
+
+# =================================================================================================
+#     2 CLASS FOREGROUND/BACKGROUND - WEIGHTED
+# =================================================================================================
+
+def prepare_for_training_fgbg_weigthed(model, optimizer='adam', loss='binary_crossentropy'):
+    # Add the weigth input
+    weight_inp = layers.Input((None, None))
+    m = models.Model(inputs=(model.input, weight_inp), outputs=model.outputs)
+    m.compile(optimizer) # TODO loss
+
+
+def prepare_data_fgbg_weigthed(batch_x, batch_y):
+    out_x = np.array(batch_x)[..., None]  # TODO input with channels?
+    foreground = None  # TODO foreground by morphology operations
+    weight_map = None  # TODO
+
+    background = np.logical_not(foreground)
+    out_y = np.array(
+        np.stack([foreground, background], axis=-1), dtype='float32')
+
+    return (out_x, weight_map), out_y
+
+
+# =================================================================================================
+#     WIP MISC
+# =================================================================================================
 
 def weighted_crossentropy(y_true, y_pred):
     # TODO check if this is correct
