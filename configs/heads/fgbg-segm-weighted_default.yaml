@@ -1,0 +1,6 @@
+name: 'fgbg-segm-weighted'
+args: {}
+prepare_model_args: {}
+prepare_data_args:
+  border_weight: 6
+  separation_border_weight: 20

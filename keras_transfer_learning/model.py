@@ -29,6 +29,7 @@ def _create_backbone(conf, inp):
 def _create_head(conf, backbone):
     return {
         'fgbg-segm': lambda: segm.segm(num_classes=2, **conf['head']['args'])(backbone),
+        'fgbg-segm-weighted': lambda: segm.segm(num_classes=2, **conf['head']['args'])(backbone),
         'stardist': lambda: stardist.stardist(**conf['head']['args'])(backbone),
         'classification': lambda: classification.classification(**conf['head']['args'])(backbone)
     }[conf['head']['name']]()
@@ -37,6 +38,7 @@ def _create_head(conf, backbone):
 def _prepare_model(conf, model):
     return {
         'fgbg-segm': segm.prepare_for_training,
+        'fgbg-segm-weighted': segm.prepare_for_training_fgbg_weigthed,
         'stardist': stardist.prepare_for_training,
         'classification': classification.prepare_for_training
     }[conf['head']['name']](model, **conf['head']['prepare_model_args'])
@@ -45,9 +47,11 @@ def _prepare_model(conf, model):
 def _process_prediction(conf, pred):
     # TODO stardist: support custom prob threshold in config
     # TODO fgbg: support setting do label
+    # TODO fgbg-weighted: Correct with dilation?
     return {
         'stardist': lambda: stardist.process_prediction(pred),
         'fgbg-segm': lambda: segm.process_prediction_fgbg(pred),
+        'fgbg-segm-weighted': lambda: segm.process_prediction_fgbg(pred),
         'classification': lambda: pred
     }[conf['head']['name']]()
 

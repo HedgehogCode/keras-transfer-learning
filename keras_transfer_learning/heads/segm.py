@@ -1,10 +1,10 @@
 import numpy as np
 import tensorflow as tf
-from scipy.ndimage import morphology, label
+from scipy.ndimage import morphology, label, filters
 from skimage import measure
 
 import keras.backend as K
-from keras import layers, models
+from keras import layers, models, losses
 
 
 def segm(num_classes, out_activation='softmax', feature_layer=0, feature_kernel_size=3,
@@ -83,21 +83,52 @@ def process_prediction_fgbg(pred, prob_thresh=0.5, do_labeling=True):
 
 def prepare_for_training_fgbg_weigthed(model, optimizer='adam', loss='binary_crossentropy'):
     # Add the weigth input
-    weight_inp = layers.Input((None, None))
-    m = models.Model(inputs=(model.input, weight_inp), outputs=model.outputs)
-    m.compile(optimizer) # TODO loss
+    weight_inp = layers.Input(
+        model.inputs[0].get_shape().dims[1:-1], name='weight_map')
+    m = models.Model(inputs=[model.input, weight_inp], outputs=model.outputs)
+
+    # Get the pixel loss
+    pixel_loss = losses.get(loss)
+
+    # Define the weighted loss
+    def _weighted_loss(y_true, y_pred):
+        return weight_inp * pixel_loss(y_true, y_pred)
+
+    # Compile the model
+    m.compile(optimizer, loss=_weighted_loss)
+    return m
 
 
-def prepare_data_fgbg_weigthed(batch_x, batch_y):
+def prepare_data_fgbg_weigthed(batch_x, batch_y, border_weight=2, separation_border_weight=5, sigma=1):
+    # Wrap x in np array and add channel dimension
     out_x = np.array(batch_x)[..., None]  # TODO input with channels?
-    foreground = None  # TODO foreground by morphology operations
-    weight_map = None  # TODO
+
+    # Create the weight map
+    struct = morphology.generate_binary_structure(len(batch_y[0].shape), 1)
+    foreground = np.zeros_like(batch_y)
+    weight_map = np.zeros_like(batch_y, dtype='float32')
+    for i, mask in enumerate(batch_y):
+        borders = morphology.morphological_laplace(mask, structure=struct) \
+            > (np.max(mask) + 1)
+        separation_borders = np.logical_and(morphology.grey_erosion(mask, structure=struct),
+                                            borders)
+        weight_map[i] = separation_border_weight * separation_borders \
+            + border_weight * borders \
+            + 1
+
+        # Filter weight map
+        if sigma > 0:
+            weight_map[i] = filters.gaussian_filter(
+                weight_map[i], sigma=sigma)
+
+        # Foreground is the mask without the borders
+        foreground[i] = np.logical_and((mask > 0), np.logical_not(borders))
 
     background = np.logical_not(foreground)
     out_y = np.array(
         np.stack([foreground, background], axis=-1), dtype='float32')
 
-    return (out_x, weight_map), out_y
+    return [out_x, weight_map], out_y
 
 
 # =================================================================================================

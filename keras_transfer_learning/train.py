@@ -79,6 +79,7 @@ def train(conf: dict, epochs: int, initial_epoch: int = 0):
 
     # Train the model
     print('Training the model...')
+    print(m.model.inputs)
     history = m.model.fit_generator(train_generator, validation_data=val_generator,
                                     epochs=epochs, initial_epoch=initial_epoch,
                                     callbacks=training_callbacks)

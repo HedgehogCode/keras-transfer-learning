@@ -68,6 +68,9 @@ def _create_prepare_fn(conf):
     return {
         'stardist': lambda x, y: stardist.prepare_data(conf['head']['args']['n_rays'], x, y),
         'fgbg-segm': segm.prepare_data_fgbg,
+        'fgbg-segm-weighted': lambda x, y: segm.prepare_data_fgbg_weigthed(
+            batch_x=x, batch_y=y,
+            **conf['head']['prepare_data_args']),
         'classification': classification.prepare_data
     }[conf['head']['name']]
 
