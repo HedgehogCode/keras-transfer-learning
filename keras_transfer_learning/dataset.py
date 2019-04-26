@@ -44,7 +44,8 @@ def _create_data_generators_from_lists(conf):
     # Create the generators
     train_gen = datagen.data_generator_from_lists(
         batch_size=conf['training']['batch_size'], data_x=train_x, data_y=train_y,
-        dataaug_fn=dataaug_fn, prepare_fn=prepare_fn)
+        dataaug_fn=dataaug_fn, prepare_fn=prepare_fn,
+        epoch_len=conf['training']['epoch_length'])
     val_gen = datagen.data_generator_for_validation(
         val_x=val_x, val_y=val_y, prepare_fn=prepare_fn)
 

@@ -10,7 +10,27 @@ class DataGenerator(keras.utils.Sequence):
     epoch length independend from the number of data samples.
     """
 
-    def __init__(self, ids, batch_size, data_fn, shuffle=True, epoch_len=None):
+    def __init__(self, ids: list, batch_size: int, data_fn: callable, shuffle: bool = True,
+                 epoch_len: int = None):
+        """A data generator which can be used to train a keras model with the `fit_generator`
+        method.
+        Allows to set the nuber of samples per epoch. If the selected number of samples per epoch
+        is smaller than the provided number of samples each sample is repeated in one epoch. If the
+        selected number of samples is larger than the provided number of samples samples that were
+        not shown in one epoch are shown in the next epoch.
+
+
+        Arguments:
+            ids {list} -- list of ids of the data. Selected ids are passed to the `data_fn`.
+            batch_size {int} -- size of one data batch
+            data_fn {callable} -- a function which returns a training batch (batch_x, batch_y) for
+                                  a given list of ids
+
+        Keyword Arguments:
+            shuffle {bool} -- If the ids should be shuffled (default: {True})
+            epoch_len {int} -- Number of samples per epoch (not number of batches). If `None` the
+                               number of ids is used. (default: {None})
+        """
         self.ids = ids
         self.batch_size = batch_size
 

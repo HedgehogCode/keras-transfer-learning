@@ -6,3 +6,4 @@ callbacks:
   args:
     patience: 8
 batch_size: 8
+epoch_length: 512
