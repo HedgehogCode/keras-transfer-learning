@@ -39,7 +39,6 @@ def load_and_split(data_dir: str, seed: int = 42, train_val_split: float = 0.9,
         offset = (len(train_idxs) - num_train) // 10
         part = part % 10
         train_idxs = train_idxs[(offset*part):(offset*part)+num_train]
-        val_idxs = val_idxs[:(math.ceil(num * (1 - train_val_split)))]
 
     # Load the data
     x_train, y_train = load_images_and_masks(data_dir, train_idxs)
