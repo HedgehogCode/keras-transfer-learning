@@ -22,6 +22,14 @@ echo
 for i in $(seq 1 ${NUM})
 do
     id=$(printf "%05d" $i)
-    echo "Generating final ${i}..."
-    3d-acquigen -c $INI_CONFIG -b "${BLURRED_DIR}blurred_${id}.tif" -f "${IMAGE_DIR}image_${id}.tif"
+    blurred_file="${BLURRED_DIR}blurred_${id}.tif"
+    final_file="${IMAGE_DIR}image_${id}.tif"
+    if [ -f "${blurred_file}" ] && [ ! -f "${final_file}" ]; then
+        echo "Generating final ${i}..."
+        3d-acquigen -c $INI_CONFIG -b "${blurred_file}" -f "${blurred_file}"
+    elif [ ! -f "${blurred_file}" ]; then
+        echo "WARNING: Blurred ${i} missing."
+    else
+        echo "Skipping. Final ${i} already presnet."
+    fi
 done

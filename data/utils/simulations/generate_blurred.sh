@@ -24,6 +24,12 @@ do
     id=$(printf "%05d" $i)
     phantom_file="${PHANTOM_DIR}phantom_${id}.tif"
     blurred_file="${BLURRED_DIR}blurred_${id}.tif"
-    echo "Generating blurred ${i}..."
-    3d-optigen -c $INI_CONFIG -p "${phantom_file}" -b "${blurred_file}"
+    if [ -f "${phantom_file}" ] && [ ! -f "${blurred_file}" ]; then
+        echo "Generating blurred ${i}..."
+        3d-optigen -c $INI_CONFIG -p "${phantom_file}" -b "${blurred_file}"
+    elif [ ! -f "${phantom_file}" ]; then
+        echo "WARNING: Phantom ${i} missing."
+    else
+        echo "Skipping. Blurred ${i} already present."
+    fi
 done
