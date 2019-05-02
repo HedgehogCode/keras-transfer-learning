@@ -6,16 +6,6 @@ PHANTOM_DIR=$3
 LABEL_DIR=$4
 PLUGIN_DIR="/home/user/cytogen-plugins"
 
-# Check output directories
-if [ -d "$PHANTOM_DIR" ]; then
-    echo "Phantom directory already exists. Aborting."
-    exit 1
-fi
-if [ -d "$LABEL_DIR" ]; then
-    echo "Label directory already exists. Aborting."
-    exit 1
-fi
-
 mkdir "$PHANTOM_DIR"
 mkdir "$LABEL_DIR"
 

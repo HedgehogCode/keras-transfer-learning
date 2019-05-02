@@ -5,12 +5,6 @@ INI_CONFIG=$2
 BLURRED_DIR=$3
 IMAGE_DIR=$4
 
-# Check output directory
-if [ -d "$IMAGE_DIR" ]; then
-    echo "Output directory already exists. Aborting."
-    exit 1
-fi
-
 mkdir "$IMAGE_DIR"
 
 # Image acquisition

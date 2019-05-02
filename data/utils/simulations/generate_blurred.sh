@@ -5,12 +5,6 @@ INI_CONFIG=$2
 PHANTOM_DIR=$3
 BLURRED_DIR=$4
 
-# Check output directorie
-if [ -d "$BLURRED_DIR" ]; then
-    echo "Blurred output directory already exists. Aborting."
-    exit 1
-fi
-
 mkdir "$BLURRED_DIR"
 
 # Blurring images with optigen
