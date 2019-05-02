@@ -22,6 +22,8 @@ echo
 for i in $(seq 1 ${NUM})
 do
     id=$(printf "%05d" $i)
+    phantom_file="${PHANTOM_DIR}phantom_${id}.tif"
+    blurred_file="${BLURRED_DIR}blurred_${id}.tif"
     echo "Generating blurred ${i}..."
-    3d-optigen -c $INI_CONFIG -p "${PHANTOM_DIR}phantom_${id}.tif" -b "${BLURRED_DIR}blurred_${id}.tif"
+    3d-optigen -c $INI_CONFIG -p "${phantom_file}" -b "${blurred_file}"
 done
