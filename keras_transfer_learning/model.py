@@ -52,7 +52,7 @@ def _process_prediction(conf, pred):
     # TODO fgbg-weighted: Correct with dilation?
     return {
         'stardist': lambda: stardist.process_prediction(pred),
-        'segm': lambda: segm.prepare_data_nclass(pred),
+        'segm': lambda: segm.process_prediction_nclass(pred),
         'fgbg-segm': lambda: segm.process_prediction_fgbg(pred),
         'fgbg-segm-weighted': lambda: segm.process_prediction_fgbg(pred),
         'classification': lambda: pred
