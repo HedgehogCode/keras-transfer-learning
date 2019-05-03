@@ -10,6 +10,7 @@ dependencies:
   - scikit-image=0.14
   - pandas=0.24
   - matplotlib=3.0
+  - seaborn=0.9
   - pyyaml=5.1
   - tensorflow-gpu=1.13
   - cudatoolkit=10.0
