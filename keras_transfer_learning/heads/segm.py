@@ -48,15 +48,15 @@ def segm(num_classes, out_activation='softmax', feature_layer=0, feature_kernel_
     return build
 
 
-# =================================================================================================
-#     2 CLASS FOREGROUND/BACKGROUND - NOT WEIGHTED
-# =================================================================================================
-
 def prepare_for_training(model, optimizer='adam', loss='binary_crossentropy'):
     # Compile the model
     model.compile(optimizer, loss=loss)
     return model
 
+
+# =================================================================================================
+#     2 CLASS FOREGROUND/BACKGROUND - NOT WEIGHTED
+# =================================================================================================
 
 def prepare_data_fgbg(batch_x, batch_y):
     out_x = np.array(batch_x)[..., None]  # TODO input with channels?
@@ -129,6 +129,21 @@ def prepare_data_fgbg_weigthed(batch_x, batch_y, border_weight=2, separation_bor
         np.stack([foreground, background], axis=-1), dtype='float32')
 
     return [out_x, weight_map], out_y
+
+
+# =================================================================================================
+#     N CLASS - NOT WEIGHTED
+# =================================================================================================
+
+def prepare_data_nclass(batch_x, batch_y, num_classes):
+    out_x = np.array(batch_x)[..., None]  # TODO input with channels?
+    out_y = np.empty((*batch_y.shape, num_classes), dtype='float32')
+    np.stack([batch_y == i for i in range(num_classes)], axis=-1, out=out_y)
+    return out_x, out_y
+
+
+def process_prediction_nclass(pred):
+    return np.argmax(pred, axis=-1)
 
 
 # =================================================================================================

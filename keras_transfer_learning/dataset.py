@@ -69,6 +69,7 @@ def _create_dataaug_fn(conf):
 def _create_prepare_fn(conf):
     return {
         'stardist': lambda x, y: stardist.prepare_data(conf['head']['args']['n_rays'], x, y),
+        'segm': lambda x, y: segm.prepare_data_nclass(x, y, conf['head']['num_classes']),
         'fgbg-segm': segm.prepare_data_fgbg,
         'fgbg-segm-weighted': lambda x, y: segm.prepare_data_fgbg_weigthed(
             batch_x=x, batch_y=y,

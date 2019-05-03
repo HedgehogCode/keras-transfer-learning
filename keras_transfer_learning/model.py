@@ -28,15 +28,17 @@ def _create_backbone(conf, inp):
 
 def _create_head(conf, backbone):
     return {
-        'fgbg-segm': lambda: segm.segm(num_classes=2, **conf['head']['args'])(backbone),
-        'fgbg-segm-weighted': lambda: segm.segm(num_classes=2, **conf['head']['args'])(backbone),
-        'stardist': lambda: stardist.stardist(**conf['head']['args'])(backbone),
-        'classification': lambda: classification.classification(**conf['head']['args'])(backbone)
-    }[conf['head']['name']]()
+        'segm': lambda c: segm.segm(num_classes=c['num_classes'], **c['args'])(backbone),
+        'fgbg-segm': lambda c: segm.segm(num_classes=2, **c['args'])(backbone),
+        'fgbg-segm-weighted': lambda c: segm.segm(num_classes=2, **c['args'])(backbone),
+        'stardist': lambda c: stardist.stardist(**c['args'])(backbone),
+        'classification': lambda c: classification.classification(**c['args'])(backbone)
+    }[conf['head']['name']](conf['head'])
 
 
 def _prepare_model(conf, model):
     return {
+        'segm': segm.prepare_for_training,
         'fgbg-segm': segm.prepare_for_training,
         'fgbg-segm-weighted': segm.prepare_for_training_fgbg_weigthed,
         'stardist': stardist.prepare_for_training,
@@ -50,6 +52,7 @@ def _process_prediction(conf, pred):
     # TODO fgbg-weighted: Correct with dilation?
     return {
         'stardist': lambda: stardist.process_prediction(pred),
+        'segm': lambda: segm.prepare_data_nclass(pred),
         'fgbg-segm': lambda: segm.process_prediction_fgbg(pred),
         'fgbg-segm-weighted': lambda: segm.process_prediction_fgbg(pred),
         'classification': lambda: pred
