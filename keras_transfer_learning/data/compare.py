@@ -41,8 +41,11 @@ def ssim_datasets(A, B, samples=1000):
 
 def sliced_wasserstein_pyramids(A, B, **kwargs):
     pyramid_levels = kwargs.get('pyramid_levels', 4)
-    pyramids_a = laplace_pyramids(A, pyramid_levels)
-    pyramids_b = laplace_pyramids(B, pyramid_levels)
+    if A is not B:
+        pyramids_a = laplace_pyramids(A, pyramid_levels)
+        pyramids_b = laplace_pyramids(B, pyramid_levels)
+    else:
+        pyramids_a = pyramids_b = laplace_pyramids(A, pyramid_levels)
 
     results = []
     for level_a, level_b in zip(pyramids_a, pyramids_b):
