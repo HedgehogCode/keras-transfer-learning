@@ -20,7 +20,7 @@ do
     final_file="${IMAGE_DIR}image_${id}.tif"
     if [ -f "${blurred_file}" ] && [ ! -f "${final_file}" ]; then
         echo "Generating final ${i}..."
-        3d-acquigen -c $INI_CONFIG -b "${blurred_file}" -f "${blurred_file}"
+        3d-acquigen -c $INI_CONFIG -b "${blurred_file}" -f "${final_file}"
     elif [ ! -f "${blurred_file}" ]; then
         echo "WARNING: Blurred ${i} missing."
     else
