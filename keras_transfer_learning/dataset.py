@@ -5,7 +5,7 @@ import numpy as np
 import tifffile
 
 from keras_transfer_learning.heads import segm, stardist, classification
-from keras_transfer_learning.data import dataaug, datagen, stardist_dsb2018, cytogen, utils
+from keras_transfer_learning.data import dataaug, datagen, stardist_dsb2018, cytogen, cityscapes, utils
 
 
 def _create_data_generators(conf):
@@ -20,7 +20,8 @@ def _create_data_generators_from_lists(conf):
     # Find the appropriate load function
     load_fn = {
         'stardist-dsb2018': stardist_dsb2018.load_train,
-        'cytogen': cytogen.load_train
+        'cytogen': cytogen.load_train,
+        'cityscapes': cityscapes.load_train
     }[conf['data']['name']]
 
     # Load the data
