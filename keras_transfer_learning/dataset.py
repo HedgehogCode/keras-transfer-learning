@@ -12,7 +12,8 @@ def _create_data_generators(conf):
     # Decide which function is appropriate
     return {
         'stardist-dsb2018': _create_data_generators_from_lists,
-        'cytogen': _create_data_generators_from_lists
+        'cytogen': _create_data_generators_from_lists,
+        'cityscapes': _create_data_generators_from_lists
     }[conf['data']['name']](conf)
 
 
@@ -35,8 +36,10 @@ def _create_data_generators_from_lists(conf):
 
     # Normalizer each sample
     normalize_fn = _create_normalize_fn(conf)
-    train_x = [normalize_fn(x) for x in train_x]
-    val_x = [normalize_fn(x) for x in val_x]
+    if conf['data']['name'] in ['stardist-dsb2018', 'cytogen']:
+        train_x = [normalize_fn(x) for x in train_x]
+        val_x = [normalize_fn(x) for x in val_x]
+        normalize_fn = None
 
     # Create the prepare and dataaug functions
     prepare_fn = _create_prepare_fn(conf)
@@ -45,10 +48,10 @@ def _create_data_generators_from_lists(conf):
     # Create the generators
     train_gen = datagen.data_generator_from_lists(
         batch_size=conf['training']['batch_size'], data_x=train_x, data_y=train_y,
-        dataaug_fn=dataaug_fn, prepare_fn=prepare_fn,
+        dataaug_fn=dataaug_fn, prepare_fn=prepare_fn, normalize_fn=normalize_fn,
         epoch_len=conf['training']['epoch_length'])
     val_gen = datagen.data_generator_for_validation(
-        val_x=val_x, val_y=val_y, prepare_fn=prepare_fn)
+        val_x=val_x, val_y=val_y, prepare_fn=prepare_fn, normalize_fn=normalize_fn)
 
     return train_gen, val_gen
 

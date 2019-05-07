@@ -89,23 +89,28 @@ class DataGenerator(keras.utils.Sequence):
         return batch_x, batch_y
 
 
-def data_generator_from_lists(batch_size, data_x, data_y, dataaug_fn, prepare_fn, **kwargs):
+def data_generator_from_lists(batch_size, data_x, data_y, dataaug_fn, prepare_fn,
+                              normalize_fn=None, **kwargs):
     ids = list(range(len(data_x)))
-    data_fn = data_fn_from_lists(data_x, data_y, dataaug_fn, prepare_fn)
+    data_fn = data_fn_from_lists(data_x, data_y, dataaug_fn, prepare_fn, normalize_fn)
     return DataGenerator(ids, batch_size, data_fn, **kwargs)
 
 
-def data_generator_for_validation(val_x, val_y, prepare_fn):
+def data_generator_for_validation(val_x, val_y, prepare_fn, normalize_fn=None):
     ids = list(range(len(val_x)))
-    data_fn = data_fn_from_lists(val_x, val_y, lambda x: x, prepare_fn)
+    data_fn = data_fn_from_lists(val_x, val_y, lambda x: x, prepare_fn, normalize_fn)
     return DataGenerator(ids, 1, data_fn, shuffle=False)
 
 
-def data_fn_from_lists(data_x, data_y, dataaug_fn, prepare_fn):
+def data_fn_from_lists(data_x, data_y, dataaug_fn, prepare_fn, normalize_fn=None):
     def data_fn(ids):
         # Loading
         batch_x = [data_x[i] for i in ids]
         batch_y = [data_y[i] for i in ids]
+
+        # Normalize if a normalizer is given
+        if normalize_fn is not None:
+            batch_x = [normalize_fn(x) for x in batch_x]
 
         # Dataaug
         batch_x, batch_y = dataaug_fn([batch_x, batch_y])

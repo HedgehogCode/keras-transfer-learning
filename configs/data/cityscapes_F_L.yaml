@@ -1,6 +1,6 @@
 name: 'cityscapes'
 data_dir: 'data/cityscapes'
-train_val_split: 0.9
+train_val_split: 0.98
 normalizer: 'min-max'
 datasplit_seed: 42
 dataaug:

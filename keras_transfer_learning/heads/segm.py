@@ -137,6 +137,7 @@ def prepare_data_fgbg_weigthed(batch_x, batch_y, border_weight=2, separation_bor
 
 def prepare_data_nclass(batch_x, batch_y, num_classes):
     out_x = np.array(batch_x)[..., None]  # TODO input with channels?
+    batch_y = np.array(batch_y)
     out_y = np.empty((*batch_y.shape, num_classes), dtype='float32')
     np.stack([batch_y == i for i in range(num_classes)], axis=-1, out=out_y)
     return out_x, out_y

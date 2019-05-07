@@ -1,0 +1,4 @@
+name: 'segm'
+num_classes: 30
+args: {}
+prepare_model_args: {}
