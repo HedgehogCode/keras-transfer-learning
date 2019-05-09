@@ -86,8 +86,7 @@ def resnet(stack_fn):
 #     BLOCK
 ##############################################################################
 
-def block(filters, kernel_size=3, stride=1,
-          conv_shortcut=True, name=None):
+def block(filters, kernel_size=3, stride=1, conv_shortcut=True, ndims=2, name=None):
     """A residual block.
 
     # Arguments
@@ -96,36 +95,38 @@ def block(filters, kernel_size=3, stride=1,
         stride: default 1, stride of the first layer.
         conv_shortcut: default True, use convolution shortcut if True,
             otherwise identity shortcut.
+        ndims: default 2, number of dimensions of the input
         name: string, block label.
 
     # Returns
         A function that applies the block to a tensor and returns the output tensor.
     """
-    bn_axis = 3 if K.image_data_format() == 'channels_last' else 1
+    bn_axis = ndims + 1 if K.image_data_format() == 'channels_last' else 1
+    conv_fn = layers.Conv2D if ndims == 2 else layers.Conv3D
 
     def build(x):
         with K.name_scope(name):
             if conv_shortcut is True:
-                shortcut = layers.Conv2D(4 * filters, 1, strides=stride,
-                                         name=name + '_0_conv')(x)
+                shortcut = conv_fn(4 * filters, 1, strides=stride,
+                                   name=name + '_0_conv')(x)
                 shortcut = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5,
                                                      name=name + '_0_bn')(shortcut)
             else:
                 shortcut = x
 
-            x = layers.Conv2D(filters, 1, strides=stride,
-                              name=name + '_1_conv')(x)
+            x = conv_fn(filters, 1, strides=stride,
+                        name=name + '_1_conv')(x)
             x = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5,
                                           name=name + '_1_bn')(x)
             x = layers.Activation('relu', name=name + '_1_relu')(x)
 
-            x = layers.Conv2D(filters, kernel_size, padding='SAME',
-                              name=name + '_2_conv')(x)
+            x = conv_fn(filters, kernel_size, padding='SAME',
+                        name=name + '_2_conv')(x)
             x = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5,
                                           name=name + '_2_bn')(x)
             x = layers.Activation('relu', name=name + '_2_relu')(x)
 
-            x = layers.Conv2D(4 * filters, 1, name=name + '_3_conv')(x)
+            x = conv_fn(4 * filters, 1, name=name + '_3_conv')(x)
             x = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5,
                                           name=name + '_3_bn')(x)
 
@@ -140,7 +141,7 @@ def block(filters, kernel_size=3, stride=1,
 #     STACK
 ##############################################################################
 
-def stack(filters, blocks, stride1=2, name=None):
+def stack(filters, blocks, stride1=2, ndims=2, name=None):
     """A set of stacked residual blocks.
 
     # Arguments
@@ -154,9 +155,10 @@ def stack(filters, blocks, stride1=2, name=None):
     """
     def build(x):
         with K.name_scope(name):
-            x = block(filters, stride=stride1, name=name + '_block1')(x)
+            x = block(filters, stride=stride1, ndims=ndims,
+                      name=name + '_block1')(x)
             for i in range(2, blocks + 1):
-                x = block(filters, conv_shortcut=False,
+                x = block(filters, conv_shortcut=False, ndims=ndims,
                           name=name + '_block' + str(i))(x)
         return x
     return build

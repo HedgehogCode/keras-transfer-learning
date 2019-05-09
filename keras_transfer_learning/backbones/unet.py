@@ -24,6 +24,8 @@ import tensorflow as tf
 import keras.backend as K
 from keras import layers
 
+from .layers import PadToMultiple, CropLike
+
 
 def unet(filters=None, kernel_size=3, activation='relu', batch_norm=False, ndims=2,
          padding_fix=False):
@@ -58,7 +60,7 @@ def unet(filters=None, kernel_size=3, activation='relu', batch_norm=False, ndims
                                 name='features_down' + str(idx))(tensor)
             tensors.insert(0, tensor)
             if padding_fix:
-                tensor = _PadToMultiple(2)(tensor)
+                tensor = PadToMultiple(2)(tensor)
             tensor = downsample_block(ndims,
                                       name='downsample' + str(idx))(tensor)
 
@@ -74,7 +76,7 @@ def unet(filters=None, kernel_size=3, activation='relu', batch_norm=False, ndims
                                          name='upsample' + str(idx))(tensor)
             skip_tensor = tensors.pop(0)
             if padding_fix:
-                tensor = _CropLike()([tensor, skip_tensor])
+                tensor = CropLike()([tensor, skip_tensor])
             tensor = layers.Concatenate(axis=-1,
                                         name='concat' + str(idx))([skip_tensor, tensor])
             tensor = conv_block(ndims, filt, kernel_size=kernel_size,
@@ -118,7 +120,7 @@ def unet_csbdeep(filter_base=32, depth=3, conv_per_depth=2, kernel_size=3, activ
                                 name='features_down' + str(idx))(tensor)
             tensors.insert(0, tensor)
             if padding_fix:
-                tensor = _PadToMultiple(2)(tensor)
+                tensor = PadToMultiple(2)(tensor)
             tensor = downsample_block(ndims,
                                       name='downsample' + str(idx))(tensor)
 
@@ -135,7 +137,7 @@ def unet_csbdeep(filter_base=32, depth=3, conv_per_depth=2, kernel_size=3, activ
                                     name='upsample' + str(idx))(tensor)
             skip_tensor = tensors.pop(0)
             if padding_fix:
-                tensor = _CropLike()([tensor, skip_tensor])
+                tensor = CropLike()([tensor, skip_tensor])
             tensor = layers.Concatenate(axis=-1,
                                         name='concat' + str(idx))([skip_tensor, tensor])
             tensor = conv_block(ndims, filt, num=conv_per_depth, kernel_size=kernel_size,
@@ -299,11 +301,12 @@ class _PadToMultiple(layers.Layer):
         factors = [1] + ([self.factor] * ndims) + \
             [1]  # Factor 1 for batch + channels
 
-        t_shape = tf.dtypes.cast(tf.shape(t_x, out_type=tf.dtypes.int32), dtype=tf.dtypes.float32)
+        t_shape = tf.dtypes.cast(
+            tf.shape(t_x, out_type=tf.dtypes.int32), dtype=tf.dtypes.float32)
         t_factors = tf.constant(factors, dtype=tf.dtypes.float32)
         t_padded_shape = tf.math.ceil(t_shape / t_factors) * t_factors
         t_paddings = tf.dtypes.cast(
-            tf.stack( [tf.zeros_like(t_shape), t_padded_shape - t_shape], axis=1),
+            tf.stack([tf.zeros_like(t_shape), t_padded_shape - t_shape], axis=1),
             dtype=tf.dtypes.int32)
         return tf.pad(t_x, t_paddings)
 
