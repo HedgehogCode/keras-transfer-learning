@@ -74,7 +74,7 @@ def unet(filters=None, kernel_size=3, activation='relu', batch_norm=False, ndims
                                          name='upsample' + str(idx))(tensor)
             skip_tensor = tensors.pop(0)
             if padding_fix:
-                tesor = _CropLike()([tensor, skip_tensor])
+                tensor = _CropLike()([tensor, skip_tensor])
             tensor = layers.Concatenate(axis=-1,
                                         name='concat' + str(idx))([skip_tensor, tensor])
             tensor = conv_block(ndims, filt, kernel_size=kernel_size,
