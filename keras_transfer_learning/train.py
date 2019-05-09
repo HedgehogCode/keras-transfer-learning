@@ -62,6 +62,7 @@ def train(conf: dict, epochs: int, initial_epoch: int = 0):
     else:
         load_weights = 'last'
     m = model.Model(conf, load_weights=load_weights, epoch=initial_epoch)
+    m.model.summary()
 
     m.prepare_for_training()
 

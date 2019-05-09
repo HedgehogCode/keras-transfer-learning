@@ -6,7 +6,7 @@ from tqdm import tqdm
 from keras import layers, models
 
 from keras_transfer_learning.utils import utils
-from keras_transfer_learning.backbones import unet, convnet
+from keras_transfer_learning.backbones import unet, convnet, resnet_unet
 from keras_transfer_learning.heads import segm, stardist, classification
 
 
@@ -18,7 +18,8 @@ def _create_backbone(conf, inp):
     return {
         'unet': lambda: unet.unet(**conf['backbone']['args'])(inp),
         'unet-csbdeep': lambda: unet.unet_csbdeep(**conf['backbone']['args'])(inp),
-        'convnet': lambda: convnet.convnet(**conf['backbone']['args'])(inp)
+        'convnet': lambda: convnet.convnet(**conf['backbone']['args'])(inp),
+        'resnet-unet': lambda: resnet_unet.resnet_unet(**conf['backbone']['args'])(inp)
     }[conf['backbone']['name']]()
 
 

@@ -1,0 +1,5 @@
+name: 'resnet-unet'
+args:
+  filters: [32, 64, 128, 256]
+  blocks: [2, 2, 3, 3]
+weights: null
