@@ -110,7 +110,9 @@ class Model:
         if load_weights == 'last':
             last_weights = utils.get_last_weights(self.model_dir, epoch=epoch)
             self.model.load_weights(last_weights, by_name=True)
-        # TODO allow loading weights of one specific epoch
+        elif load_weights == 'epoch':
+            weights = utils.get_epoch_weights(self.model_dir, epoch=epoch)
+            self.model.load_weights(weights, by_name=True)
 
     def prepare_for_training(self):
         self.model = _prepare_model(self.config, self.model)

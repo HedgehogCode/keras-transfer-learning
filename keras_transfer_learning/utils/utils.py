@@ -39,3 +39,30 @@ def get_last_weights(model_dir: str, epoch: int = None):
                 epoch, last_epoch))
 
     return last_weights
+
+
+def get_epoch_weights(model_dir: str, epoch: int):
+    """Finds the filename of the weights file for the given epoch in a model directory.
+
+    Arguments:
+        model_dir {str} -- path to the model directory
+        epoch {int} -- the epoch
+
+    Raises:
+        ValueError -- If no weights file is found for this epoch
+
+    Returns:
+        {str} -- The path to the last weights file.
+    """
+
+    weights = sorted(glob.glob(os.path.join(model_dir, 'weights_[0-9]*_*.h5')))
+    if weights == []:
+        raise ValueError('Did not find a valid weights file.')
+    for epoch_weights in weights:
+        matches = re.match(r'.*_(\d{4})_\d+\.\d{4}\.h5', epoch_weights)
+        if matches is None:
+            raise ValueError('Did not find a valid weights file.')
+        if int(matches.group(1)) == epoch:
+            return epoch_weights
+
+    raise ValueError('Cannot find weight file for epoch {}'.format(epoch))

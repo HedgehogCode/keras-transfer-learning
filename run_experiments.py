@@ -8,7 +8,9 @@ import sys
 import argparse
 from yaml import safe_load as yaml_load
 
-from keras_transfer_learning import train
+import pandas as pd
+
+from keras_transfer_learning import train, evaluate
 
 CONFIG_FILES = {
     'backbone': {
@@ -67,27 +69,31 @@ def _run_experiment_hl_60_low_high_noise(configs, dry_run):
     # - Random init
     # - Low noise
     # - All data
+    name ='E0_R_unet-stardist_hl60-low_F'
     _train_model({
-        'name': 'E0_R_unet-stardist_hl60-low_F',
+        'name': name,
         'input_shape': input_shape,
         'backbone': conf_backbone,
         'head': conf_head,
         'training': conf_training,
         'data': conf_data_low_noise
     }, max_epochs, dry_run)
+    _evaluate_model(name, dry_run)
 
     # Step 2:
     # - Random init
     # - High noise
     # - All data
+    name ='E0_R_unet-stardist_hl60-high_F'
     _train_model({
-        'name': 'E0_R_unet-stardist_hl60-high_F',
+        'name': name,
         'input_shape': input_shape,
         'backbone': conf_backbone,
         'head': conf_head,
         'training': conf_training,
         'data': conf_data_high_noise
     }, max_epochs, dry_run)
+    _evaluate_model(name, dry_run)
 
     # Step 3:
     # - Random init
@@ -96,14 +102,16 @@ def _run_experiment_hl_60_low_high_noise(configs, dry_run):
     conf_data = conf_data_high_noise.copy()
     for num_train in [200, 50, 10, 5, 2]:
         conf_data['num_train'] = num_train
+        name = 'E0_R_unet-stardist_hl60-high_{}'.format(num_train)
         _train_model({
-            'name': 'E0_R_unet-stardist_hl60-high_{}'.format(num_train),
+            'name': name,
             'input_shape': input_shape,
             'backbone': conf_backbone,
             'head': conf_head,
             'training': conf_training,
             'data': conf_data
         }, max_epochs, dry_run)
+        _evaluate_model(name, dry_run)
 
     # Step 4:
     # - Low-noise init
@@ -115,14 +123,16 @@ def _run_experiment_hl_60_low_high_noise(configs, dry_run):
     conf_data = conf_data_high_noise.copy()
     for num_train in [200, 50, 10, 5, 2]:
         conf_data['num_train'] = num_train
+        name = 'E0_R_unet-stardist_hl60-high_{}'.format(num_train)
         _train_model({
-            'name': 'E0_R_unet-stardist_hl60-high_{}'.format(num_train),
+            'name': name,
             'input_shape': input_shape,
             'backbone': conf_backbone_pretrained,
             'head': conf_head,
             'training': conf_training,
             'data': conf_data
         }, max_epochs, dry_run)
+        _evaluate_model(name, dry_run)
 
 
 def _train_model(conf, epochs, dry_run):
@@ -130,8 +140,42 @@ def _train_model(conf, epochs, dry_run):
         print('Training model {} for {} epochs...'.format(
             conf['name'], epochs))
         print(conf)
-    else:
+        return
+
+    if not os.path.isdir(os.path.join('models', conf['name'])):
         train.train(conf, epochs=epochs)
+    else:
+        print('Model {} already present.'.format(conf['name']))
+
+
+def _evaluate_model(name, dry_run):
+    if dry_run:
+        print('Evaluating model {}...'.format(name))
+        return
+
+    with open(os.path.join('models', name, 'config.yaml'), 'r') as f:
+        conf = yaml_load(f)
+
+    results = {}
+    epoch = 1
+    while True:
+        res = evaluate.evaluate(conf, epoch=epoch)
+
+        if results == {}:
+            # Create results dict
+            results['epoch'] = [epoch]
+            for k, v in res.items():
+                results[k] = [v]
+        else:
+            # Update results dict
+            results['epoch'].append(epoch)
+            for k, v in res.items():
+                results[k].append(v)
+
+        epoch += 1
+
+    results_df = pd.DataFrame(results)
+    results_df.to_csv(os.path.join('models', name, 'results.csv'))
 
 
 def _get_configs():

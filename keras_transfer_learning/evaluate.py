@@ -2,10 +2,13 @@ from keras_transfer_learning import model, dataset
 from keras_transfer_learning.utils import mean_average_precision
 
 
-def evaluate(conf):
+def evaluate(conf, epoch=None):
     # TODO allow loading a specific epoch
     # Create the mdoel
-    m = model.Model(conf, load_weights='last')
+    if epoch is None:
+        m = model.Model(conf, load_weights='last')
+    else:
+        m = model.Model(conf, load_weights='epoch', epoch=epoch)
 
     # Create the dataset
     d = dataset.Dataset(conf)
@@ -18,6 +21,7 @@ def evaluate(conf):
     # Evaluate
     iou_thresholds = [0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95]
     ap = mean_average_precision.ap_segm(pred, test_y, iou_thresholds)
-
+    ap_dict = {k: v for k, v in zip(iou_thresholds, ap)}
     print("The average precision is {}".format(ap))
-    return ap
+
+    return ap_dict

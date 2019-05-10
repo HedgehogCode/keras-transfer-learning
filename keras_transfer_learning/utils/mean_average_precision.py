@@ -90,7 +90,7 @@ def ap_matched_ious(preds, gt_segments, iou_thresholds):
     ap = []
     for iou_th in iou_thresholds:
         ap.append(ap_matched(preds, gt_segments, iou_th)[0])
-    return np.mean(ap), ap
+    return ap
 
 
 def ap_matched(preds, gt_segments, iou_threshold):
