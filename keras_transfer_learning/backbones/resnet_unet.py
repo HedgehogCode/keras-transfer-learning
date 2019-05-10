@@ -75,7 +75,7 @@ def resnet_unet(filters=None, blocks=None, ndims=2, padding_fix=True):
 
         # Upsample
         for idx, (filt, blk) in enumerate(zip(up_filters, up_blocks)):
-            tensor = unet.upsample_conv_block(ndims, filt,
+            tensor = unet.upsample_conv_block(ndims, filt * 4,
                                               name='upsample' + str(idx))(tensor)
             skip_tensor = tensors.pop(0)
             if padding_fix:

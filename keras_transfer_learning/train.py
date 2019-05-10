@@ -62,7 +62,7 @@ def train(conf: dict, epochs: int, initial_epoch: int = 0):
     else:
         load_weights = 'last'
     m = model.Model(conf, load_weights=load_weights, epoch=initial_epoch)
-    m.model.summary()
+    m.model.summary(line_length=140)
 
     m.prepare_for_training()
 
@@ -80,7 +80,6 @@ def train(conf: dict, epochs: int, initial_epoch: int = 0):
 
     # Train the model
     print('Training the model...')
-    print(m.model.inputs)
     history = m.model.fit_generator(train_generator, validation_data=val_generator,
                                     epochs=epochs, initial_epoch=initial_epoch,
                                     callbacks=training_callbacks)

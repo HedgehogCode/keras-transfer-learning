@@ -26,7 +26,6 @@ def resnet_38(y):
 
 def resnet_50(y):
     def stack_fn(x):
-        print("Print 1:", x)
         x = stack(64, 3, stride1=1, name='conv2')(x)
         x = stack(128, 4, name='conv3')(x)
         x = stack(256, 6, name='conv4')(x)
