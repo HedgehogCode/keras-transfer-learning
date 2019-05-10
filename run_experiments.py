@@ -47,7 +47,6 @@ def main(arguments):
     dry_run = args.dry_run
     # TODO add arguments to run only a subset of the experiments
 
-
     configs = _get_configs()
 
     # Experiment 1: hl60 low and high noise
@@ -69,7 +68,7 @@ def _run_experiment_hl_60_low_high_noise(configs, dry_run):
     # - Random init
     # - Low noise
     # - All data
-    name ='E0_R_unet-stardist_hl60-low_F'
+    name = 'E0_R_unet-stardist_hl60-low_F'
     _train_model({
         'name': name,
         'input_shape': input_shape,
@@ -84,7 +83,7 @@ def _run_experiment_hl_60_low_high_noise(configs, dry_run):
     # - Random init
     # - High noise
     # - All data
-    name ='E0_R_unet-stardist_hl60-high_F'
+    name = 'E0_R_unet-stardist_hl60-high_F'
     _train_model({
         'name': name,
         'input_shape': input_shape,
