@@ -50,88 +50,271 @@ def main(arguments):
     configs = _get_configs()
 
     # Experiment 1: hl60 low and high noise
-    _run_experiment_hl_60_low_high_noise(configs, dry_run)
+    try:
+        _run_experiment_hl_60_low_high_noise('E1', configs, dry_run)
+    except Exception as e:
+        print("ERROR: Experiment E1 failed:", e)
+
+    # Experiment 2: hl60 and granulocyte
+    try:
+        _run_experiment_hl_60_granulocyte('E2', configs, dry_run)
+    except Exception as e:
+        print("ERROR: Experiment E2 failed:", e)
+
+    # Experiment 3: hl60 and granulocyte
+    try:
+        _run_experiment_granulocyte_dsb2018('E3', configs, dry_run)
+    except Exception as e:
+        print("ERROR: Experiment E3 failed:", e)
+
+    # Experiment 4: hl60 and granulocyte
+    try:
+        _run_experiment_hl60_low_cityscapes('E4', configs, dry_run)
+    except Exception as e:
+        print("ERROR: Experiment E4 failed:", e)
+
+    # Experiment 5: hl60 and granulocyte
+    try:
+        _run_experiment_dsb2018_cityscapes('E5', configs, dry_run)
+    except Exception as e:
+        print("ERROR: Experiment E5 failed:", e)
 
     # TODO
 
 
-def _run_experiment_hl_60_low_high_noise(configs, dry_run):
-    max_epochs = 1000
-    input_shape = [None, None, 1]
+###################################################################################################
+#   EXPERIMENT HL60 Low/High Noise
+###################################################################################################
+
+def _run_experiment_hl_60_low_high_noise(name, configs, dry_run):
     conf_backbone = configs.backbone.unet_csbdeep
     conf_head = configs.head.stardist
     conf_training = configs.training.default
     conf_data_low_noise = configs.data.hl60_low_noise
     conf_data_high_noise = configs.data.hl60_high_noise
 
+    _run_default_experiment(name, conf_training,
+                            'unet', conf_backbone,
+                            'stardist', conf_head,
+                            'stardist', conf_head,
+                            'hl60-low-noise', conf_data_low_noise,
+                            'hl60-high-noise', conf_data_high_noise,
+                            dry_run)
+
+
+###################################################################################################
+#   EXPERIMENT HL60/Granulocyte
+###################################################################################################
+
+def _run_experiment_hl_60_granulocyte(name, configs, dry_run):
+    conf_backbone = configs.backbone.unet_csbdeep
+    conf_head = configs.head.stardist
+    conf_training = configs.training.default
+    conf_data_low_noise = configs.data.hl60_low_noise
+    conf_data_granulocyte = configs.data.granulocyte
+
+    _run_default_experiment(name, conf_training,
+                            'unet', conf_backbone,
+                            'stardist', conf_head,
+                            'stardist', conf_head,
+                            'hl60-low-noise', conf_data_low_noise,
+                            'granulocyte', conf_data_granulocyte,
+                            dry_run)
+
+
+###################################################################################################
+#   EXPERIMENT Granulocyte/DSB2018
+###################################################################################################
+
+def _run_experiment_granulocyte_dsb2018(name, configs, dry_run):
+    conf_backbone = configs.backbone.unet_csbdeep
+    conf_head = configs.head.stardist
+    conf_training = configs.training.default
+    conf_data_granulocyte = configs.data.granulocyte
+    conf_data_dsb2018 = configs.data.dsb2018
+
+    _run_default_experiment(name, conf_training,
+                            'unet', conf_backbone,
+                            'stardist', conf_head,
+                            'stardist', conf_head,
+                            'granulocyte', conf_data_granulocyte,
+                            'dsb2018', conf_data_dsb2018,
+                            dry_run)
+
+
+###################################################################################################
+#   EXPERIMENT HL60/Cityscapes
+###################################################################################################
+
+def _run_experiment_hl60_low_cityscapes(name, configs, dry_run):
+    conf_backbone = configs.backbone.resnet_unet
+    conf_head_hl60 = configs.head.stardist
+    conf_head_cityscapes = configs.head.segm_cityscapes
+    conf_training = configs.training.default
+    conf_data_hl60 = configs.data.hl60_low_noise
+    conf_data_cityscapes = configs.data.cityscapes
+
+    _run_default_experiment(name, conf_training,
+                            'resnet-unet', conf_backbone,
+                            'stardist', conf_head_hl60,
+                            'segm', conf_head_cityscapes,
+                            'hl60-low-noise', conf_data_hl60,
+                            'cityscapes', conf_data_cityscapes,
+                            dry_run)
+
+
+###################################################################################################
+#   EXPERIMENT DSB2018/Cityscapes
+###################################################################################################
+
+def _run_experiment_dsb2018_cityscapes(name, configs, dry_run):
+    conf_backbone = configs.backbone.resnet_unet
+    conf_head_dsb2018 = configs.head.stardist
+    conf_head_cityscapes = configs.head.segm_cityscapes
+    conf_training = configs.training.default
+    conf_data_dsb2018 = configs.data.dsb2018
+    conf_data_cityscapes = configs.data.cityscapes
+
+    _run_default_experiment(name, conf_training,
+                            'resnet-unet', conf_backbone,
+                            'stardist', conf_head_dsb2018,
+                            'segm', conf_head_cityscapes,
+                            'dsb2018', conf_data_dsb2018,
+                            'cityscapes', conf_data_cityscapes,
+                            dry_run)
+
+
+###################################################################################################
+#   Utils
+###################################################################################################
+
+def _run_default_experiment(name_experiment, conf_training,
+                            name_backbone, conf_backbone,
+                            name_head_1, conf_head_1,
+                            name_head_2, conf_head_2,
+                            name_data_1, conf_data_1,
+                            name_data_2, conf_data_2,
+                            dry_run):
+    max_epochs = 1000
+    input_shape = [None, None, 1]
     # Step 1:
     # - Random init
-    # - Low noise
+    # - Head 1 + Data 1
     # - All data
-    name = 'E0_R_unet-stardist_hl60-low_F'
+    name_model_1 = _get_model_name(
+        name_experiment, name_backbone, name_head_1, name_data_1, False, 'F')
     _train_model({
-        'name': name,
+        'name': name_model_1,
         'input_shape': input_shape,
         'backbone': conf_backbone,
-        'head': conf_head,
+        'head': conf_head_1,
         'training': conf_training,
-        'data': conf_data_low_noise
+        'data': conf_data_1
     }, max_epochs, dry_run)
-    _evaluate_model(name, dry_run)
+    _evaluate_model(name_model_1, dry_run)
 
     # Step 2:
     # - Random init
-    # - High noise
+    # - Head 2 + Data 2
     # - All data
-    name = 'E0_R_unet-stardist_hl60-high_F'
+    name_model_2 = _get_model_name(
+        name_experiment, name_backbone, name_head_2, name_data_2, False, 'F')
     _train_model({
-        'name': name,
+        'name': name_model_2,
         'input_shape': input_shape,
         'backbone': conf_backbone,
-        'head': conf_head,
+        'head': conf_head_2,
         'training': conf_training,
-        'data': conf_data_high_noise
+        'data': conf_data_2
     }, max_epochs, dry_run)
-    _evaluate_model(name, dry_run)
+    _evaluate_model(name_model_2, dry_run)
 
     # Step 3:
     # - Random init
-    # - High noise
+    # - Head 1 + Data 1
     # - Parts of the data
-    conf_data = conf_data_high_noise.copy()
+    conf_data = conf_data_1.copy()
     for num_train in [200, 50, 10, 5, 2]:
         conf_data['num_train'] = num_train
-        name = 'E0_R_unet-stardist_hl60-high_{}'.format(num_train)
+        name = _get_model_name(
+            name_experiment, name_backbone, name_head_1, name_data_1, False, num_train)
         _train_model({
             'name': name,
             'input_shape': input_shape,
             'backbone': conf_backbone,
-            'head': conf_head,
+            'head': conf_head_1,
             'training': conf_training,
             'data': conf_data
         }, max_epochs, dry_run)
         _evaluate_model(name, dry_run)
 
     # Step 4:
-    # - Low-noise init
-    # - High noise
+    # - Random init
+    # - Head 2 + Data 2
     # - Parts of the data
-    conf_backbone_pretrained = conf_backbone.copy()
-    conf_backbone_pretrained['weights'] = os.path.join(
-        'models', 'E0_R_unet-stardist_hl60-low_F', 'weights_final.h5')
-    conf_data = conf_data_high_noise.copy()
+    conf_data = conf_data_2.copy()
     for num_train in [200, 50, 10, 5, 2]:
         conf_data['num_train'] = num_train
-        name = 'E0_R_unet-stardist_hl60-high_{}'.format(num_train)
+        name = _get_model_name(
+            name_experiment, name_backbone, name_head_2, name_data_2, False, num_train)
         _train_model({
             'name': name,
             'input_shape': input_shape,
-            'backbone': conf_backbone_pretrained,
-            'head': conf_head,
+            'backbone': conf_backbone,
+            'head': conf_head_2,
             'training': conf_training,
             'data': conf_data
         }, max_epochs, dry_run)
         _evaluate_model(name, dry_run)
+
+    # Step 5:
+    # - Step 1 model init
+    # - Head 2 + Data 2
+    # - Parts of the data
+    conf_backbone_pretrained = conf_backbone.copy()
+    conf_backbone_pretrained['weights'] = os.path.join(
+        'models', name_model_1, 'weights_final.h5')
+    conf_data = conf_data_2.copy()
+    for num_train in [200, 50, 10, 5, 2]:
+        conf_data['num_train'] = num_train
+        name = _get_model_name(
+            name_experiment, name_backbone, name_head_2, name_data_2, True, num_train)
+        _train_model({
+            'name': name,
+            'input_shape': input_shape,
+            'backbone': conf_backbone_pretrained,
+            'head': conf_head_2,
+            'training': conf_training,
+            'data': conf_data
+        }, max_epochs, dry_run)
+        _evaluate_model(name, dry_run)
+
+    # Step 6:
+    # - Step 2 model init
+    # - Head 1 + Data 1
+    # - Parts of the data
+    conf_backbone_pretrained = conf_backbone.copy()
+    conf_backbone_pretrained['weights'] = os.path.join(
+        'models', name_model_2, 'weights_final.h5')
+    conf_data = conf_data_1.copy()
+    for num_train in [200, 50, 10, 5, 2]:
+        conf_data['num_train'] = num_train
+        name = _get_model_name(
+            name_experiment, name_backbone, name_head_1, name_data_1, True, num_train)
+        _train_model({
+            'name': name,
+            'input_shape': input_shape,
+            'backbone': conf_backbone_pretrained,
+            'head': conf_head_1,
+            'training': conf_training,
+            'data': conf_data
+        }, max_epochs, dry_run)
+        _evaluate_model(name, dry_run)
+
+
+def _get_model_name(name_experiment, name_backbone, name_head, name_data, pretrained, num_train):
+    return '{}_{}_{}_{}_{}_{}'.format(name_experiment, name_backbone, name_head, name_data,
+                                      'P' if pretrained else 'R', num_train)
 
 
 def _train_model(conf, epochs, dry_run):
@@ -142,7 +325,11 @@ def _train_model(conf, epochs, dry_run):
         return
 
     if not os.path.isdir(os.path.join('models', conf['name'])):
-        train.train(conf, epochs=epochs)
+        try:
+            train.train(conf, epochs=epochs)
+        except Exception as e:
+            print('ERROR: Training of model {} failed: {}'.format(
+                conf['name'], e))
     else:
         print('Model {} already present.'.format(conf['name']))
 
@@ -155,30 +342,33 @@ def _evaluate_model(name, dry_run):
     with open(os.path.join('models', name, 'config.yaml'), 'r') as f:
         conf = yaml_load(f)
 
-    results = {}
-    epoch = 1
-    while True:
-        try:
-            res = evaluate.evaluate(conf, epoch=epoch)
-        except ValueError:
-            # Last epoch
-            break
+    try:
+        results = {}
+        epoch = 1
+        while True:
+            try:
+                res = evaluate.evaluate(conf, epoch=epoch)
+            except ValueError:
+                # Last epoch
+                break
 
-        if results == {}:
-            # Create results dict
-            results['epoch'] = [epoch]
-            for k, v in res.items():
-                results[k] = [v]
-        else:
-            # Update results dict
-            results['epoch'].append(epoch)
-            for k, v in res.items():
-                results[k].append(v)
+            if results == {}:
+                # Create results dict
+                results['epoch'] = [epoch]
+                for k, v in res.items():
+                    results[k] = [v]
+            else:
+                # Update results dict
+                results['epoch'].append(epoch)
+                for k, v in res.items():
+                    results[k].append(v)
 
-        epoch += 1
+            epoch += 1
 
-    results_df = pd.DataFrame(results)
-    results_df.to_csv(os.path.join('models', name, 'results.csv'))
+        results_df = pd.DataFrame(results)
+        results_df.to_csv(os.path.join('models', name, 'results.csv'))
+    except Exception as e:
+        print('ERROR: Evaluation of model {} failed: {}'.format(name, e))
 
 
 def _get_configs():
