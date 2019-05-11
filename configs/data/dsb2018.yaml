@@ -1,5 +1,5 @@
-name: 'stardist-dsb2018'
-data_dir: 'data/stardist-dsb2018'
+name: 'dsb2018'
+data_dir: 'data/dsb2018'
 train_val_split: 0.9
 normalizer: 'min-max'
 datasplit_seed: 42

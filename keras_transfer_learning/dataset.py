@@ -5,13 +5,15 @@ import numpy as np
 import tifffile
 
 from keras_transfer_learning.heads import segm, stardist, classification
-from keras_transfer_learning.data import dataaug, datagen, stardist_dsb2018, cytogen, cityscapes, utils
+from keras_transfer_learning.data import stardist_dsb2018, dsb2018, cytogen, cityscapes
+from keras_transfer_learning.data import dataaug, datagen, utils
 
 
 def _create_data_generators(conf):
     # Decide which function is appropriate
     return {
         'stardist-dsb2018': _create_data_generators_from_lists,
+        'dsb2018': _create_data_generators_from_lists,
         'cytogen': _create_data_generators_from_lists,
         'cityscapes': _create_data_generators_from_lists
     }[conf['data']['name']](conf)
@@ -21,6 +23,7 @@ def _create_data_generators_from_lists(conf):
     # Find the appropriate load function
     load_fn = {
         'stardist-dsb2018': stardist_dsb2018.load_train,
+        'dsb2018': dsb2018.load_train,
         'cytogen': cytogen.load_train,
         'cityscapes': cityscapes.load_train
     }[conf['data']['name']]
@@ -36,7 +39,7 @@ def _create_data_generators_from_lists(conf):
 
     # Normalizer each sample
     normalize_fn = _create_normalize_fn(conf)
-    if conf['data']['name'] in ['stardist-dsb2018', 'cytogen']:
+    if conf['data']['name'] in ['stardist-dsb2018', 'dsb2018', 'cytogen']:
         train_x = [normalize_fn(x) for x in train_x]
         val_x = [normalize_fn(x) for x in val_x]
         normalize_fn = None
