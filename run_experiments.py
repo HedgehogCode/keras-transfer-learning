@@ -158,7 +158,11 @@ def _evaluate_model(name, dry_run):
     results = {}
     epoch = 1
     while True:
-        res = evaluate.evaluate(conf, epoch=epoch)
+        try:
+            res = evaluate.evaluate(conf, epoch=epoch)
+        except ValueError:
+            # Last epoch
+            break
 
         if results == {}:
             # Create results dict
