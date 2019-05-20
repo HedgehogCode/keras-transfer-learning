@@ -356,10 +356,16 @@ def _evaluate_model(name, dry_run):
         print('Evaluating model {}...'.format(name))
         return
 
-    with open(os.path.join('models', name, 'config.yaml'), 'r') as f:
-        conf = yaml_load(f)
-
     try:
+        results_file = os.path.join('models', name, 'results.csv')
+        # Check if the results file already exists
+        if os.path.isfile(results_file):
+            print('Model {} already evaluated.'.format(name))
+            return
+
+        with open(os.path.join('models', name, 'config.yaml'), 'r') as f:
+            conf = yaml_load(f)
+
         results = {}
         epoch = 1
         while True:
@@ -384,7 +390,7 @@ def _evaluate_model(name, dry_run):
             epoch += 1
 
         results_df = pd.DataFrame(results)
-        results_df.to_csv(os.path.join('models', name, 'results.csv'))
+        results_df.to_csv(results_file)
     except Exception as e:
         print('ERROR: Evaluation of model {} failed: {}'.format(name, e))
 
