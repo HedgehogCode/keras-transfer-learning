@@ -45,39 +45,41 @@ def main(arguments):
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-d', '--dry-run', action='store_true')
+    parser.add_argument('--no-eval', action='store_true')
     args = parser.parse_args(arguments)
     dry_run = args.dry_run
+    no_eval = args.no_eval
     # TODO add arguments to run only a subset of the experiments
 
     configs = _get_configs()
 
     # Experiment 1: hl60 low and high noise
     try:
-        _run_experiment_hl_60_low_high_noise('E1', configs, dry_run)
+        _run_experiment_hl_60_low_high_noise('E1', configs, dry_run, no_eval)
     except Exception as e:
         print("ERROR: Experiment E1 failed:", e)
 
     # Experiment 2: hl60 and granulocyte
     try:
-        _run_experiment_hl_60_granulocyte('E2', configs, dry_run)
+        _run_experiment_hl_60_granulocyte('E2', configs, dry_run, no_eval)
     except Exception as e:
         print("ERROR: Experiment E2 failed:", e)
 
     # Experiment 3: hl60 and granulocyte
     try:
-        _run_experiment_granulocyte_dsb2018('E3', configs, dry_run)
+        _run_experiment_granulocyte_dsb2018('E3', configs, dry_run, no_eval)
     except Exception as e:
         print("ERROR: Experiment E3 failed:", e)
 
     # Experiment 4: hl60 and granulocyte
     try:
-        _run_experiment_hl60_low_cityscapes('E4', configs, dry_run)
+        _run_experiment_hl60_low_cityscapes('E4', configs, dry_run, no_eval)
     except Exception as e:
         print("ERROR: Experiment E4 failed:", e)
 
     # Experiment 5: hl60 and granulocyte
     try:
-        _run_experiment_dsb2018_cityscapes('E5', configs, dry_run)
+        _run_experiment_dsb2018_cityscapes('E5', configs, dry_run, no_eval)
     except Exception as e:
         print("ERROR: Experiment E5 failed:", e)
 
@@ -88,7 +90,7 @@ def main(arguments):
 #   EXPERIMENT HL60 Low/High Noise
 ###################################################################################################
 
-def _run_experiment_hl_60_low_high_noise(name, configs, dry_run):
+def _run_experiment_hl_60_low_high_noise(name, configs, dry_run, no_eval):
     conf_backbone = configs.backbone.unet_csbdeep
     conf_head = configs.head.stardist
     conf_training = configs.training.default
@@ -101,14 +103,14 @@ def _run_experiment_hl_60_low_high_noise(name, configs, dry_run):
                             'stardist', conf_head,
                             'hl60-low-noise', conf_data_low_noise,
                             'hl60-high-noise', conf_data_high_noise,
-                            dry_run)
+                            dry_run, no_eval)
 
 
 ###################################################################################################
 #   EXPERIMENT HL60/Granulocyte
 ###################################################################################################
 
-def _run_experiment_hl_60_granulocyte(name, configs, dry_run):
+def _run_experiment_hl_60_granulocyte(name, configs, dry_run, no_eval):
     conf_backbone = configs.backbone.unet_csbdeep
     conf_head = configs.head.stardist
     conf_training = configs.training.default
@@ -121,14 +123,14 @@ def _run_experiment_hl_60_granulocyte(name, configs, dry_run):
                             'stardist', conf_head,
                             'hl60-low-noise', conf_data_low_noise,
                             'granulocyte', conf_data_granulocyte,
-                            dry_run)
+                            dry_run, no_eval)
 
 
 ###################################################################################################
 #   EXPERIMENT Granulocyte/DSB2018
 ###################################################################################################
 
-def _run_experiment_granulocyte_dsb2018(name, configs, dry_run):
+def _run_experiment_granulocyte_dsb2018(name, configs, dry_run, no_eval):
     conf_backbone = configs.backbone.unet_csbdeep
     conf_head = configs.head.stardist
     conf_training = configs.training.default
@@ -141,14 +143,14 @@ def _run_experiment_granulocyte_dsb2018(name, configs, dry_run):
                             'stardist', conf_head,
                             'granulocyte', conf_data_granulocyte,
                             'dsb2018', conf_data_dsb2018,
-                            dry_run)
+                            dry_run, no_eval)
 
 
 ###################################################################################################
 #   EXPERIMENT HL60/Cityscapes
 ###################################################################################################
 
-def _run_experiment_hl60_low_cityscapes(name, configs, dry_run):
+def _run_experiment_hl60_low_cityscapes(name, configs, dry_run, no_eval):
     conf_backbone = configs.backbone.resnet_unet
     conf_head_hl60 = configs.head.stardist
     conf_head_cityscapes = configs.head.segm_cityscapes
@@ -162,14 +164,14 @@ def _run_experiment_hl60_low_cityscapes(name, configs, dry_run):
                             'segm', conf_head_cityscapes,
                             'hl60-low-noise', conf_data_hl60,
                             'cityscapes', conf_data_cityscapes,
-                            dry_run)
+                            dry_run, no_eval)
 
 
 ###################################################################################################
 #   EXPERIMENT DSB2018/Cityscapes
 ###################################################################################################
 
-def _run_experiment_dsb2018_cityscapes(name, configs, dry_run):
+def _run_experiment_dsb2018_cityscapes(name, configs, dry_run, no_eval):
     conf_backbone = configs.backbone.resnet_unet
     conf_head_dsb2018 = configs.head.stardist
     conf_head_cityscapes = configs.head.segm_cityscapes
@@ -183,7 +185,7 @@ def _run_experiment_dsb2018_cityscapes(name, configs, dry_run):
                             'segm', conf_head_cityscapes,
                             'dsb2018', conf_data_dsb2018,
                             'cityscapes', conf_data_cityscapes,
-                            dry_run)
+                            dry_run, no_eval)
 
 
 ###################################################################################################
@@ -196,7 +198,7 @@ def _run_default_experiment(name_experiment, conf_training,
                             name_head_2, conf_head_2,
                             name_data_1, conf_data_1,
                             name_data_2, conf_data_2,
-                            dry_run):
+                            dry_run, no_eval):
     max_epochs = 1000
     input_shape = [None, None, 1]
     # Step 1:
@@ -213,7 +215,8 @@ def _run_default_experiment(name_experiment, conf_training,
         'training': conf_training,
         'data': conf_data_1
     }, max_epochs, dry_run)
-    _evaluate_model(name_model_1, dry_run)
+    if not no_eval:
+        _evaluate_model(name_model_1, dry_run)
 
     # Step 2:
     # - Random init
@@ -229,7 +232,8 @@ def _run_default_experiment(name_experiment, conf_training,
         'training': conf_training,
         'data': conf_data_2
     }, max_epochs, dry_run)
-    _evaluate_model(name_model_2, dry_run)
+    if not no_eval:
+        _evaluate_model(name_model_2, dry_run)
 
     # Step 3:
     # - Random init
@@ -248,7 +252,8 @@ def _run_default_experiment(name_experiment, conf_training,
             'training': conf_training,
             'data': conf_data
         }, max_epochs, dry_run)
-        _evaluate_model(name, dry_run)
+        if not no_eval:
+            _evaluate_model(name, dry_run)
 
     # Step 4:
     # - Random init
@@ -267,7 +272,8 @@ def _run_default_experiment(name_experiment, conf_training,
             'training': conf_training,
             'data': conf_data
         }, max_epochs, dry_run)
-        _evaluate_model(name, dry_run)
+        if not no_eval:
+            _evaluate_model(name, dry_run)
 
     # Step 5:
     # - Step 1 model init
@@ -289,7 +295,8 @@ def _run_default_experiment(name_experiment, conf_training,
             'training': conf_training,
             'data': conf_data
         }, max_epochs, dry_run)
-        _evaluate_model(name, dry_run)
+        if not no_eval:
+            _evaluate_model(name, dry_run)
 
     # Step 6:
     # - Step 2 model init
@@ -311,7 +318,8 @@ def _run_default_experiment(name_experiment, conf_training,
             'training': conf_training,
             'data': conf_data
         }, max_epochs, dry_run)
-        _evaluate_model(name, dry_run)
+        if not no_eval:
+            _evaluate_model(name, dry_run)
 
 
 def _get_model_name(name_experiment, name_backbone, name_head, name_data, pretrained, num_train):
