@@ -46,42 +46,48 @@ def main(arguments):
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-d', '--dry-run', action='store_true')
     parser.add_argument('--no-eval', action='store_true')
+    parser.add_argument('-e', '--experiments', nargs='+', type=int)
     args = parser.parse_args(arguments)
     dry_run = args.dry_run
     no_eval = args.no_eval
-    # TODO add arguments to run only a subset of the experiments
+    experiments = args.experiments
 
     configs = _get_configs()
 
     # Experiment 1: hl60 low and high noise
-    try:
-        _run_experiment_hl_60_low_high_noise('E1', configs, dry_run, no_eval)
-    except Exception as e:
-        print("ERROR: Experiment E1 failed:", e)
+    if experiments is None or 1 in experiments:
+        try:
+            _run_experiment_hl_60_low_high_noise('E1', configs, dry_run, no_eval)
+        except Exception as e:
+            print("ERROR: Experiment E1 failed:", e)
 
     # Experiment 2: hl60 and granulocyte
-    try:
-        _run_experiment_hl_60_granulocyte('E2', configs, dry_run, no_eval)
-    except Exception as e:
-        print("ERROR: Experiment E2 failed:", e)
+    if experiments is None or 2 in experiments:
+        try:
+            _run_experiment_hl_60_granulocyte('E2', configs, dry_run, no_eval)
+        except Exception as e:
+            print("ERROR: Experiment E2 failed:", e)
 
     # Experiment 3: hl60 and granulocyte
-    try:
-        _run_experiment_granulocyte_dsb2018('E3', configs, dry_run, no_eval)
-    except Exception as e:
-        print("ERROR: Experiment E3 failed:", e)
+    if experiments is None or 3 in experiments:
+        try:
+            _run_experiment_granulocyte_dsb2018('E3', configs, dry_run, no_eval)
+        except Exception as e:
+            print("ERROR: Experiment E3 failed:", e)
 
     # Experiment 4: hl60 and granulocyte
-    try:
-        _run_experiment_hl60_low_cityscapes('E4', configs, dry_run, no_eval)
-    except Exception as e:
-        print("ERROR: Experiment E4 failed:", e)
+    if experiments is None or 4 in experiments:
+        try:
+            _run_experiment_hl60_low_cityscapes('E4', configs, dry_run, no_eval)
+        except Exception as e:
+            print("ERROR: Experiment E4 failed:", e)
 
     # Experiment 5: hl60 and granulocyte
-    try:
-        _run_experiment_dsb2018_cityscapes('E5', configs, dry_run, no_eval)
-    except Exception as e:
-        print("ERROR: Experiment E5 failed:", e)
+    if experiments is None or 5 in experiments:
+        try:
+            _run_experiment_dsb2018_cityscapes('E5', configs, dry_run, no_eval)
+        except Exception as e:
+            print("ERROR: Experiment E5 failed:", e)
 
     # TODO
 
