@@ -1,12 +1,12 @@
 {
-    "python.pythonPath": "/home/bw/apps/miniconda/envs/bachelorthesis/bin/python",
+    "python.pythonPath": "/home/benjamin/miniconda3/envs/bachelorthesis/bin/python",
     "python.linting.enabled": true,
-    "python.unitTest.pyTestArgs": [
+    "python.testing.pyTestArgs": [
         "tests"
     ],
-    "python.unitTest.unittestEnabled": false,
-    "python.unitTest.nosetestsEnabled": false,
-    "python.unitTest.pyTestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.nosetestsEnabled": false,
+    "python.testing.pyTestEnabled": true,
     "spellright.language": [],
     "spellright.documentTypes": [
         "markdown"
