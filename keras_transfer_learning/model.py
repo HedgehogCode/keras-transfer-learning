@@ -4,6 +4,7 @@ from yaml import safe_load as yaml_load
 from tqdm import tqdm
 
 from keras import layers, models
+import keras.backend as K
 
 from keras_transfer_learning.utils import utils
 from keras_transfer_learning.backbones import unet, convnet, resnet_unet
@@ -70,6 +71,8 @@ class Model:
         if config is None and model_dir is None:
             raise ValueError(
                 'Either the model directory or config must be given')
+
+        K.clear_session()
 
         # Set the config
         if config is None:

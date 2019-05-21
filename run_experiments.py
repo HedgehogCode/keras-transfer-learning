@@ -10,8 +10,6 @@ from yaml import safe_load as yaml_load
 
 import pandas as pd
 
-import keras.backend as K
-
 from keras_transfer_learning import train, evaluate
 
 CONFIG_FILES = {
@@ -342,7 +340,6 @@ def _train_model(conf, epochs, dry_run):
 
     if not os.path.isdir(os.path.join('models', conf['name'])):
         try:
-            K.clear_session()
             train.train(conf, epochs=epochs)
         except Exception as e:
             print('ERROR: Training of model {} failed: {}'.format(
@@ -370,7 +367,6 @@ def _evaluate_model(name, dry_run):
         epoch = 1
         while True:
             try:
-                K.clear_session()
                 res = evaluate.evaluate(conf, epoch=epoch)
             except ValueError:
                 # Last epoch
