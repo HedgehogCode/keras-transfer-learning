@@ -68,21 +68,21 @@ def main(arguments):
         except Exception as e:
             print("ERROR: Experiment E2 failed:", e)
 
-    # Experiment 3: hl60 and granulocyte
+    # Experiment 3: granulocyte and dsb2018
     if experiments is None or 3 in experiments:
         try:
             _run_experiment_granulocyte_dsb2018('E3', configs, dry_run, no_eval)
         except Exception as e:
             print("ERROR: Experiment E3 failed:", e)
 
-    # Experiment 4: hl60 and granulocyte
+    # Experiment 4: hl60 and cityscapes
     if experiments is None or 4 in experiments:
         try:
             _run_experiment_hl60_low_cityscapes('E4', configs, dry_run, no_eval)
         except Exception as e:
             print("ERROR: Experiment E4 failed:", e)
 
-    # Experiment 5: hl60 and granulocyte
+    # Experiment 5: dsb2018 and cityscapes
     if experiments is None or 5 in experiments:
         try:
             _run_experiment_dsb2018_cityscapes('E5', configs, dry_run, no_eval)
