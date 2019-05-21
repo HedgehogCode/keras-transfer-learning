@@ -10,6 +10,10 @@ def evaluate(conf, epoch=None):
     else:
         m = model.Model(conf, load_weights='epoch', epoch=epoch)
 
+    # TODO implement
+    if conf['data']['name'] == 'cityscapes':
+        raise ValueError('Evaluation is not supported for the cityscapes dataset yet.')
+
     # Create the dataset
     d = dataset.Dataset(conf)
     test_x, test_y = d.create_test_dataset()
