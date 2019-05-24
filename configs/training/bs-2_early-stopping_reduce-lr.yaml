@@ -1,0 +1,9 @@
+callbacks:
+- name: early_stopping
+  args:
+    patience: 12
+- name: reduce_lr_on_plateau
+  args:
+    patience: 8
+batch_size: 2
+epoch_length: 512
