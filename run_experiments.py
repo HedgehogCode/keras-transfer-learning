@@ -15,6 +15,7 @@ from keras_transfer_learning import train, evaluate
 CONFIG_FILES = {
     'backbone': {
         'resnet_unet': ['backbones', 'resnet-unet.yaml'],
+        'resnet_unet_big': ['backbones', 'resnet-unet-big.yaml'],
         'unet_csbdeep': ['backbones', 'unet-csbdeep.yaml'],
         'unet_very_small': ['backbones', 'unet-very-small.yaml']
     },
@@ -32,7 +33,8 @@ CONFIG_FILES = {
         'stardist': ['heads', 'stardist.yaml']
     },
     'training': {
-        'default': ['training', 'bs-8_early-stopping_reduce-lr.yaml']
+        'default': ['training', 'bs-8_early-stopping_reduce-lr.yaml'],
+        'small_bs': ['training', 'bs-2_early-stopping_reduce-lr.yaml']
     }
 }
 
@@ -52,42 +54,37 @@ def main(arguments):
 
     configs = _get_configs()
 
-    # Experiment 1: hl60 low and high noise
-    if experiments is None or 1 in experiments:
-        try:
-            _run_experiment_hl_60_low_high_noise('E1', configs, dry_run, no_eval)
-        except Exception as e:
-            print("ERROR: Experiment E1 failed:", e)
+    # Define the experiments
+    experiment_fns = {
+        # Experiment 1: hl60 low and high noise
+        1: lambda: _run_experiment_hl_60_low_high_noise('E1', configs, dry_run, no_eval),
+        # Experiment 2: hl60 and granulocyte
+        2: lambda: _run_experiment_hl_60_granulocyte('E2', configs, dry_run, no_eval),
+        # Experiment 3: granulocyte and dsb2018
+        3: lambda: _run_experiment_granulocyte_dsb2018('E3', configs, dry_run, no_eval),
+        # Experiment 4: hl60 and cityscapes
+        4: lambda: _run_experiment_hl60_low_cityscapes('E4', configs, dry_run, no_eval),
+        # Experiment 5: dsb2018 and cityscapes
+        5: lambda: _run_experiment_dsb2018_cityscapes('E5', configs, dry_run, no_eval),
+        # Experiment 6: dsb2018 monster model
+        6: lambda: _run_experiment_dsb2018_monster('E6', configs, dry_run, no_eval),
+        # Experiment 7: granulocyte and dsb2018 (unet)
+        7: lambda: _run_experiment_granulocyte_dsb2018_unet('E7', configs, dry_run, no_eval),
+        # Experiment 8: hl60 and granulocyte (same as 2)
+        8: lambda: _run_experiment_hl_60_granulocyte('E2a', configs, dry_run, no_eval),
+        # Experiment 9: granulocyte and dsb2018 (same as 3)
+        9: lambda: _run_experiment_granulocyte_dsb2018('E3a', configs, dry_run, no_eval)
+    }
 
-    # Experiment 2: hl60 and granulocyte
-    if experiments is None or 2 in experiments:
-        try:
-            _run_experiment_hl_60_granulocyte('E2', configs, dry_run, no_eval)
-        except Exception as e:
-            print("ERROR: Experiment E2 failed:", e)
+    # If no experiments were selected: Run all
+    if experiments is None:
+        experiments = list(experiment_fns.keys())
 
-    # Experiment 3: granulocyte and dsb2018
-    if experiments is None or 3 in experiments:
+    for exp in experiments:
         try:
-            _run_experiment_granulocyte_dsb2018('E3', configs, dry_run, no_eval)
+            experiment_fns[exp]()
         except Exception as e:
-            print("ERROR: Experiment E3 failed:", e)
-
-    # Experiment 4: hl60 and cityscapes
-    if experiments is None or 4 in experiments:
-        try:
-            _run_experiment_hl60_low_cityscapes('E4', configs, dry_run, no_eval)
-        except Exception as e:
-            print("ERROR: Experiment E4 failed:", e)
-
-    # Experiment 5: dsb2018 and cityscapes
-    if experiments is None or 5 in experiments:
-        try:
-            _run_experiment_dsb2018_cityscapes('E5', configs, dry_run, no_eval)
-        except Exception as e:
-            print("ERROR: Experiment E5 failed:", e)
-
-    # TODO
+            print("ERROR: Experiment E{} failed:".format(exp), e)
 
 
 ###################################################################################################
@@ -189,6 +186,52 @@ def _run_experiment_dsb2018_cityscapes(name, configs, dry_run, no_eval):
                             'segm', conf_head_cityscapes,
                             'dsb2018', conf_data_dsb2018,
                             'cityscapes', conf_data_cityscapes,
+                            dry_run, no_eval)
+
+
+###################################################################################################
+#   EXPERIMENT DSB2018 MONSTER
+###################################################################################################
+
+def _run_experiment_dsb2018_monster(name, configs, dry_run, no_eval):
+    conf_backbone = configs.backbone.resnet_unet_big
+    conf_head = configs.head.fgbg_segm_weighted
+    conf_training = configs.training.small_bs
+    conf_data = configs.data.dsb2018
+
+    max_epochs = 1000
+    input_shape = [None, None, 1]
+    name_model = _get_model_name(
+        name, 'resnet-unet-big', 'fgbg-weighted', 'dsb2018', False, 'F')
+    _train_model({
+        'name': name_model,
+        'input_shape': input_shape,
+        'backbone': conf_backbone,
+        'head': conf_head,
+        'training': conf_training,
+        'data': conf_data
+    }, max_epochs, dry_run)
+    if not no_eval:
+        _evaluate_model(name_model, dry_run)
+
+
+###################################################################################################
+#   EXPERIMENT Granulocyte/DSB2018
+###################################################################################################
+
+def _run_experiment_granulocyte_dsb2018_unet(name, configs, dry_run, no_eval):
+    conf_backbone = configs.backbone.resnet_unet
+    conf_head = configs.head.fgbg_segm_weighted
+    conf_training = configs.training.default
+    conf_data_granulocyte = configs.data.granulocyte
+    conf_data_dsb2018 = configs.data.dsb2018
+
+    _run_default_experiment(name, conf_training,
+                            'resnet-unet', conf_backbone,
+                            'fgbg-weighted', conf_head,
+                            'fgbg-weighted', conf_head,
+                            'granulocyte', conf_data_granulocyte,
+                            'dsb2018', conf_data_dsb2018,
                             dry_run, no_eval)
 
 
@@ -327,8 +370,12 @@ def _run_default_experiment(name_experiment, conf_training,
 
 
 def _get_model_name(name_experiment, name_backbone, name_head, name_data, pretrained, num_train):
-    return '{}_{}_{}_{}_{}_{:03d}'.format(name_experiment, name_backbone, name_head, name_data,
-                                      'P' if pretrained else 'R', num_train)
+    name_part = '{}_{}_{}_{}_{}_'.format(name_experiment, name_backbone, name_head, name_data,
+                                         'P' if pretrained else 'R')
+    if num_train == 'F':
+        return name_part + 'F'
+    else:
+        return name_part + str(num_train)
 
 
 def _train_model(conf, epochs, dry_run):
