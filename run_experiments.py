@@ -327,7 +327,7 @@ def _run_default_experiment(name_experiment, conf_training,
 
 
 def _get_model_name(name_experiment, name_backbone, name_head, name_data, pretrained, num_train):
-    return '{}_{}_{}_{}_{}_{}'.format(name_experiment, name_backbone, name_head, name_data,
+    return '{}_{}_{}_{}_{}_{:03d}'.format(name_experiment, name_backbone, name_head, name_data,
                                       'P' if pretrained else 'R', num_train)
 
 
