@@ -49,7 +49,7 @@ def resnet_unet(filters=None, blocks=None, ndims=2, padding_fix=True):
         elif len(blocks) == (depth * 2) - 1:
             down_blocks = blocks[:depth]
             middle_blocks = blocks[depth]
-            up_blocks = blocks[depth+1:]
+            up_blocks = blocks[depth:]
         else:
             raise ValueError(
                 '''Length of blocks must be len(filters) or 2 * len(filters) - 1.
