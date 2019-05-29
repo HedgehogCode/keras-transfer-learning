@@ -100,15 +100,15 @@ def main(arguments):
 
 def _run_experiment_hl_60_low_high_noise(name, configs, dry_run, no_eval):
     conf_backbone = configs.backbone.unet_csbdeep
-    conf_head = configs.head.fgbg_segm
+    conf_head = configs.head.stardist
     conf_training = configs.training.default
     conf_data_low_noise = configs.data.hl60_low_noise
     conf_data_high_noise = configs.data.hl60_high_noise
 
     _run_default_experiment(name, conf_training,
                             'unet', conf_backbone,
-                            'fgbg', conf_head,
-                            'fgbg', conf_head,
+                            'stardist', conf_head,
+                            'stardist', conf_head,
                             'hl60-low-noise', conf_data_low_noise,
                             'hl60-high-noise', conf_data_high_noise,
                             dry_run, no_eval)
