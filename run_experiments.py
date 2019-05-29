@@ -6,7 +6,8 @@
 import os
 import sys
 import argparse
-from yaml import safe_load as yaml_load
+import traceback
+from yaml import unsafe_load as yaml_load
 
 import pandas as pd
 
@@ -22,6 +23,7 @@ CONFIG_FILES = {
     'data': {
         'cityscapes': ['data', 'cityscapes.yaml'],
         'dsb2018': ['data', 'dsb2018.yaml'],
+        'dsb2018_heavy_aug': ['data', 'dsb2018-heavy-aug.yaml'],
         'granulocyte': ['data', 'granulocyte.yaml'],
         'hl60_high_noise': ['data', 'hl60_high-noise.yaml'],
         'hl60_low_noise': ['data', 'hl60_low-noise.yaml']
@@ -73,7 +75,11 @@ def main(arguments):
         # Experiment 8: hl60 and granulocyte (same as 2)
         8: lambda: _run_experiment_hl_60_granulocyte('E2a', configs, dry_run, no_eval),
         # Experiment 9: granulocyte and dsb2018 (same as 3)
-        9: lambda: _run_experiment_granulocyte_dsb2018('E3a', configs, dry_run, no_eval)
+        9: lambda: _run_experiment_granulocyte_dsb2018('E3a', configs, dry_run, no_eval),
+        # Experiment 8: hl60 and granulocyte (same as 2)
+        10: lambda: _run_experiment_hl_60_granulocyte('E2b', configs, dry_run, no_eval),
+        # Experiment 9: granulocyte and dsb2018 (same as 3)
+        11: lambda: _run_experiment_granulocyte_dsb2018('E3b', configs, dry_run, no_eval)
     }
 
     # If no experiments were selected: Run all
@@ -84,7 +90,8 @@ def main(arguments):
         try:
             experiment_fns[exp]()
         except Exception as e:
-            print("ERROR: Experiment E{} failed:".format(exp), e)
+            print("ERROR: Experiment {} failed:".format(exp), e)
+            traceback.print_tb(e.__traceback__)
 
 
 ###################################################################################################
@@ -93,15 +100,15 @@ def main(arguments):
 
 def _run_experiment_hl_60_low_high_noise(name, configs, dry_run, no_eval):
     conf_backbone = configs.backbone.unet_csbdeep
-    conf_head = configs.head.stardist
+    conf_head = configs.head.fgbg_segm
     conf_training = configs.training.default
     conf_data_low_noise = configs.data.hl60_low_noise
     conf_data_high_noise = configs.data.hl60_high_noise
 
     _run_default_experiment(name, conf_training,
                             'unet', conf_backbone,
-                            'stardist', conf_head,
-                            'stardist', conf_head,
+                            'fgbg', conf_head,
+                            'fgbg', conf_head,
                             'hl60-low-noise', conf_data_low_noise,
                             'hl60-high-noise', conf_data_high_noise,
                             dry_run, no_eval)
@@ -197,7 +204,7 @@ def _run_experiment_dsb2018_monster(name, configs, dry_run, no_eval):
     conf_backbone = configs.backbone.resnet_unet_big
     conf_head = configs.head.fgbg_segm_weighted
     conf_training = configs.training.small_bs
-    conf_data = configs.data.dsb2018
+    conf_data = configs.data.dsb2018_heavy_aug
 
     max_epochs = 1000
     input_shape = [None, None, 1]
@@ -391,6 +398,7 @@ def _train_model(conf, epochs, dry_run):
         except Exception as e:
             print('ERROR: Training of model {} failed: {}'.format(
                 conf['name'], e))
+            traceback.print_tb(e.__traceback__)
     else:
         print('Model {} already present.'.format(conf['name']))
 
@@ -436,6 +444,7 @@ def _evaluate_model(name, dry_run):
         results_df.to_csv(results_file)
     except Exception as e:
         print('ERROR: Evaluation of model {} failed: {}'.format(name, e))
+        traceback.print_tb(e.__traceback__)
 
 
 def _get_configs():

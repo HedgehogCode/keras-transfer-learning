@@ -62,7 +62,7 @@ def _create_data_generators_from_lists(conf):
 def _create_normalize_fn(conf):
     return {
         'uint8-range': lambda x: x / 255,
-        'min-max': lambda x: (x - np.min(x)) / np.max(x)
+        'min-max': lambda x: ((x - np.min(x)) / np.max(x)).astype('float32')
     }[conf['data']['normalizer']]
 
 
