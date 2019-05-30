@@ -382,7 +382,7 @@ def _get_model_name(name_experiment, name_backbone, name_head, name_data, pretra
     if num_train == 'F':
         return name_part + 'F'
     else:
-        return name_part + str(num_train)
+        return '{}{:03d}'.format(name_part, num_train)
 
 
 def _train_model(conf, epochs, dry_run):
