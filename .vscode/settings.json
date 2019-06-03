@@ -11,5 +11,8 @@
     "spellright.documentTypes": [
         "markdown"
     ],
-    "editor.rulers": [100]
+    "editor.rulers": [
+        100
+    ],
+    "python.linting.pylintEnabled": true
 }
