@@ -48,7 +48,7 @@ def main(arguments):
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-d', '--dry-run', action='store_true')
     parser.add_argument('--no-eval', action='store_true')
-    parser.add_argument('-e', '--experiments', nargs='+', type=int)
+    parser.add_argument('-e', '--experiments', nargs='+', type=str)
     args = parser.parse_args(arguments)
     dry_run = args.dry_run
     no_eval = args.no_eval
@@ -59,27 +59,19 @@ def main(arguments):
     # Define the experiments
     experiment_fns = {
         # Experiment 1: hl60 low and high noise
-        1: lambda: _run_experiment_hl_60_low_high_noise('E1', configs, dry_run, no_eval),
+        'A': (1, _run_experiment_hl_60_low_high_noise),
         # Experiment 2: hl60 and granulocyte
-        2: lambda: _run_experiment_hl_60_granulocyte('E2', configs, dry_run, no_eval),
+        'B': (3, _run_experiment_hl_60_granulocyte),
         # Experiment 3: granulocyte and dsb2018
-        3: lambda: _run_experiment_granulocyte_dsb2018('E3', configs, dry_run, no_eval),
+        'C': (3, _run_experiment_granulocyte_dsb2018),
         # Experiment 4: hl60 and cityscapes
-        4: lambda: _run_experiment_hl60_low_cityscapes('E4', configs, dry_run, no_eval),
+        'D': (1, _run_experiment_hl60_low_cityscapes),
         # Experiment 5: dsb2018 and cityscapes
-        5: lambda: _run_experiment_dsb2018_cityscapes('E5', configs, dry_run, no_eval),
+        'E': (1, _run_experiment_dsb2018_cityscapes),
         # Experiment 6: dsb2018 monster model
-        6: lambda: _run_experiment_dsb2018_monster('E6', configs, dry_run, no_eval),
+        'F': (1, _run_experiment_dsb2018_monster('F', configs, dry_run, no_eval)),
         # Experiment 7: granulocyte and dsb2018 (unet)
-        7: lambda: _run_experiment_granulocyte_dsb2018_unet('E7', configs, dry_run, no_eval),
-        # Experiment 8: hl60 and granulocyte (same as 2)
-        8: lambda: _run_experiment_hl_60_granulocyte('E2a', configs, dry_run, no_eval),
-        # Experiment 9: granulocyte and dsb2018 (same as 3)
-        9: lambda: _run_experiment_granulocyte_dsb2018('E3a', configs, dry_run, no_eval),
-        # Experiment 8: hl60 and granulocyte (same as 2)
-        10: lambda: _run_experiment_hl_60_granulocyte('E2b', configs, dry_run, no_eval),
-        # Experiment 9: granulocyte and dsb2018 (same as 3)
-        11: lambda: _run_experiment_granulocyte_dsb2018('E3b', configs, dry_run, no_eval)
+        'G': (1, _run_experiment_granulocyte_dsb2018_unet('G', configs, dry_run, no_eval))
     }
 
     # If no experiments were selected: Run all
@@ -87,11 +79,13 @@ def main(arguments):
         experiments = list(experiment_fns.keys())
 
     for exp in experiments:
-        try:
-            experiment_fns[exp]()
-        except Exception as e:
-            print("ERROR: Experiment {} failed:".format(exp), e)
-            traceback.print_tb(e.__traceback__)
+        num, experiment_fn = experiment_fns[exp]
+        for i in range(num):
+            try:
+                experiment_fn(exp + '{:02d}'.format(i), configs, dry_run, no_eval)
+            except Exception as e:
+                print("ERROR: Experiment {} failed:".format(exp), e)
+                traceback.print_tb(e.__traceback__)
 
 
 ###################################################################################################
