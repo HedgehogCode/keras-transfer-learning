@@ -59,11 +59,11 @@ def main(arguments):
     # Define the experiments
     experiment_fns = {
         # Experiment 1: hl60 low and high noise
-        'A': (1, _run_experiment_hl_60_low_high_noise),
+        'A': (5, _run_experiment_hl_60_low_high_noise),
         # Experiment 2: hl60 and granulocyte
-        'B': (3, _run_experiment_hl_60_granulocyte),
+        'B': (5, _run_experiment_hl_60_granulocyte),
         # Experiment 3: granulocyte and dsb2018
-        'C': (3, _run_experiment_granulocyte_dsb2018),
+        'C': (5, _run_experiment_granulocyte_dsb2018),
         # Experiment 4: hl60 and cityscapes
         'D': (1, _run_experiment_hl60_low_cityscapes),
         # Experiment 5: dsb2018 and cityscapes
