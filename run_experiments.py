@@ -69,9 +69,9 @@ def main(arguments):
         # Experiment 5: dsb2018 and cityscapes
         'E': (1, _run_experiment_dsb2018_cityscapes),
         # Experiment 6: dsb2018 monster model
-        'F': (1, _run_experiment_dsb2018_monster('F', configs, dry_run, no_eval)),
+        'F': (1, _run_experiment_dsb2018_monster),
         # Experiment 7: granulocyte and dsb2018 (unet)
-        'G': (1, _run_experiment_granulocyte_dsb2018_unet('G', configs, dry_run, no_eval))
+        'G': (1, _run_experiment_granulocyte_dsb2018_unet)
     }
 
     # If no experiments were selected: Run all
