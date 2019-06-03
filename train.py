@@ -5,7 +5,7 @@
 
 import sys
 import argparse
-from yaml import safe_load as yaml_load
+from yaml import unsafe_load as yaml_load
 
 from keras_transfer_learning import train
 

@@ -5,13 +5,8 @@
 
 import sys
 import argparse
-from yaml import safe_load as yaml_load
+from yaml import unsafe_load as yaml_load
 
-from keras_transfer_learning.config import config
-from keras_transfer_learning.config import backbone_configs
-from keras_transfer_learning.config import head_configs
-from keras_transfer_learning.config import training_configs
-from keras_transfer_learning.config import data_configs
 from keras_transfer_learning import train
 
 

@@ -1,6 +1,6 @@
 import os
 import yaml
-from yaml import safe_load as yaml_load
+from yaml import unsafe_load as yaml_load
 from tqdm import tqdm
 
 from keras import layers, models

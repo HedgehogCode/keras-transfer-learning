@@ -7,9 +7,10 @@ import os
 import sys
 import argparse
 import glob
-import yaml
 import shutil
-from yaml import safe_load as yaml_load
+
+import yaml
+from yaml import unsafe_load as yaml_load
 
 def main(arguments):
 
