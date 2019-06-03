@@ -4,6 +4,6 @@ callbacks:
     patience: 40
 - name: reduce_lr_on_plateau
   args:
-    patience: 20
+    patience: 30
 batch_size: 2
 epoch_length: 512
