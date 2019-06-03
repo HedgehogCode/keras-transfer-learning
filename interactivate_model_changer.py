@@ -69,6 +69,40 @@ def process_model(model_dir):
 
             print('Renamed model. New name: "{}"'.format(model_name))
 
+        elif inp == 'ra':
+            # Rename automatically
+            model_prefix, _, num_train = model_name.rpartition('_')
+            if num_train == 'F':
+                new_model_name = model_prefix + '_F'
+            else:
+                new_model_name = model_prefix + '_{:03d}'.format(int(num_train))
+
+            if new_model_name == model_name:
+                print('The new model name is the same as the old model name.')
+                continue
+
+            new_model_dir = os.path.join('.', 'models', new_model_name)
+            if os.path.exists(new_model_dir):
+                print('A model with the name {} already exists. Aborting.'.format(new_model_name))
+                continue
+
+            # Change the config yaml
+            conf['name'] = new_model_name
+            with open(os.path.join(model_dir, 'config.yaml'), 'w') as f:
+                yaml.dump(conf, f)
+
+            # Move the model dir
+            os.rename(model_dir, new_model_dir)
+            model_dir = new_model_dir
+
+            # Move log dir
+            new_log_dir = os.path.join('.', 'logs', new_model_name)
+            os.rename(os.path.join('.', 'logs', model_name), new_log_dir)
+
+            model_name = new_model_name
+
+            print('Renamed model. New name: "{}"'.format(model_name))
+
         elif inp == 'd':
             # Delete model
             confirm = input("Delete model? (yes/no): ")
