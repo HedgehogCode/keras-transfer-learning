@@ -12,6 +12,19 @@ import pandas as pd
 from scipy.ndimage import filters
 
 
+def set_default_plotting():
+    small_size = 8
+    medium_size = 10
+    large_size = 12
+    sns.set(rc={'font.size': small_size,
+                'axes.titlesize': small_size,
+                'axes.labelsize': medium_size,
+                'xtick.labelsize': small_size,
+                'ytick.labelsize': small_size,
+                'legend.fontsize': small_size,
+                'figure.titlesize': large_size})
+
+
 def get_models(pattern: str, model_dirs: list = None):
     # Default model dirs
     if model_dirs is None:
@@ -29,8 +42,6 @@ def get_models(pattern: str, model_dirs: list = None):
 
 def plot_map_over_epoch(pattern: str, model_dirs: list = None, size: tuple = None):
     selected_models = get_models(pattern, model_dirs)
-    if size is None:
-        size = (12, 8)
     return _plot_map_over_epoch_df(_get_results_df(selected_models), size)
 
 
@@ -46,8 +57,6 @@ def plot_map_last_compare(pattern: str, model_dirs: list = None, size: tuple = N
         return 'pretrained' if name.split('_')[-2] == 'P' else 'random'
 
     selected_model_dirs = get_models(pattern, model_dirs)
-    if size is None:
-        size = (12, 8)
     results_last = _get_results_last(selected_model_dirs)
     df = pd.DataFrame([{
         'name': n,
@@ -56,16 +65,14 @@ def plot_map_last_compare(pattern: str, model_dirs: list = None, size: tuple = N
         'init': get_init(n)
     } for n, v in results_last.items()])
 
-    fig = plt.figure(figsize=size)
+    fig = _create_figure(size)
     ax = sns.barplot(x='num_train', y='mAP', hue='init', data=df)
     ax.set(ylim=(df.min()['mAP'] - 0.05, df.max()['mAP'] + 0.05), ylabel='mAP')
     return fig
 
 
-def plot_map_last(pattern: str, model_dirs: list = None, size: tuple=None):
+def plot_map_last(pattern: str, model_dirs: list = None, size: tuple = None):
     selected_model_dirs = get_models(pattern, model_dirs)
-    if size is None:
-        size = (12, 8)
     results_last = _get_results_last(selected_model_dirs)
     df = pd.DataFrame({n: [v] for n, v in results_last.items()})
     return _plot_map_last(df, size)
@@ -92,7 +99,13 @@ def _get_results_last(dirs):
     return {n: df.mean(axis=1).iloc[-1] for n, df in results.items()}
 
 
-def _plot_map_over_epoch_df(df, size):
+def _create_figure(size: tuple = None):
+    if size is None:
+        size = (6.4, 4.8)
+    return plt.figure(figsize=size, dpi=300)
+
+
+def _plot_map_over_epoch_df(df, size: tuple = None):
 
     def smooth_dataset_gaussian(data, sigma=1.5):
         return data.apply(lambda x: filters.gaussian_filter(x, sigma, mode='nearest'))
@@ -101,14 +114,14 @@ def _plot_map_over_epoch_df(df, size):
         box = np.ones(width) / width
         return data.apply(lambda x: filters.convolve(x, box, mode='nearest'))
 
-    fig = plt.figure(figsize=size)
+    fig = _create_figure(size)
     ax = sns.lineplot(data=smooth_dataset_gaussian(df))
     ax.set(ylim=(0.4, 0.9), ylabel='mAP')
     return fig
 
 
-def _plot_map_last(df, size):
-    fig = plt.figure(figsize=size)
+def _plot_map_last(df, size: tuple = None):
+    fig = _create_figure(size)
     ax = sns.barplot(data=df)
     # TODO set ylim based on values
     ax.set(ylim=(0.4, 0.9), ylabel='mAP')
