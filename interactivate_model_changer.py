@@ -12,19 +12,24 @@ import shutil
 import yaml
 from yaml import unsafe_load as yaml_load
 
+
 def main(arguments):
 
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-f', '--filter', type=str, default='*')
+    parser.add_argument('--auto-rename', action='store_true')
     args = parser.parse_args(arguments)
     filter_glob = args.filter
 
     model_dirs = sorted(glob.glob(os.path.join('.', 'models', filter_glob)))
 
     for m in model_dirs:
-        process_model(m)
+        if args.auto_rename:
+            auto_rename(m)
+        else:
+            process_model(m)
 
 
 def process_model(model_dir):
@@ -49,7 +54,8 @@ def process_model(model_dir):
 
             new_model_dir = os.path.join('.', 'models', new_model_name)
             if os.path.exists(new_model_dir):
-                print('A model with the name {} already exists. Aborting.'.format(new_model_name))
+                print('A model with the name {} already exists. Aborting.'.format(
+                    new_model_name))
                 continue
 
             # Change the config yaml
@@ -75,7 +81,8 @@ def process_model(model_dir):
             if num_train == 'F':
                 new_model_name = model_prefix + '_F'
             else:
-                new_model_name = model_prefix + '_{:03d}'.format(int(num_train))
+                new_model_name = model_prefix + \
+                    '_{:03d}'.format(int(num_train))
 
             if new_model_name == model_name:
                 print('The new model name is the same as the old model name.')
@@ -83,7 +90,8 @@ def process_model(model_dir):
 
             new_model_dir = os.path.join('.', 'models', new_model_name)
             if os.path.exists(new_model_dir):
-                print('A model with the name {} already exists. Aborting.'.format(new_model_name))
+                print('A model with the name {} already exists. Aborting.'.format(
+                    new_model_name))
                 continue
 
             # Change the config yaml
@@ -116,6 +124,59 @@ def process_model(model_dir):
             print(yaml.dump(conf))
         else:
             print('Unsupported command. Supported commands are "n", "r" and "c"')
+
+
+def auto_rename(model_dir):
+    with open(os.path.join(model_dir, 'config.yaml'), 'r') as f:
+        conf = yaml_load(f)
+
+    model_name = conf['name']
+
+    print('Model name: "{}"'.format(model_name))
+
+    # Rename model
+    exp_name, _, model_suffix = model_name.partition('_')
+    try:
+        model_prefix = {
+            'E1': 'A00',
+            'E2': 'B00', 'E2a': 'B01', 'E2b': 'B02',
+            'E3': 'C00', 'E3a': 'C01', 'E3b': 'C02',
+            'E4': 'D00',
+            'E5': 'E00',
+            'E6': 'F00',
+            'E7': 'G00',
+        }[exp_name]
+    except KeyError:
+        return
+    new_model_name = model_prefix + '_' + model_suffix
+
+    if new_model_name == model_name:
+        print('The new model name is the same as the old model name.')
+        return
+
+    new_model_dir = os.path.join('.', 'models', new_model_name)
+    if os.path.exists(new_model_dir):
+        print('A model with the name {} already exists. Aborting.'.format(
+            new_model_name))
+        return
+    print(new_model_name)
+
+    # Change the config yaml
+    conf['name'] = new_model_name
+    with open(os.path.join(model_dir, 'config.yaml'), 'w') as f:
+        yaml.dump(conf, f)
+
+    # Move the model dir
+    os.rename(model_dir, new_model_dir)
+    model_dir = new_model_dir
+
+    # Move log dir
+    new_log_dir = os.path.join('.', 'logs', new_model_name)
+    os.rename(os.path.join('.', 'logs', model_name), new_log_dir)
+
+    model_name = new_model_name
+
+    print('Renamed model. New name: "{}"'.format(model_name))
 
 
 if __name__ == '__main__':
