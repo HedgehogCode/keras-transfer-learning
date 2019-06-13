@@ -51,11 +51,15 @@ def main(arguments):
 
         # Loop over images and write the encoded pixels
         for image_id, p in tqdm.tqdm(list(zip(ids, pred))):
+            added_one = False
             for i in range(1, np.max(p) + 1):
                 segment = p == i
                 if np.any(segment):
                     enc_pixels = get_encoded_pixels(segment)
                     submission_file.write(image_id + ',' + enc_pixels + '\n')
+                    added_one = True
+            if not added_one:
+                print("WARNING: No nuclei found for image " + image_id)
 
         submission_file.flush()
 
