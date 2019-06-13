@@ -1,3 +1,6 @@
 [submodule "dsb2018_topcoders"]
-	path = dsb2018_topcoders
+	path = dsb2018_1st_place
 	url = git@github.com:selimsef/dsb2018_topcoders.git
+[submodule "2018DSB"]
+	path = dsb2018_2nd_place
+	url = git@github.com:jacobkie/2018DSB.git
