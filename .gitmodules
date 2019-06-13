@@ -4,3 +4,6 @@
 [submodule "2018DSB"]
 	path = dsb2018_2nd_place
 	url = git@github.com:jacobkie/2018DSB.git
+[submodule "DSB_2018"]
+	path = dsb2018_3rd_place
+	url = git@github.com:Lopezurrutia/DSB_2018.git
