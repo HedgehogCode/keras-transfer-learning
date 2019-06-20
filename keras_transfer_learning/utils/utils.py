@@ -4,6 +4,9 @@
 import os
 import re
 import glob
+from yaml import unsafe_load
+
+from keras import models
 
 
 def get_last_weights(model_dir: str, epoch: int = None):
@@ -66,3 +69,27 @@ def get_epoch_weights(model_dir: str, epoch: int):
             return epoch_weights
 
     raise ValueError('Cannot find weight file for epoch {}'.format(epoch))
+
+
+def model_up_to_layer(keras_model, layer_name):
+    for l in keras_model.layers:
+        if l.name == layer_name:
+            break
+    return models.Model(keras_model.input, l.output)
+
+
+def yaml_load(file_name: str):
+    """Loads the given yaml file from the disc.
+
+    Arguments:
+        file_name {str} -- path to the yaml file
+
+    Returns:
+        The content of the yaml file
+    """
+    with open(file_name, 'r') as f:
+        content = unsafe_load(f)
+    return content
+
+def path_to_model_config(model_name):
+    return os.path.join('.', 'models', model_name, 'config.yaml')

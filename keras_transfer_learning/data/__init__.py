@@ -6,3 +6,4 @@ from . import pcom
 from . import cytogen
 from . import cityscapes
 from . import utils
+from . import compare

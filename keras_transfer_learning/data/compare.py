@@ -1,7 +1,11 @@
 import math
 
+import tqdm
 import numpy as np
 from skimage import measure, transform
+from scipy import linalg
+
+from keras_transfer_learning import utils, dataset, model
 
 
 def ssim(im1, im2):
@@ -52,6 +56,7 @@ def sliced_wasserstein_pyramids(A, B, **kwargs):
         results.append(sliced_wasserstein_patches(level_a, level_b, **kwargs))
 
     return results
+
 
 def sliced_wasserstein_patches(A, B, **kwargs):
     patch_size = kwargs.get('patch_size', 7)
@@ -120,8 +125,50 @@ def sliced_wasserstein(A, B, dir_repeats=4, dirs_per_repeat=128):
 def laplace_pyramids(dataset, levels=4):
     pyramids = [[] for _ in range(levels)]
     for img in dataset:
-        pyramid = transform.pyramid_laplacian(img, max_layer=levels-1, multichannel=False)
+        pyramid = transform.pyramid_laplacian(
+            img, max_layer=levels-1, multichannel=False)
         for i, img_level in enumerate(pyramid):
             pyramids[i].append(img_level)
 
     return pyramids
+
+
+def frechet_distance(mean_1, cov_1, mean_2, cov_2):
+    return np.sum(np.square(mean_1 - mean_2)) + \
+        np.trace(cov_1 + cov_2 - 2 *
+                 linalg.fractional_matrix_power(np.dot(cov_1, cov_2), 1/2))
+
+
+def frenchet_model_distance(model_config, data_config, feature_layer_name, num_samples=20):
+    # Create the feature model
+    full_model = model.Model(model_config)
+    feature_model = utils.utils.model_up_to_layer(full_model.model, feature_layer_name)
+    features_size = feature_model.output.shape[-1].value
+
+    def get_mgf(data):
+        if num_samples is not None:
+            data = [data[i]
+                    for i in np.random.permutation(len(data))[:num_samples]]
+
+        features_list = []
+        for img in tqdm.tqdm(data):
+            pred = feature_model.predict(img[None, ..., None])
+            features_list.append(np.reshape(pred, (-1, features_size)))
+
+        features = np.concatenate(features_list)
+        mean = np.mean(features, axis=0)
+        cov = np.cov(features, rowvar=0)
+        return mean, cov
+
+    # Compute a mgf on the original model data
+    orig_data = dataset.Dataset(model_config)
+    orig_x, _ = orig_data.create_test_dataset()
+    orig_mean, orig_cov = get_mgf(orig_x)
+
+    # Compute a mgf on the new dataset
+    other_data = dataset.Dataset({'data': data_config})
+    other_x, _ = other_data.create_test_dataset()
+    other_mean, other_cov = get_mgf(other_x)
+
+    # Compute the frenchet distance
+    return frechet_distance(orig_mean, orig_cov, other_mean, other_cov)
