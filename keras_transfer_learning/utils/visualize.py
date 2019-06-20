@@ -11,6 +11,15 @@ import numpy as np
 import pandas as pd
 from scipy.ndimage import filters
 
+NAME_PARTS = [
+    'Experiment',
+    'Backbone',
+    'Head',
+    'Dataset',
+    'Initialization',
+    'Size'
+]
+
 
 def set_default_plotting():
     small_size = 8
@@ -45,37 +54,32 @@ def plot_map_over_epoch(pattern: str, model_dirs: list = None, size: tuple = Non
     return _plot_map_over_epoch_df(_get_results_df(selected_models), size)
 
 
-def plot_map_last_compare(pattern: str, model_dirs: list = None, size: tuple = None):
-    def get_train_num(name):
-        num = name.split('_')[-1]
-        if num == 'F':
-            return 'F'
-        else:
-            return int(num)
-
-    def get_init(name):
-        return 'pretrained' if name.split('_')[-2] == 'P' else 'random'
-
+def plot_map_last(pattern: str, model_dirs: list = None, size: tuple = None,
+                  ignore_experiment=False, ignore_backbone=False, ignore_head=False,
+                  ignore_dataset=False, ignore_init=False, ignore_size=False):
+    ignored_vals = []
+    if ignore_experiment:
+        ignored_vals.append('Experiment')
+    if ignore_backbone:
+        ignored_vals.append('Backbone')
+    if ignore_head:
+        ignored_vals.append('Head')
+    if ignore_dataset:
+        ignored_vals.append('Dataset')
+    if ignore_init:
+        ignored_vals.append('Initialization')
+    if ignore_size:
+        ignored_vals.append('Size')
     selected_model_dirs = get_models(pattern, model_dirs)
     results_last = _get_results_last(selected_model_dirs)
-    df = pd.DataFrame([{
-        'name': n,
-        'mAP': v,
-        'num_train': get_train_num(n),
-        'init': get_init(n)
-    } for n, v in results_last.items()])
-
-    fig = _create_figure(size)
-    ax = sns.barplot(x='num_train', y='mAP', hue='init', data=df)
-    ax.set(ylim=(df.min()['mAP'] - 0.05, df.max()['mAP'] + 0.05), ylabel='mAP')
-    return fig
+    return _plot_map_last(results_last, size, ignored_vals)
 
 
-def plot_map_last(pattern: str, model_dirs: list = None, size: tuple = None):
-    selected_model_dirs = get_models(pattern, model_dirs)
-    results_last = _get_results_last(selected_model_dirs)
-    df = pd.DataFrame({n: [v] for n, v in results_last.items()})
-    return _plot_map_last(df, size)
+def _split_model_name(model_name):
+    vals = dict(zip(NAME_PARTS, model_name.split('_')))
+    vals['Initialization'] = 'pretrained' if vals['Initialization'] == 'P' else 'random'
+    vals['Size'] = 'F' if vals['Size'] == 'F' else int(vals['Size'])
+    return vals
 
 
 def _get_model_name(path):
@@ -116,13 +120,36 @@ def _plot_map_over_epoch_df(df, size: tuple = None):
 
     fig = _create_figure(size)
     ax = sns.lineplot(data=smooth_dataset_gaussian(df))
-    ax.set(ylim=(0.4, 0.9), ylabel='mAP')
     return fig
 
 
-def _plot_map_last(df, size: tuple = None):
+def _plot_map_last(results_last, size: tuple = None, ignored_vals: list = None):
+    if ignored_vals is None:
+        ignored_vals = []
+
+    def _create_datapoint(n, v):
+        desc = _split_model_name(n)
+        desc['mAP'] = v
+        return desc
+
+    datapoints = [_create_datapoint(n, v) for n, v in results_last.items()]
+    df = pd.DataFrame(datapoints)
+
+    # Find x and hue
+    different_vals = {n: len(df[n].unique())
+                      for n in NAME_PARTS if n not in ignored_vals}
+    x_label, hue_label = sorted(
+        different_vals, key=different_vals.get, reverse=True)[:2]
+    if different_vals[hue_label] == 1:
+        hue_label = None
+
+    # Draw the plot
     fig = _create_figure(size)
-    ax = sns.barplot(data=df)
-    # TODO set ylim based on values
-    ax.set(ylim=(0.4, 0.9), ylabel='mAP')
+    ax = sns.barplot(data=df, y='mAP', x=x_label, hue=hue_label)
+
+    # Set ylim based on values
+    min_map = df['mAP'].min()
+    max_map = df['mAP'].max()
+    buffer = (max_map - min_map) * 0.2
+    ax.set(ylim=(min_map - buffer, max_map + buffer))
     return fig
