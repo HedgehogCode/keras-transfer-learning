@@ -141,8 +141,9 @@ def frechet_distance(mean_1, cov_1, mean_2, cov_2):
 
 def frenchet_model_distance(model_config, data_config, feature_layer_name, num_samples=20):
     # Create the feature model
-    full_model = model.Model(model_config)
-    feature_model = utils.utils.model_up_to_layer(full_model.model, feature_layer_name)
+    full_model = model.Model(model_config, load_weights='last')
+    feature_model = utils.utils.model_up_to_layer(
+        full_model.model, feature_layer_name)
     features_size = feature_model.output.shape[-1].value
 
     def get_mgf(data):
