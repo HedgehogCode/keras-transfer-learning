@@ -87,4 +87,9 @@ def process_prediction(pred, prob_thresh=0.4):
     points = non_maximum_suppression(coord, prob, prob_thresh=prob_thresh)
     labels = polygons_to_label(coord, prob, points)
 
-    return labels
+    # Get the score for each segment by getting the maximum prob in this segment
+    score = {}
+    for l in np.unique(labels):
+        score[l] = np.max(prob[labels == l])
+
+    return labels, score

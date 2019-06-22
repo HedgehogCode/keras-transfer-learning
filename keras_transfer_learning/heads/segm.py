@@ -72,9 +72,19 @@ def process_prediction_fgbg(pred, prob_thresh=0.5, do_labeling=True):
 
     fg = np.array(fg_prob > prob_thresh, dtype=np.int)
 
-    if do_labeling:
-        return label(fg)[0]
-    return fg
+    if not do_labeling:
+        return fg
+
+    # Do the labeling
+    labels = label(fg)[0]
+
+    # Get the score for each segment by getting the maximum prob in this segment
+    score = {}
+    for l in np.unique(labels):
+        score[l] = np.max(fg_prob[labels == l])
+
+    return labels, score
+
 
 
 # =================================================================================================
@@ -144,7 +154,7 @@ def prepare_data_nclass(batch_x, batch_y, num_classes):
 
 
 def process_prediction_nclass(pred):
-    return np.argmax(pred, axis=-1)
+    return np.argmax(pred, axis=-1), np.max(pred, axis=-1)
 
 
 # =================================================================================================
