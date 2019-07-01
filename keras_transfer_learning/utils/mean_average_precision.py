@@ -127,7 +127,7 @@ def ap_dsb2018_matched(preds, gt_segments, iou_threshold):
         iou_threshold {float} -- The IoU threshold
     """
     pred_gt = [(p[1] if p[2] >= iou_threshold else None) for p in preds]
-    true_positives = len([0 for p in pred_gt if p in gt_segments])  # TP
+    true_positives = len({p for p in pred_gt if p in gt_segments})  # TP
     false_positives = len(preds) - true_positives  # FP
     false_negatives = len([0 for gt in gt_segments if gt not in pred_gt])  # FN
     return true_positives / (true_positives + false_positives + false_negatives)
