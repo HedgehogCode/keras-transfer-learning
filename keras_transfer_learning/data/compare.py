@@ -134,9 +134,9 @@ def laplace_pyramids(dataset, levels=4):
 
 
 def frechet_distance(mean_1, cov_1, mean_2, cov_2):
-    return np.sum(np.square(mean_1 - mean_2)) + \
-        np.trace(cov_1 + cov_2 - 2 *
-                 linalg.fractional_matrix_power(np.dot(cov_1, cov_2), 1/2))
+    return np.real(np.sum(np.square(mean_1 - mean_2)) +
+                   np.trace(cov_1 + cov_2 - 2 *
+                            linalg.fractional_matrix_power(np.dot(cov_1, cov_2), 1/2)))
 
 
 def frenchet_model_distance(model_config, data_config, feature_layer_name, num_samples=20):
