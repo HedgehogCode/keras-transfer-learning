@@ -8,17 +8,29 @@ TODO publish in own package
 from operator import itemgetter
 
 import numpy as np
-
 from scipy.ndimage import find_objects
 
 
-def ap_segm(preds, labelings, iou_thresholds):
-    pred_matchings, gt_segments = _match_preds_to_labelings(preds, labelings)
-    return [ap_matched(pred_matchings, gt_segments, th)[0] for th in iou_thresholds]
+# =================================================================================================
+#      mAP interpolated
+# =================================================================================================
+
+def ap_segm_interpolated(preds, labelings, scores=None, iou_thresholds=None):
+    """Computes the interpolated mean Average Precision for the given predictions.
+    TODO describe formular
+    TODO describe args
+    """
+    if iou_thresholds is None:
+        iou_thresholds = [.50, .55, .60, .65, .70, .75, .80, .85, .90, .95]
+    pred_matchings, gt_segments = _match_preds_to_labelings(
+        preds, labelings, scores)
+    return [ap_matched_interpolated(pred_matchings, gt_segments, th)[0] for th in iou_thresholds]
 
 
-def ap_matched(preds, gt_segments, iou_threshold):
+def ap_matched_interpolated(preds, gt_segments, iou_threshold):
     """Computes the Average Precision for the given predictions.
+    TODO describe interpolated
+    TODO describe the formular
 
     The preds argument is supposed to be a list of tuples with the following structure:
     [
@@ -26,7 +38,8 @@ def ap_matched(preds, gt_segments, iou_threshold):
             0.9,           # A score for the prediction
             'img01_seg09', # The best matching ground truth segment
             0.6            # The IoU with the best matching gt segment
-        )
+        ),
+        [...]
     ].
 
     The gt_semgents argument is a set of identifier for the ground truth segments.
@@ -89,8 +102,13 @@ def ap_matched(preds, gt_segments, iou_threshold):
     return average_precision, matchings
 
 
+# =================================================================================================
+#      mAP data science bowl 2018
+# =================================================================================================
+
 def ap_dsb2018(preds, labelings, iou_thresholds):
-    """Computes the Average Precision as defined in the data science bowl 2018 challenge.
+    """Computes the mean Average Precision as defined in the data science bowl 2018 challenge.
+    TODO describe the formular
 
     Arguments:
         pred {list of labelings} -- A list of predictions
@@ -102,9 +120,10 @@ def ap_dsb2018(preds, labelings, iou_thresholds):
         {list} -- The Average Precision for each given threshold.
     """
     aps = []
-    for p, l in zip(preds, labelings):
-        pred_matchings, gt_segments = _match_preds_to_labelings(preds, labelings)
-        aps.append([ap_dsb2018_matched(pred_matchings, gt_segments, th) for th in iou_thresholds])
+    for pred, labeling in zip(preds, labelings):
+        pred_matchings, gt_segments = _match_preds_to_labelings([pred], [labeling])
+        aps.append([ap_dsb2018_matched(pred_matchings, gt_segments, th)
+                    for th in iou_thresholds])
     return [np.mean(ap) for ap in zip(*aps)]
 
 
@@ -118,7 +137,8 @@ def ap_dsb2018_matched(preds, gt_segments, iou_threshold):
             0.9,           # A score for the prediction
             'img01_seg09', # The best matching ground truth segment
             0.6            # The IoU with the best matching gt segment
-        )
+        ),
+        [...]
     ].
 
     The gt_semgents argument is a set of identifier for the ground truth segments.
@@ -136,7 +156,7 @@ def ap_dsb2018_matched(preds, gt_segments, iou_threshold):
     return true_positives / (true_positives + false_positives + false_negatives)
 
 
-def _match_preds_to_labelings(preds, labelings):
+def _match_preds_to_labelings(preds, labelings, scores=None):
     """Matches prediction segments to ground truth segments. Returns a tuble with two items:
 
     The first item is a list with each prediction matched to an ground truth segment:
@@ -155,13 +175,16 @@ def _match_preds_to_labelings(preds, labelings):
         preds {list of labelings} -- A list of predictions.
         gt_segments {list of labelings} -- A list of ground truth labelings
     """
+    if scores is None:
+        scores = [None] * len(preds)
+
     pred_matchings = []
     gt_segments = set()
 
     def gt_id(img_id, label_id):
         return 'img{}_lab{}'.format(img_id, label_id)
 
-    for i, (pred, labeling) in enumerate(zip(preds, labelings)):
+    for i, (pred, labeling, pred_scores) in enumerate(zip(preds, labelings, scores)):
         pred_objects = find_objects(pred)
         gt_objects = find_objects(labeling)
 
@@ -171,7 +194,10 @@ def _match_preds_to_labelings(preds, labelings):
             if pred_slice is None:
                 continue
 
-            score = 1.  # TODO different scores for different segments?
+            if pred_scores is None:
+                score = 1.
+            else:
+                score = pred_scores[pred_label]
             best_iou = 0
             best_gt = None
 

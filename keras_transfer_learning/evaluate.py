@@ -1,9 +1,10 @@
+import numpy as np
+
 from keras_transfer_learning import model, dataset
-from keras_transfer_learning.utils import mean_average_precision
+from mean_average_precision import mean_ap
 
 
 def evaluate(conf, epoch=None):
-    # TODO allow loading a specific epoch
     # Create the mdoel
     if epoch is None:
         m = model.Model(conf, load_weights='last')
@@ -12,7 +13,8 @@ def evaluate(conf, epoch=None):
 
     # TODO implement
     if conf['data']['name'] == 'cityscapes':
-        raise ValueError('Evaluation is not supported for the cityscapes dataset yet.')
+        raise ValueError(
+            'Evaluation is not supported for the cityscapes dataset yet.')
 
     # Create the dataset
     d = dataset.Dataset(conf)
@@ -20,12 +22,14 @@ def evaluate(conf, epoch=None):
 
     # Run the prediction
     pred = m.predict_and_process(test_x)
+    pred_segm, scores = zip(*pred)  # unzip
 
     # TODO allow for different evaluations
     # Evaluate
-    iou_thresholds = [0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95]
-    ap = mean_average_precision.ap_segm(pred, test_y, iou_thresholds)
-    ap_dict = {k: v for k, v in zip(iou_thresholds, ap)}
-    print("The average precision is {}".format(ap))
+    iou_thresholds = [0.50, 0.55, 0.60, 0.65, 0.70,
+                      0.75, 0.80, 0.85, 0.90, 0.95]
+    ap = mean_ap.ap_segm_interpolated(
+        pred_segm, test_y, scores, iou_thresholds=iou_thresholds)
+    print("The average precision is {}".format(np.mean(ap)))
 
-    return ap_dict
+    return {k: v for k, v in zip(iou_thresholds, ap)}

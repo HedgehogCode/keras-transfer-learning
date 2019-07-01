@@ -1,3 +1,3 @@
-from . import mean_average_precision
+from . import visualize
 from . import tensorboard
 from . import utils

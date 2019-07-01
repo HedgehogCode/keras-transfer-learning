@@ -1,6 +1,6 @@
 import pytest
 
-from keras_transfer_learning.utils.mean_average_precision import ap_matched
+from mean_average_precision import mean_ap
 
 
 def test_ap_easy():
@@ -20,7 +20,7 @@ def test_ap_easy():
     gt_segments = ['gt0', 'gt1', 'gt2', 'gt3', 'gt4']
     iou_th = 0.6
 
-    ap, matchings = ap_matched(preds, gt_segments, iou_th)
+    ap, matchings = mean_ap.ap_matched_interpolated(preds, gt_segments, iou_th)
 
     assert pytest.approx(0.7532467532467532, 0.00001) == ap
     # TODO check matchings
