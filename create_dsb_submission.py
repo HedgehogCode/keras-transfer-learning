@@ -41,7 +41,7 @@ def main(arguments):
     ids = [i.split(os.path.sep)[-1][:-4] for i in folders]
 
     # Run the prediction
-    pred = m.predict_and_process(test_x)
+    pred, _ = zip(*(m.predict_and_process(test_x)))
 
     # Create the submission file
     with open(os.path.join('models', conf['name'], 'submission.csv'), 'w') as submission_file:
