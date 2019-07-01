@@ -119,7 +119,9 @@ def download_and_process(zip_file, train_set):
             for idx, pixels_str in enumerate(mask_pixels, 1):
                 pixels = []
                 pixel_pairs = np.array(
-                    [int(idx) for idx in pixels_str.split(' ')]).reshape(-1, 2) - 1
+                    [int(idx) for idx in pixels_str.split(' ')]).reshape(-1, 2)
+                # Change to zero index
+                pixel_pairs = pixel_pairs - [[1, 0]]
                 for pair in pixel_pairs:
                     pixels.extend(list(range(pair[0], pair[0] + pair[1])))
 

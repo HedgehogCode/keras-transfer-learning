@@ -101,8 +101,11 @@ def ap_dsb2018(preds, labelings, iou_thresholds):
     Returns:
         {list} -- The Average Precision for each given threshold.
     """
-    pred_matchings, gt_segments = _match_preds_to_labelings(preds, labelings)
-    return [ap_dsb2018_matched(pred_matchings, gt_segments, th) for th in iou_thresholds]
+    aps = []
+    for p, l in zip(preds, labelings):
+        pred_matchings, gt_segments = _match_preds_to_labelings(preds, labelings)
+        aps.append([ap_dsb2018_matched(pred_matchings, gt_segments, th) for th in iou_thresholds])
+    return [np.mean(ap) for ap in zip(*aps)]
 
 
 def ap_dsb2018_matched(preds, gt_segments, iou_threshold):
@@ -126,7 +129,7 @@ def ap_dsb2018_matched(preds, gt_segments, iou_threshold):
         gt_segments {set} -- A set of identifiers for the ground truth segments
         iou_threshold {float} -- The IoU threshold
     """
-    pred_gt = [(p[1] if p[2] >= iou_threshold else None) for p in preds]
+    pred_gt = [(p[1] if p[2] > iou_threshold else None) for p in preds]
     true_positives = len({p for p in pred_gt if p in gt_segments})  # TP
     false_positives = len(preds) - true_positives  # FP
     false_negatives = len([0 for gt in gt_segments if gt not in pred_gt])  # FN
