@@ -21,6 +21,7 @@ def main(arguments):
     parser.add_argument('-f', '--filter', type=str, default='*')
     parser.add_argument('--auto-rename', action='store_true')
     parser.add_argument('--add-eval', action='store_true')
+    parser.add_argument('--remove-results', action='store_true')
     args = parser.parse_args(arguments)
     filter_glob = args.filter
 
@@ -31,6 +32,8 @@ def main(arguments):
             auto_rename(m)
         elif args.add_eval:
             add_eval(m)
+        elif args.remove_results:
+            remove_results(m)
         else:
             process_model(m)
 
@@ -212,6 +215,16 @@ def add_eval(model_dir):
         yaml.dump(conf, f)
 
     print('Added evaluation to model')
+
+
+def remove_results(model_dir):
+    print('Model dir: "{}"'.format(model_dir))
+    results_file = os.path.join(model_dir, 'results.csv')
+    if os.path.isfile(results_file):
+        shutil.move(results_file, results_file + '.bak')
+        print('Moved the results file')
+    print('No results file')
+
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))

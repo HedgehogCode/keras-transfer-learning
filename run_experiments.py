@@ -37,6 +37,10 @@ CONFIG_FILES = {
     'training': {
         'default': ['training', 'bs-8_early-stopping_reduce-lr.yaml'],
         'small_bs': ['training', 'bs-2_early-stopping_reduce-lr.yaml']
+    },
+    'evaluation': {
+        'instance_segm': ['eval', 'instance_segm.yaml'],
+        'semantic_segm': ['eval', 'semantic_segm.yaml']
     }
 }
 
@@ -98,6 +102,7 @@ def _run_experiment_hl_60_low_high_noise(name, configs, dry_run, no_eval):
     conf_training = configs.training.default
     conf_data_low_noise = configs.data.hl60_low_noise
     conf_data_high_noise = configs.data.hl60_high_noise
+    conf_eval = configs.evaluation.instance_segm
 
     _run_default_experiment(name, conf_training,
                             'unet', conf_backbone,
@@ -105,6 +110,7 @@ def _run_experiment_hl_60_low_high_noise(name, configs, dry_run, no_eval):
                             'stardist', conf_head,
                             'hl60-low-noise', conf_data_low_noise,
                             'hl60-high-noise', conf_data_high_noise,
+                            conf_eval, conf_eval,
                             dry_run, no_eval)
 
 
@@ -118,6 +124,7 @@ def _run_experiment_hl_60_granulocyte(name, configs, dry_run, no_eval):
     conf_training = configs.training.default
     conf_data_low_noise = configs.data.hl60_low_noise
     conf_data_granulocyte = configs.data.granulocyte
+    conf_eval = configs.evaluation.instance_segm
 
     _run_default_experiment(name, conf_training,
                             'unet', conf_backbone,
@@ -125,6 +132,7 @@ def _run_experiment_hl_60_granulocyte(name, configs, dry_run, no_eval):
                             'stardist', conf_head,
                             'hl60-low-noise', conf_data_low_noise,
                             'granulocyte', conf_data_granulocyte,
+                            conf_eval, conf_eval,
                             dry_run, no_eval)
 
 
@@ -138,6 +146,7 @@ def _run_experiment_granulocyte_dsb2018(name, configs, dry_run, no_eval):
     conf_training = configs.training.default
     conf_data_granulocyte = configs.data.granulocyte
     conf_data_dsb2018 = configs.data.dsb2018
+    conf_eval = configs.evaluation.instance_segm
 
     _run_default_experiment(name, conf_training,
                             'unet', conf_backbone,
@@ -145,6 +154,7 @@ def _run_experiment_granulocyte_dsb2018(name, configs, dry_run, no_eval):
                             'stardist', conf_head,
                             'granulocyte', conf_data_granulocyte,
                             'dsb2018', conf_data_dsb2018,
+                            conf_eval, conf_eval,
                             dry_run, no_eval)
 
 
@@ -159,6 +169,8 @@ def _run_experiment_hl60_low_cityscapes(name, configs, dry_run, no_eval):
     conf_training = configs.training.default
     conf_data_hl60 = configs.data.hl60_low_noise
     conf_data_cityscapes = configs.data.cityscapes
+    conf_eval_hl60 = configs.evaluation.instance_segm
+    conf_eval_cityscapes = configs.evaluation.semantic_segm
 
     _run_default_experiment(name, conf_training,
                             'resnet-unet', conf_backbone,
@@ -166,6 +178,7 @@ def _run_experiment_hl60_low_cityscapes(name, configs, dry_run, no_eval):
                             'segm', conf_head_cityscapes,
                             'hl60-low-noise', conf_data_hl60,
                             'cityscapes', conf_data_cityscapes,
+                            conf_eval_hl60, conf_eval_cityscapes,
                             dry_run, no_eval)
 
 
@@ -180,6 +193,8 @@ def _run_experiment_dsb2018_cityscapes(name, configs, dry_run, no_eval):
     conf_training = configs.training.default
     conf_data_dsb2018 = configs.data.dsb2018
     conf_data_cityscapes = configs.data.cityscapes
+    conf_eval_dsb2018 = configs.evaluation.instance_segm
+    conf_eval_cityscapes = configs.evaluation.semantic_segm
 
     _run_default_experiment(name, conf_training,
                             'resnet-unet', conf_backbone,
@@ -187,6 +202,7 @@ def _run_experiment_dsb2018_cityscapes(name, configs, dry_run, no_eval):
                             'segm', conf_head_cityscapes,
                             'dsb2018', conf_data_dsb2018,
                             'cityscapes', conf_data_cityscapes,
+                            conf_eval_dsb2018, conf_eval_cityscapes,
                             dry_run, no_eval)
 
 
@@ -199,6 +215,7 @@ def _run_experiment_dsb2018_monster(name, configs, dry_run, no_eval):
     conf_head = configs.head.fgbg_segm_weighted
     conf_training = configs.training.small_bs
     conf_data = configs.data.dsb2018_heavy_aug
+    conf_eval = configs.evaluation.instance_segm
 
     max_epochs = 1000
     input_shape = [None, None, 1]
@@ -210,7 +227,8 @@ def _run_experiment_dsb2018_monster(name, configs, dry_run, no_eval):
         'backbone': conf_backbone,
         'head': conf_head,
         'training': conf_training,
-        'data': conf_data
+        'data': conf_data,
+        'evaluation': conf_eval
     }, max_epochs, dry_run)
     if not no_eval:
         _evaluate_model(name_model, dry_run)
@@ -226,6 +244,7 @@ def _run_experiment_granulocyte_dsb2018_unet(name, configs, dry_run, no_eval):
     conf_training = configs.training.default
     conf_data_granulocyte = configs.data.granulocyte
     conf_data_dsb2018 = configs.data.dsb2018
+    conf_eval = configs.evaluation.instance_segm
 
     _run_default_experiment(name, conf_training,
                             'resnet-unet', conf_backbone,
@@ -233,6 +252,7 @@ def _run_experiment_granulocyte_dsb2018_unet(name, configs, dry_run, no_eval):
                             'fgbg-weighted', conf_head,
                             'granulocyte', conf_data_granulocyte,
                             'dsb2018', conf_data_dsb2018,
+                            conf_eval, conf_eval,
                             dry_run, no_eval)
 
 
@@ -246,6 +266,7 @@ def _run_default_experiment(name_experiment, conf_training,
                             name_head_2, conf_head_2,
                             name_data_1, conf_data_1,
                             name_data_2, conf_data_2,
+                            conf_eval_1, conf_eval_2,
                             dry_run, no_eval):
     max_epochs = 1000
     input_shape = [None, None, 1]
@@ -261,7 +282,8 @@ def _run_default_experiment(name_experiment, conf_training,
         'backbone': conf_backbone,
         'head': conf_head_1,
         'training': conf_training,
-        'data': conf_data_1
+        'data': conf_data_1,
+        'evaluation': conf_eval_1
     }, max_epochs, dry_run)
     if not no_eval:
         _evaluate_model(name_model_1, dry_run)
@@ -278,7 +300,8 @@ def _run_default_experiment(name_experiment, conf_training,
         'backbone': conf_backbone,
         'head': conf_head_2,
         'training': conf_training,
-        'data': conf_data_2
+        'data': conf_data_2,
+        'evaluation': conf_eval_2
     }, max_epochs, dry_run)
     if not no_eval:
         _evaluate_model(name_model_2, dry_run)
@@ -298,7 +321,8 @@ def _run_default_experiment(name_experiment, conf_training,
             'backbone': conf_backbone,
             'head': conf_head_1,
             'training': conf_training,
-            'data': conf_data
+            'data': conf_data,
+            'evaluation': conf_eval_1
         }, max_epochs, dry_run)
         if not no_eval:
             _evaluate_model(name, dry_run)
@@ -318,7 +342,8 @@ def _run_default_experiment(name_experiment, conf_training,
             'backbone': conf_backbone,
             'head': conf_head_2,
             'training': conf_training,
-            'data': conf_data
+            'data': conf_data,
+            'evaluation': conf_eval_2
         }, max_epochs, dry_run)
         if not no_eval:
             _evaluate_model(name, dry_run)
@@ -341,7 +366,8 @@ def _run_default_experiment(name_experiment, conf_training,
             'backbone': conf_backbone_pretrained,
             'head': conf_head_2,
             'training': conf_training,
-            'data': conf_data
+            'data': conf_data,
+            'evaluation': conf_eval_2
         }, max_epochs, dry_run)
         if not no_eval:
             _evaluate_model(name, dry_run)
@@ -364,7 +390,8 @@ def _run_default_experiment(name_experiment, conf_training,
             'backbone': conf_backbone_pretrained,
             'head': conf_head_1,
             'training': conf_training,
-            'data': conf_data
+            'data': conf_data,
+            'evaluation': conf_eval_1
         }, max_epochs, dry_run)
         if not no_eval:
             _evaluate_model(name, dry_run)
