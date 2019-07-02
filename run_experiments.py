@@ -86,7 +86,8 @@ def main(arguments):
         num, experiment_fn = experiment_fns[exp]
         for i in range(num):
             try:
-                experiment_fn(exp + '{:02d}'.format(i), configs, dry_run, no_eval)
+                experiment_fn(exp + '{:02d}'.format(i),
+                              configs, dry_run, no_eval)
             except Exception as e:
                 print("ERROR: Experiment {} failed:".format(exp), e)
                 traceback.print_tb(e.__traceback__)
@@ -407,9 +408,9 @@ def _get_model_name(name_experiment, name_backbone, name_head, name_data, pretra
 
 
 def _train_model(conf, epochs, dry_run):
+    print('Training model {} for {} epochs...'.format(
+        conf['name'], epochs))
     if dry_run:
-        print('Training model {} for {} epochs...'.format(
-            conf['name'], epochs))
         print(conf)
         return
 
@@ -425,8 +426,8 @@ def _train_model(conf, epochs, dry_run):
 
 
 def _evaluate_model(name, dry_run):
+    print('Evaluating model {}...'.format(name))
     if dry_run:
-        print('Evaluating model {}...'.format(name))
         return
 
     try:
