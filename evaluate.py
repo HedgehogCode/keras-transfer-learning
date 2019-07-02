@@ -6,6 +6,7 @@
 import sys
 import argparse
 from yaml import unsafe_load as yaml_load
+from yaml import dump as yaml_dump
 
 from keras_transfer_learning import evaluate
 
@@ -24,7 +25,8 @@ def main(arguments):
     conf = yaml_load(args.configfile)
 
     # Run the evaluation
-    evaluate.evaluate(conf)
+    res = evaluate.evaluate(conf)
+    print(res)
 
 
 if __name__ == '__main__':

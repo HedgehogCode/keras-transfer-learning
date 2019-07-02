@@ -1,5 +1,3 @@
-import numpy as np
-
 from keras_transfer_learning import model, dataset
 from mean_average_precision import mean_ap
 
@@ -24,12 +22,17 @@ def evaluate(conf, epoch=None):
     pred = m.predict_and_process(test_x)
     pred_segm, scores = zip(*pred)  # unzip
 
-    # TODO allow for different evaluations
-    # Evaluate
-    iou_thresholds = [0.50, 0.55, 0.60, 0.65, 0.70,
-                      0.75, 0.80, 0.85, 0.90, 0.95]
-    ap = mean_ap.ap_segm_interpolated(
-        pred_segm, test_y, scores, iou_thresholds=iou_thresholds)
-    print("The average precision is {}".format(np.mean(ap)))
+    results = {}
+    for evalu in conf['evaluation']:
+        ev_name = evalu['name']
+        if ev_name == 'ap_segm_interpolated':
+            res = mean_ap.ap_segm_interpolated(pred_segm, test_y, scores, **evalu['arguments'])
+        elif ev_name == 'ap_dsb2018':
+            res = mean_ap.ap_dsb2018(pred_segm, test_y, **evalu['arguments'])
+        else:
+            raise ValueError('Unknown evaluation "{}".'.format(ev_name))
 
-    return {k: v for k, v in zip(iou_thresholds, ap)}
+        for n, r in zip(evalu['names'], res):
+            results[ev_name + '#' + n] = r
+
+    return results

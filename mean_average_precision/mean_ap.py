@@ -15,7 +15,7 @@ from scipy.ndimage import find_objects
 #      mAP interpolated
 # =================================================================================================
 
-def ap_segm_interpolated(preds, labelings, scores=None, iou_thresholds=None):
+def ap_segm_interpolated(preds, labelings, scores=None, iou_thresholds=None, compute_mean=False):
     """Computes the interpolated mean Average Precision for the given predictions.
     TODO describe formular
     TODO describe args
@@ -24,7 +24,11 @@ def ap_segm_interpolated(preds, labelings, scores=None, iou_thresholds=None):
         iou_thresholds = [.50, .55, .60, .65, .70, .75, .80, .85, .90, .95]
     pred_matchings, gt_segments = _match_preds_to_labelings(
         preds, labelings, scores)
-    return [ap_matched_interpolated(pred_matchings, gt_segments, th)[0] for th in iou_thresholds]
+    aps = [ap_matched_interpolated(pred_matchings, gt_segments, th)[0] for th in iou_thresholds]
+
+    if compute_mean:
+        return aps + [np.mean(aps)]
+    return aps
 
 
 def ap_matched_interpolated(preds, gt_segments, iou_threshold):
@@ -106,7 +110,7 @@ def ap_matched_interpolated(preds, gt_segments, iou_threshold):
 #      mAP data science bowl 2018
 # =================================================================================================
 
-def ap_dsb2018(preds, labelings, iou_thresholds):
+def ap_dsb2018(preds, labelings, iou_thresholds=None, compute_mean=False):
     """Computes the mean Average Precision as defined in the data science bowl 2018 challenge.
     TODO describe the formular
 
@@ -119,12 +123,19 @@ def ap_dsb2018(preds, labelings, iou_thresholds):
     Returns:
         {list} -- The Average Precision for each given threshold.
     """
+    if iou_thresholds is None:
+        iou_thresholds = [.50, .55, .60, .65, .70, .75, .80, .85, .90, .95]
+
     aps = []
     for pred, labeling in zip(preds, labelings):
         pred_matchings, gt_segments = _match_preds_to_labelings([pred], [labeling])
         aps.append([ap_dsb2018_matched(pred_matchings, gt_segments, th)
                     for th in iou_thresholds])
-    return [np.mean(ap) for ap in zip(*aps)]
+    ap_means = [np.mean(ap) for ap in zip(*aps)]
+
+    if compute_mean:
+        return ap_means + [np.mean(ap_means)]
+    return ap_means
 
 
 def ap_dsb2018_matched(preds, gt_segments, iou_threshold):

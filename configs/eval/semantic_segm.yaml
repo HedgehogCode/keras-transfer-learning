@@ -1,0 +1,3 @@
+- name: pascal_voc_iou
+  arguments: {}
+  names: ['iou_class']

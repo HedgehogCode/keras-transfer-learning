@@ -20,6 +20,7 @@ def main(arguments):
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-f', '--filter', type=str, default='*')
     parser.add_argument('--auto-rename', action='store_true')
+    parser.add_argument('--add-eval', action='store_true')
     args = parser.parse_args(arguments)
     filter_glob = args.filter
 
@@ -28,6 +29,8 @@ def main(arguments):
     for m in model_dirs:
         if args.auto_rename:
             auto_rename(m)
+        elif args.add_eval:
+            add_eval(m)
         else:
             process_model(m)
 
@@ -178,6 +181,37 @@ def auto_rename(model_dir):
 
     print('Renamed model. New name: "{}"'.format(model_name))
 
+def add_eval(model_dir):
+    config_file = os.path.join(model_dir, 'config.yaml')
+    with open(config_file, 'r') as f:
+        conf = yaml_load(f)
+
+    model_name = conf['name']
+
+    print('Model name: "{}"'.format(model_name))
+
+    if conf['head']['name'] in ['fgbg-segm', 'fgbg-segm-weighted', 'stardist']:
+        # Load the instance segmentation evaluation
+        with open(os.path.join('configs', 'eval', 'instance_segm.yaml'), 'r') as f:
+            evaluation_conf = yaml_load(f)
+    elif conf['head']['name'] in ['segm']:
+        # Load the sematic segmentation evaluation
+        with open(os.path.join('configs', 'eval', 'semantic_segm.yaml'), 'r') as f:
+            evaluation_conf = yaml_load(f)
+    else:
+        print('WARN: Could not find evaluation for model.')
+        return
+
+    # Move the old config file
+    shutil.move(config_file, config_file + '.bak')
+
+    conf['evaluation'] = evaluation_conf
+
+    # Write the new evaluation file
+    with open(config_file, 'w') as f:
+        yaml.dump(conf, f)
+
+    print('Added evaluation to model')
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
