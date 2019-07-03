@@ -71,6 +71,30 @@ def get_epoch_weights(model_dir: str, epoch: int):
     raise ValueError('Cannot find weight file for epoch {}'.format(epoch))
 
 
+def get_last_epoch(model_dir: str):
+    """Returns the number of the last epoch of the trained model.
+
+    Arguments:
+        model_dir {str} -- path to the model directory
+
+    Raises:
+        ValueError -- If no weights files were found or if they are named wrongly.
+
+    Returns:
+        {int} -- the number of the last epoch
+    """
+    weights = sorted(glob.glob(os.path.join(model_dir, 'weights_[0-9]*_*.h5')))
+    if weights == []:
+        raise ValueError('Did not find a valid weights file.')
+    last_weights = weights[-1]
+    matches = re.match(r'.*_(\d{4})_\d+\.\d{4}\.h5', last_weights)
+    if matches is None:
+        raise ValueError('Did not find a valid weights file.')
+
+    # Return the epoch of the last weights
+    return int(matches.group(1))
+
+
 def model_up_to_layer(keras_model, layer_name):
     for l in keras_model.layers:
         if l.name == layer_name:

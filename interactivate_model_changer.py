@@ -8,6 +8,7 @@ import sys
 import argparse
 import glob
 import shutil
+import pandas as pd
 
 import yaml
 from yaml import unsafe_load as yaml_load
@@ -22,6 +23,7 @@ def main(arguments):
     parser.add_argument('--auto-rename', action='store_true')
     parser.add_argument('--add-eval', action='store_true')
     parser.add_argument('--remove-results', action='store_true')
+    parser.add_argument('--results-set-index', action='store_true')
     args = parser.parse_args(arguments)
     filter_glob = args.filter
 
@@ -34,6 +36,8 @@ def main(arguments):
             add_eval(m)
         elif args.remove_results:
             remove_results(m)
+        elif args.results_set_index:
+            results_set_index(m)
         else:
             process_model(m)
 
@@ -223,6 +227,21 @@ def remove_results(model_dir):
     if os.path.isfile(results_file):
         shutil.move(results_file, results_file + '.bak')
         print('Moved the results file')
+    print('No results file')
+
+
+def results_set_index(model_dir):
+    print('Model dir: "{}"'.format(model_dir))
+    results_file = os.path.join(model_dir, 'results.csv')
+    if os.path.isfile(results_file):
+        results_df = pd.read_csv(results_file)
+        results_df = results_df.drop('Unnamed: 0', axis=1)
+        results_df = results_df.set_index('epoch')
+
+        shutil.move(results_file, results_file + '.bak2')
+        results_df.to_csv(results_file)
+        print('Moved the results file and saved new')
+
     print('No results file')
 
 

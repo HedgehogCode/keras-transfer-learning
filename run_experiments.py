@@ -11,7 +11,7 @@ from yaml import unsafe_load as yaml_load
 
 import pandas as pd
 
-from keras_transfer_learning import train, evaluate
+from keras_transfer_learning import train, evaluate, utils
 
 CONFIG_FILES = {
     'backbone': {
@@ -514,10 +514,13 @@ def _evaluate_model(name, dry_run):
         with open(os.path.join('models', name, 'config.yaml'), 'r') as f:
             conf = yaml_load(f)
 
+        # Evaluate all epochs
         results = {}
-        epoch = 1
+        # TODO set start epoch to 0
+        epoch = utils.utils.get_last_epoch(os.path.join('models', name))
         while True:
             try:
+                print("Epoch {}".format(epoch))
                 res = evaluate.evaluate(conf, epoch=epoch)
             except ValueError:
                 # Last epoch
@@ -537,7 +540,9 @@ def _evaluate_model(name, dry_run):
             epoch += 1
 
         results_df = pd.DataFrame(results)
+        results_df = results_df.set_index('epoch')
         results_df.to_csv(results_file)
+        print("Done evaluating model {}".format(name))
     except Exception as e:
         print('ERROR: Evaluation of model {} failed: {}'.format(name, e))
         traceback.print_tb(e.__traceback__)
