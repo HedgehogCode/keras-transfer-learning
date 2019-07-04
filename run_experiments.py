@@ -77,7 +77,9 @@ def main(arguments):
         # Experiment 7: granulocyte and dsb2018 (unet)
         'G': (1, _run_experiment_granulocyte_dsb2018_unet),
         # Experiment 8: frankenstein
-        'H': (1, _run_experiment_frankenstein)
+        'H': (1, _run_experiment_frankenstein),
+        # Experiment 9: hl60 and dsb2018
+        'I': (5, _run_experiment_hl60_dsb2018),
     }
 
     # If no experiments were selected: Run all
@@ -329,6 +331,28 @@ def _run_experiment_frankenstein(name, configs, dry_run, no_eval):
         }, max_epochs, dry_run)
         if not no_eval:
             _evaluate_model(name_model, dry_run)
+
+
+###################################################################################################
+#   EXPERIMENT Granulocyte/DSB2018
+###################################################################################################
+
+def _run_experiment_hl60_dsb2018(name, configs, dry_run, no_eval):
+    conf_backbone = configs.backbone.unet_csbdeep
+    conf_head = configs.head.stardist
+    conf_training = configs.training.default
+    conf_data_hl60 = configs.data.hl60_low_noise
+    conf_data_dsb2018 = configs.data.dsb2018
+    conf_eval = configs.evaluation.instance_segm
+
+    _run_default_experiment(name, conf_training,
+                            'unet', conf_backbone,
+                            'stardist', conf_head,
+                            'stardist', conf_head,
+                            'hl60-low-noise', conf_data_hl60,
+                            'dsb2018', conf_data_dsb2018,
+                            conf_eval, conf_eval,
+                            dry_run, no_eval)
 
 
 ###################################################################################################
