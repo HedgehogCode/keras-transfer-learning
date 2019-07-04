@@ -23,6 +23,8 @@ def main(arguments):
                         type=argparse.FileType('r'), required=True)
     parser.add_argument('-d', '--data', help='Data config file',
                         type=argparse.FileType('r'), required=True)
+    parser.add_argument('--eval', help='Evaluation config file',
+                        type=argparse.FileType('r'), required=True)
     parser.add_argument('-n', '--name', help='Name of the model',
                         type=str, required=True)
     parser.add_argument('-i', '--input_shape', help='Input shape of the model (yaml)',
@@ -40,7 +42,8 @@ def main(arguments):
         'backbone': yaml_load(args.backbone),
         'head': yaml_load(args.head),
         'training': yaml_load(args.training),
-        'data': yaml_load(args.data)
+        'data': yaml_load(args.data),
+        'evaluation': yaml_load(args.eval)
     }
 
     # Run the training
