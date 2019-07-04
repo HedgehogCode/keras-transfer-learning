@@ -49,12 +49,12 @@ def get_models(pattern: str, model_dirs: list = None):
     return selected_model_dirs
 
 
-def plot_map_over_epoch(pattern: str, model_dirs: list = None, size: tuple = None):
+def plot_over_epoch(pattern: str, metric :str, model_dirs: list = None, size: tuple = None):
     selected_models = get_models(pattern, model_dirs)
-    return _plot_map_over_epoch_df(_get_results_df(selected_models), size)
+    return _plot_map_over_epoch_df(_get_results_df(selected_models, metric), size)
 
 
-def plot_map_last(pattern: str, model_dirs: list = None, size: tuple = None,
+def plot_last(pattern: str, metric: str, model_dirs: list = None, size: tuple = None,
                   ignore_experiment=False, ignore_backbone=False, ignore_head=False,
                   ignore_dataset=False, ignore_init=False, ignore_size=False):
     ignored_vals = []
@@ -71,8 +71,8 @@ def plot_map_last(pattern: str, model_dirs: list = None, size: tuple = None,
     if ignore_size:
         ignored_vals.append('Size')
     selected_model_dirs = get_models(pattern, model_dirs)
-    results_last = _get_results_last(selected_model_dirs)
-    return _plot_map_last(results_last, size, ignored_vals)
+    results_last = _get_results_last(selected_model_dirs, metric)
+    return _plot_last(results_last, size, ignored_vals)
 
 
 def _split_model_name(model_name):
@@ -88,19 +88,18 @@ def _get_model_name(path):
 
 def _get_model_results(path):
     results_file = os.path.join(path, 'results.csv')
-    df = pd.read_csv(results_file)
-    return df.drop('Unnamed: 0', 1).set_index('epoch')
+    return pd.read_csv(results_file)
 
 
-def _get_results_df(dirs):
+def _get_results_df(dirs, metric: str):
     results = {_get_model_name(p): _get_model_results(p) for p in dirs}
-    results_mean = {n: df.mean(axis=1) for n, df in results.items()}
-    return pd.DataFrame(results_mean)
+    results_metric = {name: df[metric] for name, df in results.items()}
+    return pd.DataFrame(results_metric)
 
 
-def _get_results_last(dirs):
+def _get_results_last(dirs, metric: str):
     results = {_get_model_name(p): _get_model_results(p) for p in dirs}
-    return {n: df.mean(axis=1).iloc[-1] for n, df in results.items()}
+    return {n: df[metric].iloc[-1] for n, df in results.items()}
 
 
 def _create_figure(size: tuple = None):
@@ -119,11 +118,11 @@ def _plot_map_over_epoch_df(df, size: tuple = None):
         return data.apply(lambda x: filters.convolve(x, box, mode='nearest'))
 
     fig = _create_figure(size)
-    ax = sns.lineplot(data=smooth_dataset_gaussian(df))
+    sns.lineplot(data=smooth_dataset_gaussian(df))
     return fig
 
 
-def _plot_map_last(results_last, size: tuple = None, ignored_vals: list = None):
+def _plot_last(results_last, size: tuple = None, ignored_vals: list = None):
     if ignored_vals is None:
         ignored_vals = []
 
