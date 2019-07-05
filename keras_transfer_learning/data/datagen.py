@@ -98,7 +98,7 @@ def data_generator_from_lists(batch_size, data_x, data_y, dataaug_fn, prepare_fn
 
 def data_generator_for_validation(val_x, val_y, prepare_fn, normalize_fn=None):
     ids = list(range(len(val_x)))
-    data_fn = data_fn_from_lists(val_x, val_y, lambda x: x, prepare_fn, normalize_fn)
+    data_fn = data_fn_from_lists(val_x, val_y, lambda x, y: (x, y), prepare_fn, normalize_fn)
     return DataGenerator(ids, 1, data_fn, shuffle=False)
 
 
@@ -113,7 +113,7 @@ def data_fn_from_lists(data_x, data_y, dataaug_fn, prepare_fn, normalize_fn=None
             batch_x = [normalize_fn(x) for x in batch_x]
 
         # Dataaug
-        batch_x, batch_y = dataaug_fn([batch_x, batch_y])
+        batch_x, batch_y = dataaug_fn(batch_x, batch_y)
 
         # Prepare for training
         return prepare_fn(batch_x, batch_y)

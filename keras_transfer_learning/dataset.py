@@ -73,6 +73,10 @@ def _create_dataaug_fn(conf):
 
 
 def _create_prepare_fn(conf):
+    # For testing: If no head is defined we just use the identity
+    if 'head' not in conf:
+        return lambda x, y: (x, y)
+
     return {
         'stardist': lambda x, y: stardist.prepare_data(conf['head']['args']['n_rays'], x, y),
         'segm': lambda x, y: segm.prepare_data_nclass(x, y, conf['head']['num_classes']),

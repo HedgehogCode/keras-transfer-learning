@@ -11,6 +11,7 @@ dataaug:
         scale: !!python/tuple [0.5, 2]
         rotate: !!python/tuple [0, 360]
         shear: !!python/tuple [-16, 16]
+        order: 0
     - name: 'CropToFixedSize'
       args: { width: 256, height: 256 }
     - name: 'Fliplr'
@@ -18,16 +19,23 @@ dataaug:
     - name: 'Flipud'
       args: { p: 0.5 }
     - name: 'GammaContrast'
+      onsegm: False
       args: { gamma: !!python/tuple [0.5, 2.0] }
     - name: 'Sharpen'
+      onsegm: False
       args: { alpha: !!python/tuple [0, 1] }
     - name: 'Emboss'
+      onsegm: False
       args: { alpha: !!python/tuple [0, 1], strength: !!python/tuple [0.5, 1.5] }
     - name: 'Add'
+      onsegm: False
       args: { value: !!python/tuple [-0.1, 0.1 ] }
     - name: 'AdditiveGaussianNoise'
+      onsegm: False
       args: { scale: !!python/tuple [0, 0.2] }
     - name: 'GaussianBlur'
+      onsegm: False
       args: { sigma: !!python/tuple [0, 3] }
     - name: 'MotionBlur'
+      onsegm: False
       args: {}

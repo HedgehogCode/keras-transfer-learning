@@ -1,0 +1,19 @@
+name: 'dsb2018'
+data_dir: 'data/dsb2018'
+train_val_split: 0.9
+normalizer: 'min-max'
+datasplit_seed: 42
+dataaug:
+  name: 'imgaug'
+  augmentors:
+    - name: 'Affine'
+      args:
+        scale: !!python/tuple [0.5, 2]
+        # rotate: !!python/tuple [0, 360]
+        # shear: !!python/tuple [-16, 16]
+    - name: 'CropToFixedSize'
+      args: { width: 256, height: 256 }
+    - name: 'Fliplr'
+      args: { p: 0.5 }
+    - name: 'Flipud'
+      args: { p: 0.5 }
