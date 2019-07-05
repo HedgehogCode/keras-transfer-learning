@@ -1,5 +1,5 @@
-name: 'dsb2018'
-data_dir: 'data/dsb2018'
+name: 'cytogen'
+data_dir: 'data/granulocyte'
 train_val_split: 0.9
 normalizer: 'min-max'
 datasplit_seed: 42
@@ -8,7 +8,7 @@ dataaug:
   augmentors:
     - name: 'Affine'
       args:
-        scale: !!python/tuple [0.5, 2]
+        scale: !!python/tuple [0.5, 1.7]
         rotate: !!python/tuple [0, 360]
         shear: !!python/tuple [-16, 16]
         order: 0
@@ -41,4 +41,4 @@ dataaug:
       args: {}
     - name: 'Invert'
       onsegm: False
-      args: { p: 0.5 }
+      args: { p: 0.3 }
