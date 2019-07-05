@@ -20,7 +20,7 @@ dependencies:
     - tifffile==2019.3.18
     - stardist==0.2.0
     - csbdeep==0.3.0
-    - imgaug==0.2.8
+    - imgaug==0.2.9
     - pytest==4.4.0
     - pylint==2.3.1
     - autopep8==1.4.3
