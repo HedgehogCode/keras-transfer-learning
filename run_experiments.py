@@ -26,7 +26,9 @@ CONFIG_FILES = {
         'dsb2018_heavy_aug': ['data', 'dsb2018-heavy-aug.yaml'],
         'granulocyte': ['data', 'granulocyte.yaml'],
         'hl60_high_noise': ['data', 'hl60_high-noise.yaml'],
-        'hl60_low_noise': ['data', 'hl60_low-noise.yaml']
+        'hl60_low_noise': ['data', 'hl60_low-noise.yaml'],
+        'hl60_aug': ['data', 'hl60-aug.yaml'],
+        'granulocyte_aug': ['data', 'granulocyte-aug.yaml']
     },
     'head': {
         'fgbg_segm_weighted': ['heads', 'fgbg-segm-weighted.yaml'],
@@ -77,9 +79,11 @@ def main(arguments):
         # Experiment 7: granulocyte and dsb2018 (unet)
         'G': (1, _run_experiment_granulocyte_dsb2018_unet),
         # Experiment 8: frankenstein
-        'H': (1, _run_experiment_frankenstein),
+        'H': (3, _run_experiment_frankenstein),
         # Experiment 9: hl60 and dsb2018
         'I': (5, _run_experiment_hl60_dsb2018),
+        # Experiment 9: hl60 and dsb2018
+        'J': (3, _run_experiment_frankenstein2),
     }
 
     # If no experiments were selected: Run all
@@ -289,6 +293,83 @@ def _run_experiment_frankenstein(name, configs, dry_run, no_eval):
         ('hl60-low-noise13', configs.data.hl60_low_noise),
         ('hl60-high-noise14', configs.data.hl60_high_noise),
         ('granulocyte15', configs.data.granulocyte),
+    ]
+
+    epochs_per_model = 15
+    input_shape = [None, None, 1]
+    conf_backbone_pretrained = conf_backbone.copy()
+
+    for name_data, conf_data in conf_datas:
+        name_model = _get_model_name(
+            name, 'resnet-unet', 'stardist', name_data, False, 'F')
+        _train_model({
+            'name': name_model,
+            'input_shape': input_shape,
+            'backbone': conf_backbone_pretrained,
+            'head': conf_head,
+            'training': conf_training,
+            'data': conf_data,
+            'evaluation': conf_eval
+        }, epochs_per_model, dry_run)
+
+        # Update pretrained config
+        conf_backbone_pretrained = conf_backbone.copy()
+        conf_backbone_pretrained['weights'] = os.path.join(
+                        'models', name_model, 'weights_final.h5')
+
+    # Train the dsb2018 model
+    max_epochs = 1000
+    conf_data = conf_data_dsb2018.copy()
+    for num_train in [200, 50, 10, 5, 2]:
+        conf_data['num_train'] = num_train
+        name_model = _get_model_name(
+            name, 'resnet-unet', 'stardist', 'dsb2018', True, num_train)
+        _train_model({
+            'name': name_model,
+            'input_shape': input_shape,
+            'backbone': conf_backbone_pretrained,
+            'head': conf_head,
+            'training': conf_training,
+            'data': conf_data,
+            'evaluation': conf_eval
+        }, max_epochs, dry_run)
+        if not no_eval:
+            _evaluate_model(name_model, dry_run)
+
+
+###################################################################################################
+#   EXPERIMENT Frankenstein 2
+###################################################################################################
+
+def _run_experiment_frankenstein2(name, configs, dry_run, no_eval):
+    conf_backbone = configs.backbone.resnet_unet
+    conf_head = configs.head.stardist
+    conf_training = configs.training.default
+    conf_eval = configs.evaluation.instance_segm
+    conf_data_dsb2018 = configs.data.dsb2018
+
+    # Pretrain the modell on all generated datasets
+    conf_datas = [
+        ('hl60-01', configs.data.hl60_aug),
+        ('granulocyte-02', configs.data.granulocyte_aug),
+        ('hl60-03', configs.data.hl60_aug),
+        ('granulocyte-04', configs.data.granulocyte_aug),
+        ('hl60-05', configs.data.hl60_aug),
+        ('granulocyte-06', configs.data.granulocyte_aug),
+        ('hl60-07', configs.data.hl60_aug),
+        ('granulocyte-08', configs.data.granulocyte_aug),
+        ('hl60-09', configs.data.hl60_aug),
+        ('granulocyte-10', configs.data.granulocyte_aug),
+        ('hl60-11', configs.data.hl60_aug),
+        ('granulocyte-12', configs.data.granulocyte_aug),
+        ('hl60-13', configs.data.hl60_aug),
+        ('granulocyte-14', configs.data.granulocyte_aug),
+        ('hl60-15', configs.data.hl60_aug),
+        ('granulocyte-16', configs.data.granulocyte_aug),
+        ('hl60-17', configs.data.hl60_aug),
+        ('granulocyte-18', configs.data.granulocyte_aug),
+        ('hl60-19', configs.data.hl60_aug),
+        ('granulocyte-20', configs.data.granulocyte_aug),
     ]
 
     epochs_per_model = 15
