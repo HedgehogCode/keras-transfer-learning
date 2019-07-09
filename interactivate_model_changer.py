@@ -24,6 +24,7 @@ def main(arguments):
     parser.add_argument('--add-eval', action='store_true')
     parser.add_argument('--remove-results', action='store_true')
     parser.add_argument('--results-set-index', action='store_true')
+    parser.add_argument('--auto-rename-weights', action='store_true')
     args = parser.parse_args(arguments)
     filter_glob = args.filter
 
@@ -38,6 +39,8 @@ def main(arguments):
             remove_results(m)
         elif args.results_set_index:
             results_set_index(m)
+        elif args.auto_rename_weights:
+            auto_rename_weights(m)
         else:
             process_model(m)
 
@@ -187,6 +190,73 @@ def auto_rename(model_dir):
     model_name = new_model_name
 
     print('Renamed model. New name: "{}"'.format(model_name))
+
+
+def auto_rename_weights(model_dir):
+    with open(os.path.join(model_dir, 'config.yaml'), 'r') as f:
+        conf = yaml_load(f)
+
+    model_name = conf['name']
+    print('Model name: "{}"'.format(model_name))
+
+    # Get the weights name
+    weigths_name = conf['backbone']['weights']
+    if weigths_name is None:
+        print('No weigths')
+        return
+
+    if os.path.isfile(weigths_name):
+        print('Weights file exists. No need to rename')
+        return
+
+    # Get the model name of the weigths
+    weigths_model_name = weigths_name.split('/')[1]
+
+    # Rename model
+    exp_name, _, model_suffix = weigths_model_name.partition('_')
+    try:
+        model_prefix = {
+            'E1': 'A00',
+            'E2': 'B00', 'E2a': 'B01', 'E2b': 'B02',
+            'E3': 'C00', 'E3a': 'C01', 'E3b': 'C02',
+            'E4': 'D00',
+            'E5': 'E00',
+            'E6': 'F00',
+            'E7': 'G00',
+        }[exp_name]
+    except KeyError:
+        return
+    new_weigths_model_name = model_prefix + '_' + model_suffix
+
+    # Check if the weights model changed
+    if new_weigths_model_name == weigths_model_name:
+        print('ERROR: The new model name is the same as the old one ' +
+              'but the file does not exist: {}'.format(new_weigths_model_name))
+        new_weigths_model_name = input('New weigths model name: ')
+        return
+
+    # Get the new weigths file
+    new_weights_file = os.path.join('models',
+                                    new_weigths_model_name,
+                                    weigths_name.split('/')[-1])
+    if not os.path.isfile(new_weights_file):
+        print('FATAL ERROR: The new weigths file does not exist: {}'.format(
+            new_weights_file))
+        exit()
+
+    # Rename the old config yaml
+    shutil.move(os.path.join(model_dir, 'config.yaml'),
+                os.path.join(model_dir, 'config.yaml.bak2'))
+
+    # Set to the new weights file
+    conf['backbone']['weights'] = new_weights_file
+
+    # Write the new config yaml
+    with open(os.path.join(model_dir, 'config.yaml'), 'w') as f:
+        yaml.dump(conf, f)
+
+    print('Changed weights file to {}.'.format(new_weights_file))
+
 
 def add_eval(model_dir):
     config_file = os.path.join(model_dir, 'config.yaml')
