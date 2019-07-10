@@ -14,6 +14,9 @@ import yaml
 from yaml import unsafe_load as yaml_load
 
 
+MODEL_NAME_MAP = {}
+
+
 def main(arguments):
 
     parser = argparse.ArgumentParser(
@@ -44,6 +47,9 @@ def main(arguments):
         else:
             process_model(m)
 
+    print(MODEL_NAME_MAP)
+    with open('model_map.yaml', 'w') as f:
+        yaml.dump(MODEL_NAME_MAP, f)
 
 def process_model(model_dir):
     with open(os.path.join(model_dir, 'config.yaml'), 'r') as f:
@@ -313,6 +319,21 @@ def results_set_index(model_dir):
         print('Moved the results file and saved new')
 
     print('No results file')
+
+
+def _rename_model(model_name, new_model_name):
+    model_dir_old = os.path.join('models', model_name)
+    model_dir_new = os.path.join('models', new_model_name)
+
+    log_dir_old = os.path.join('logs', model_name)
+    log_dir_new = os.path.join('logs', new_model_name)
+
+    if os.path.isdir(model_dir_new):
+        raise ValueError('The target model "{}" already exists.'.format(model_dir_new))
+    if os.path.isdir(log_dir_new):
+        raise ValueError('The target log directory "{}" already exists.'.format(log_dir_new))
+
+
 
 
 if __name__ == '__main__':

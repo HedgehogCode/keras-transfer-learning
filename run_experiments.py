@@ -53,567 +53,697 @@ def main(arguments):
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('-d', '--dry-run', action='store_true')
+    parser.add_argument('-v', '--verbose', action='store_true')
     parser.add_argument('--no-eval', action='store_true')
-    parser.add_argument('-e', '--experiments', nargs='+', type=str)
+    parser.add_argument('--check', action='store_true')
     args = parser.parse_args(arguments)
-    dry_run = args.dry_run
-    no_eval = args.no_eval
-    experiments = args.experiments
 
     configs = _get_configs()
 
-    # Define the experiments
-    experiment_fns = {
-        # Experiment 1: hl60 low and high noise
-        'A': (5, _run_experiment_hl_60_low_high_noise),
-        # Experiment 2: hl60 and granulocyte
-        'B': (5, _run_experiment_hl_60_granulocyte),
-        # Experiment 3: granulocyte and dsb2018
-        'C': (5, _run_experiment_granulocyte_dsb2018),
-        # Experiment 4: hl60 and cityscapes
-        'D': (1, _run_experiment_hl60_low_cityscapes),
-        # Experiment 5: dsb2018 and cityscapes
-        'E': (1, _run_experiment_dsb2018_cityscapes),
-        # Experiment 6: dsb2018 monster model
-        'F': (1, _run_experiment_dsb2018_monster),
-        # Experiment 7: granulocyte and dsb2018 (unet)
-        'G': (1, _run_experiment_granulocyte_dsb2018_unet),
-        # Experiment 8: frankenstein
-        'H': (3, _run_experiment_frankenstein),
-        # Experiment 9: hl60 and dsb2018
-        'I': (5, _run_experiment_hl60_dsb2018),
-        # Experiment 9: hl60 and dsb2018
-        'J': (3, _run_experiment_frankenstein2),
+    _run_random_init_models(configs, args)
+
+    _run_frankenstein_models(configs, args)
+
+    _run_pretrained_models(configs, args)
+
+
+def _run_random_init_models(configs, args):
+    num_train_options = ['F', 200, 50, 10, 5, 2]
+
+    # ------------------------------------------------
+    # HL60 Low Noise
+    # ------------------------------------------------
+    # Unet
+    num_experiments = 15
+    _train_eval_random_init_models('hl60low', configs.data.hl60_low_noise,
+                                   'stardist', configs.head.stardist,
+                                   'unet', configs.backbone.unet_csbdeep,
+                                   configs.training.default,
+                                   configs.evaluation.instance_segm,
+                                   num_train_options,
+                                   num_experiments,
+                                   args)
+
+    # ResNet Unet
+    num_experiments = 1
+    _train_eval_random_init_models('hl60low', configs.data.hl60_low_noise,
+                                   'stardist', configs.head.stardist,
+                                   'resnet-unet', configs.backbone.resnet_unet,
+                                   configs.training.default,
+                                   configs.evaluation.instance_segm,
+                                   num_train_options,
+                                   num_experiments,
+                                   args)
+
+    # ------------------------------------------------
+    # HL60 High Noise
+    # ------------------------------------------------
+    num_experiments = 5
+    _train_eval_random_init_models('hl60high', configs.data.hl60_high_noise,
+                                   'stardist', configs.head.stardist,
+                                   'unet', configs.backbone.unet_csbdeep,
+                                   configs.training.default,
+                                   configs.evaluation.instance_segm,
+                                   num_train_options,
+                                   num_experiments,
+                                   args)
+
+    # ------------------------------------------------
+    # Granulocyte
+    # ------------------------------------------------
+    # Stardist - Unet
+    num_experiments = 10
+    _train_eval_random_init_models('granulocyte', configs.data.granulocyte,
+                                   'stardist', configs.head.stardist,
+                                   'unet', configs.backbone.unet_csbdeep,
+                                   configs.training.default,
+                                   configs.evaluation.instance_segm,
+                                   num_train_options,
+                                   num_experiments,
+                                   args)
+
+    # FGBG Weighted - ResNet Unet
+    num_experiments = 1
+    _train_eval_random_init_models('granulocyte', configs.data.granulocyte,
+                                   'fgbg-weighted', configs.head.fgbg_segm_weighted,
+                                   'resnet-unet', configs.backbone.resnet_unet,
+                                   configs.training.default,
+                                   configs.evaluation.instance_segm,
+                                   num_train_options,
+                                   num_experiments,
+                                   args)
+
+    # ------------------------------------------------
+    # DSB2018
+    # ------------------------------------------------
+    # Stardist - Unet
+    num_experiments = 10
+    _train_eval_random_init_models('dsb2018', configs.data.dsb2018,
+                                   'stardist', configs.head.stardist,
+                                   'unet', configs.backbone.unet_csbdeep,
+                                   configs.training.default,
+                                   configs.evaluation.instance_segm,
+                                   num_train_options,
+                                   num_experiments,
+                                   args)
+
+    # Stardist - ResNet Unet
+    num_experiments = 1
+    _train_eval_random_init_models('dsb2018', configs.data.dsb2018,
+                                   'stardist', configs.head.stardist,
+                                   'resnet-unet', configs.backbone.resnet_unet,
+                                   configs.training.default,
+                                   configs.evaluation.instance_segm,
+                                   num_train_options,
+                                   num_experiments,
+                                   args)
+
+    # FGBG Weighted - ResNet Unet
+    num_experiments = 1
+    _train_eval_random_init_models('dsb2018', configs.data.dsb2018,
+                                   'fgbg-weighted', configs.head.fgbg_segm_weighted,
+                                   'resnet-unet', configs.backbone.resnet_unet,
+                                   configs.training.default,
+                                   configs.evaluation.instance_segm,
+                                   num_train_options,
+                                   num_experiments,
+                                   args)
+
+    # FGBG Weighted - ResNet Unet Big (Monster)
+    # TODO fix nice data augmentation
+    # num_experiments = 1
+    # _train_eval_random_init_models('dsb2018', configs.data.dsb2018,
+    #                                'fgbg-weighted', configs.head.fgbg_segm_weighted,
+    #                                'resnet-unet-big', configs.backbone.resnet_unet_big,
+    #                                configs.training.small_bs,
+    #                                configs.evaluation.instance_segm,
+    #                                ['F'],
+    #                                num_experiments,
+    #                                args)
+
+    # ------------------------------------------------
+    # Cityscapes
+    # ------------------------------------------------
+    num_experiments = 2
+    _train_eval_random_init_models('cityscapes', configs.data.cityscapes,
+                                   'segm', configs.head.segm_cityscapes,
+                                   'resnet-unet', configs.backbone.resnet_unet,
+                                   configs.training.default,
+                                   configs.evaluation.semantic_segm,
+                                   num_train_options,
+                                   num_experiments,
+                                   args)
+
+
+def _run_frankenstein_models(configs, args):
+    # No data augmentation
+    conf_datas = [
+        ('hl60low', configs.data.hl60_low_noise),
+        ('hl60high', configs.data.hl60_high_noise),
+        ('granulocyte', configs.data.granulocyte),
+        ('hl60low', configs.data.hl60_low_noise),
+        ('hl60high', configs.data.hl60_high_noise),
+        ('granulocyte', configs.data.granulocyte),
+        ('hl60low', configs.data.hl60_low_noise),
+        ('hl60high', configs.data.hl60_high_noise),
+        ('granulocyte', configs.data.granulocyte),
+        ('hl60low', configs.data.hl60_low_noise),
+        ('hl60high', configs.data.hl60_high_noise),
+        ('granulocyte', configs.data.granulocyte),
+        ('hl60low', configs.data.hl60_low_noise),
+        ('hl60high', configs.data.hl60_high_noise),
+        ('granulocyte', configs.data.granulocyte)
+    ]
+    num_experiments = 3
+    epochs_per_model = 15
+    _train_frankenstein_models('hl60low-hl60high-granulocyte', conf_datas,
+                               'stardist', configs.head.stardist,
+                               'resnet-unet', configs.backbone.resnet_unet,
+                               configs.training.default,
+                               configs.evaluation.instance_segm,
+                               epochs_per_model, num_experiments, args)
+
+    # Data augmentation
+    conf_datas = [
+        ('hl60low', configs.data.hl60_aug),
+        ('granulocyte', configs.data.granulocyte_aug),
+        ('hl60low', configs.data.hl60_aug),
+        ('granulocyte', configs.data.granulocyte_aug),
+        ('hl60low', configs.data.hl60_aug),
+        ('granulocyte', configs.data.granulocyte_aug),
+        ('hl60low', configs.data.hl60_aug),
+        ('granulocyte', configs.data.granulocyte_aug),
+        ('hl60low', configs.data.hl60_aug),
+        ('granulocyte', configs.data.granulocyte_aug),
+        ('hl60low', configs.data.hl60_aug),
+        ('granulocyte', configs.data.granulocyte_aug),
+        ('hl60low', configs.data.hl60_aug),
+        ('granulocyte', configs.data.granulocyte_aug),
+        ('hl60low', configs.data.hl60_aug),
+        ('granulocyte', configs.data.granulocyte_aug),
+        ('hl60low', configs.data.hl60_aug),
+        ('granulocyte', configs.data.granulocyte_aug),
+        ('hl60low', configs.data.hl60_aug),
+        ('granulocyte', configs.data.granulocyte_aug),
+    ]
+    num_experiments = 3
+    epochs_per_model = 15
+    _train_frankenstein_models('hl60low-granulocyte-aug', conf_datas,
+                               'stardist', configs.head.stardist,
+                               'resnet-unet', configs.backbone.resnet_unet,
+                               configs.training.default,
+                               configs.evaluation.instance_segm,
+                               epochs_per_model, num_experiments, args)
+
+
+def _run_pretrained_models(configs, args):
+    num_train_options = [200, 50, 10, 5, 2]
+
+    # ------------------------------------------------
+    # HL60 Low Noise
+    # ------------------------------------------------
+    # HL60 High Noise
+    model_names_pretrained = [
+        'R/none/hl60low/stardist/unet/F/000',
+        'R/none/hl60low/stardist/unet/F/001',
+        'R/none/hl60low/stardist/unet/F/002',
+        'R/none/hl60low/stardist/unet/F/003',
+        'R/none/hl60low/stardist/unet/F/004',
+    ]
+    _train_eval_pretrained_models('hl60high', configs.data.hl60_high_noise,
+                                  'stardist', configs.head.stardist,
+                                  'unet', configs.backbone.unet_csbdeep,
+                                  configs.training.default,
+                                  configs.evaluation.instance_segm,
+                                  num_train_options,
+                                  model_names_pretrained,
+                                  args)
+
+    # Granulocyte
+    model_names_pretrained = [
+        'R/none/hl60low/stardist/unet/F/005',
+        'R/none/hl60low/stardist/unet/F/006',
+        'R/none/hl60low/stardist/unet/F/007',
+        'R/none/hl60low/stardist/unet/F/008',
+        'R/none/hl60low/stardist/unet/F/009',
+    ]
+    _train_eval_pretrained_models('granulocyte', configs.data.granulocyte,
+                                  'stardist', configs.head.stardist,
+                                  'unet', configs.backbone.unet_csbdeep,
+                                  configs.training.default,
+                                  configs.evaluation.instance_segm,
+                                  num_train_options,
+                                  model_names_pretrained,
+                                  args)
+
+    # DSB2018
+    model_names_pretrained = [
+        'R/none/hl60low/stardist/unet/F/010',
+        'R/none/hl60low/stardist/unet/F/011',
+        'R/none/hl60low/stardist/unet/F/012',
+        'R/none/hl60low/stardist/unet/F/013',
+        'R/none/hl60low/stardist/unet/F/014',
+    ]
+    _train_eval_pretrained_models('dsb2018', configs.data.dsb2018,
+                                  'stardist', configs.head.stardist,
+                                  'unet', configs.backbone.unet_csbdeep,
+                                  configs.training.default,
+                                  configs.evaluation.instance_segm,
+                                  num_train_options,
+                                  model_names_pretrained,
+                                  args)
+
+    # Cityscapes
+    model_names_pretrained = [
+        'R/none/hl60low/stardist/resnet-unet/F/000',
+    ]
+    _train_eval_pretrained_models('cityscapes', configs.data.cityscapes,
+                                  'segm', configs.head.segm_cityscapes,
+                                  'resnet-unet', configs.backbone.resnet_unet,
+                                  configs.training.default,
+                                  configs.evaluation.semantic_segm,
+                                  num_train_options,
+                                  model_names_pretrained,
+                                  args)
+
+    # ------------------------------------------------
+    # HL60 High Noise
+    # ------------------------------------------------
+    # HL60 Low Noise
+    model_names_pretrained = [
+        'R/none/hl60high/stardist/unet/F/000',
+        'R/none/hl60high/stardist/unet/F/001',
+        'R/none/hl60high/stardist/unet/F/002',
+        'R/none/hl60high/stardist/unet/F/003',
+        'R/none/hl60high/stardist/unet/F/004',
+    ]
+    _train_eval_pretrained_models('hl60low', configs.data.hl60_low_noise,
+                                  'stardist', configs.head.stardist,
+                                  'unet', configs.backbone.unet_csbdeep,
+                                  configs.training.default,
+                                  configs.evaluation.instance_segm,
+                                  num_train_options,
+                                  model_names_pretrained,
+                                  args)
+
+    # ------------------------------------------------
+    # Granulocyte
+    # ------------------------------------------------
+    # HL60 Low Noise
+    model_names_pretrained = [
+        'R/none/granulocyte/stardist/unet/F/000',
+        'R/none/granulocyte/stardist/unet/F/001',
+        'R/none/granulocyte/stardist/unet/F/002',
+        'R/none/granulocyte/stardist/unet/F/003',
+        'R/none/granulocyte/stardist/unet/F/004',
+    ]
+    _train_eval_pretrained_models('hl60low', configs.data.hl60_low_noise,
+                                  'stardist', configs.head.stardist,
+                                  'unet', configs.backbone.unet_csbdeep,
+                                  configs.training.default,
+                                  configs.evaluation.instance_segm,
+                                  num_train_options,
+                                  model_names_pretrained,
+                                  args)
+
+    # DSB2018
+    model_names_pretrained = [
+        'R/none/granulocyte/stardist/unet/F/005',
+        'R/none/granulocyte/stardist/unet/F/006',
+        'R/none/granulocyte/stardist/unet/F/007',
+        'R/none/granulocyte/stardist/unet/F/008',
+        'R/none/granulocyte/stardist/unet/F/009',
+    ]
+    _train_eval_pretrained_models('dsb2018', configs.data.dsb2018,
+                                  'stardist', configs.head.stardist,
+                                  'unet', configs.backbone.unet_csbdeep,
+                                  configs.training.default,
+                                  configs.evaluation.instance_segm,
+                                  num_train_options,
+                                  model_names_pretrained,
+                                  args)
+
+    # DSB2018
+    model_names_pretrained = [
+        'R/none/granulocyte/fgbg-weighted/resnet-unet/F/000',
+    ]
+    _train_eval_pretrained_models('dsb2018', configs.data.dsb2018,
+                                  'fgbg-weighted', configs.head.fgbg_segm_weighted,
+                                  'resnet-unet', configs.backbone.resnet_unet,
+                                  configs.training.default,
+                                  configs.evaluation.instance_segm,
+                                  num_train_options,
+                                  model_names_pretrained,
+                                  args)
+
+    # ------------------------------------------------
+    # DSB2018
+    # ------------------------------------------------
+    # Granulocyte - StarDist - Unet
+    model_names_pretrained = [
+        'R/none/dsb2018/stardist/unet/F/000',
+        'R/none/dsb2018/stardist/unet/F/001',
+        'R/none/dsb2018/stardist/unet/F/002',
+        'R/none/dsb2018/stardist/unet/F/003',
+        'R/none/dsb2018/stardist/unet/F/004',
+    ]
+    _train_eval_pretrained_models('granulocyte', configs.data.granulocyte,
+                                  'stardist', configs.head.stardist,
+                                  'unet', configs.backbone.unet_csbdeep,
+                                  configs.training.default,
+                                  configs.evaluation.instance_segm,
+                                  num_train_options,
+                                  model_names_pretrained,
+                                  args)
+
+    # HL60 Low Noise - StarDist - Unet
+    model_names_pretrained = [
+        'R/none/dsb2018/stardist/unet/F/005',
+        'R/none/dsb2018/stardist/unet/F/006',
+        'R/none/dsb2018/stardist/unet/F/007',
+        'R/none/dsb2018/stardist/unet/F/008',
+        'R/none/dsb2018/stardist/unet/F/009',
+    ]
+    _train_eval_pretrained_models('hl60low', configs.data.hl60_low_noise,
+                                  'stardist', configs.head.stardist,
+                                  'unet', configs.backbone.unet_csbdeep,
+                                  configs.training.default,
+                                  configs.evaluation.instance_segm,
+                                  num_train_options,
+                                  model_names_pretrained,
+                                  args)
+
+    # Granulocyte - fgbg-weighted - resnet-unet
+    model_names_pretrained = [
+        'R/none/dsb2018/fgbg-weighted/resnet-unet/F/000',
+    ]
+    _train_eval_pretrained_models('granulocyte', configs.data.granulocyte,
+                                  'fgbg-weighted', configs.head.fgbg_segm_weighted,
+                                  'resnet-unet', configs.backbone.resnet_unet,
+                                  configs.training.default,
+                                  configs.evaluation.instance_segm,
+                                  num_train_options,
+                                  model_names_pretrained,
+                                  args)
+
+    # ------------------------------------------------
+    # Cityscapes
+    # ------------------------------------------------
+    # HL60 Low Noise - stardist - resnet-unet
+    model_names_pretrained = [
+        'R/none/cityscapes/segm/resnet-unet/F/000',
+    ]
+    _train_eval_pretrained_models('hl60low', configs.data.hl60_low_noise,
+                                  'stardist', configs.head.stardist,
+                                  'resnet-unet', configs.backbone.resnet_unet,
+                                  configs.training.default,
+                                  configs.evaluation.instance_segm,
+                                  num_train_options,
+                                  model_names_pretrained,
+                                  args)
+
+    # DSB2018 - stardist - resnet-unet
+    model_names_pretrained = [
+        'R/none/cityscapes/segm/resnet-unet/F/001',
+    ]
+    _train_eval_pretrained_models('dsb2018', configs.data.dsb2018,
+                                  'stardist', configs.head.stardist,
+                                  'resnet-unet', configs.backbone.resnet_unet,
+                                  configs.training.default,
+                                  configs.evaluation.instance_segm,
+                                  num_train_options,
+                                  model_names_pretrained,
+                                  args)
+
+    # Cityscapes - segm - resnet-unet
+    model_names_pretrained = [
+        'R/none/dsb2018/stardist/resnet-unet/F/000',
+    ]
+    _train_eval_pretrained_models('cityscapes', configs.data.cityscapes,
+                                  'segm', configs.head.segm_cityscapes,
+                                  'resnet-unet', configs.backbone.resnet_unet,
+                                  configs.training.default,
+                                  configs.evaluation.semantic_segm,
+                                  num_train_options,
+                                  model_names_pretrained,
+                                  args)
+
+    # ------------------------------------------------
+    # Frankenstein - No aug
+    # ------------------------------------------------
+    model_names_pretrained = [
+        'T/none/hl60low-hl60high-granulocyte/stardist/resnet-unet/F/000/015_granulocyte',
+        'T/none/hl60low-hl60high-granulocyte/stardist/resnet-unet/F/001/015_granulocyte',
+        'T/none/hl60low-hl60high-granulocyte/stardist/resnet-unet/F/002/015_granulocyte',
+    ]
+    _train_eval_pretrained_models('dsb2018', configs.data.dsb2018,
+                                  'stardist', configs.head.stardist,
+                                  'resnet-unet', configs.backbone.resnet_unet,
+                                  configs.training.default,
+                                  configs.evaluation.instance_segm,
+                                  num_train_options,
+                                  model_names_pretrained,
+                                  args)
+
+    # ------------------------------------------------
+    # Frankenstein - Aug
+    # ------------------------------------------------
+    model_names_pretrained = [
+        'T/none/hl60low-granulocyte-aug/stardist/resnet-unet/F/000/020_granulocyte',
+        'T/none/hl60low-granulocyte-aug/stardist/resnet-unet/F/001/020_granulocyte',
+        'T/none/hl60low-granulocyte-aug/stardist/resnet-unet/F/002/020_granulocyte',
+    ]
+    _train_eval_pretrained_models('dsb2018', configs.data.dsb2018,
+                                  'stardist', configs.head.stardist,
+                                  'resnet-unet', configs.backbone.resnet_unet,
+                                  configs.training.default,
+                                  configs.evaluation.instance_segm,
+                                  num_train_options,
+                                  model_names_pretrained,
+                                  args)
+
+
+def _train_eval_random_init_models(name_data, conf_data,
+                                   name_head, conf_head,
+                                   name_backbone, conf_backbone,
+                                   conf_training, conf_eval,
+                                   num_train_options, num_experiments,
+                                   args):
+    for experiment_id in range(num_experiments):
+        for num_train in num_train_options:
+            _train_eval_random_init_model(name_data, conf_data,
+                                          name_head, conf_head,
+                                          name_backbone, conf_backbone,
+                                          conf_training, conf_eval,
+                                          num_train, experiment_id, args)
+
+
+def _train_eval_random_init_model(name_data, conf_data,
+                                  name_head, conf_head,
+                                  name_backbone, conf_backbone,
+                                  conf_training, conf_eval,
+                                  num_train, experiment_id, args):
+    max_epochs = 1000
+    input_shape = [None, None, 1]
+    model_name = _get_model_name_random(name_data, name_head, name_backbone, num_train,
+                                        experiment_id)
+    conf_data_limited = dict(conf_data)
+    if num_train != 'F':
+        conf_data_limited['num_train'] = num_train
+    conf = {
+        'name': model_name,
+        'input_shape': input_shape,
+        'data': conf_data_limited,
+        'head': conf_head,
+        'backbone': conf_backbone,
+        'training': conf_training,
+        'evaluation': conf_eval
     }
 
-    # If no experiments were selected: Run all
-    if experiments is None:
-        experiments = list(experiment_fns.keys())
-
-    for exp in experiments:
-        num, experiment_fn = experiment_fns[exp]
-        for i in range(num):
-            try:
-                experiment_fn(exp + '{:02d}'.format(i),
-                              configs, dry_run, no_eval)
-            except Exception as e:
-                print("ERROR: Experiment {} failed:".format(exp), e)
-                traceback.print_tb(e.__traceback__)
+    _train_and_evaluate(conf, max_epochs, args)
 
 
-###################################################################################################
-#   EXPERIMENT HL60 Low/High Noise
-###################################################################################################
-
-def _run_experiment_hl_60_low_high_noise(name, configs, dry_run, no_eval):
-    conf_backbone = configs.backbone.unet_csbdeep
-    conf_head = configs.head.stardist
-    conf_training = configs.training.default
-    conf_data_low_noise = configs.data.hl60_low_noise
-    conf_data_high_noise = configs.data.hl60_high_noise
-    conf_eval = configs.evaluation.instance_segm
-
-    _run_default_experiment(name, conf_training,
-                            'unet', conf_backbone,
-                            'stardist', conf_head,
-                            'stardist', conf_head,
-                            'hl60-low-noise', conf_data_low_noise,
-                            'hl60-high-noise', conf_data_high_noise,
-                            conf_eval, conf_eval,
-                            dry_run, no_eval)
+def _train_eval_pretrained_models(name_data, conf_data,
+                                  name_head, conf_head,
+                                  name_backbone, conf_backbone,
+                                  conf_training, conf_eval,
+                                  num_train_options, model_names_pretrained,
+                                  args):
+    for experiment_id, model_name_pre in enumerate(model_names_pretrained):
+        for num_train in num_train_options:
+            _train_eval_pretrained_model(name_data, conf_data,
+                                         name_head, conf_head,
+                                         name_backbone, conf_backbone,
+                                         conf_training, conf_eval,
+                                         num_train, model_name_pre,
+                                         experiment_id, args)
 
 
-###################################################################################################
-#   EXPERIMENT HL60/Granulocyte
-###################################################################################################
-
-def _run_experiment_hl_60_granulocyte(name, configs, dry_run, no_eval):
-    conf_backbone = configs.backbone.unet_csbdeep
-    conf_head = configs.head.stardist
-    conf_training = configs.training.default
-    conf_data_low_noise = configs.data.hl60_low_noise
-    conf_data_granulocyte = configs.data.granulocyte
-    conf_eval = configs.evaluation.instance_segm
-
-    _run_default_experiment(name, conf_training,
-                            'unet', conf_backbone,
-                            'stardist', conf_head,
-                            'stardist', conf_head,
-                            'hl60-low-noise', conf_data_low_noise,
-                            'granulocyte', conf_data_granulocyte,
-                            conf_eval, conf_eval,
-                            dry_run, no_eval)
-
-
-###################################################################################################
-#   EXPERIMENT Granulocyte/DSB2018
-###################################################################################################
-
-def _run_experiment_granulocyte_dsb2018(name, configs, dry_run, no_eval):
-    conf_backbone = configs.backbone.unet_csbdeep
-    conf_head = configs.head.stardist
-    conf_training = configs.training.default
-    conf_data_granulocyte = configs.data.granulocyte
-    conf_data_dsb2018 = configs.data.dsb2018
-    conf_eval = configs.evaluation.instance_segm
-
-    _run_default_experiment(name, conf_training,
-                            'unet', conf_backbone,
-                            'stardist', conf_head,
-                            'stardist', conf_head,
-                            'granulocyte', conf_data_granulocyte,
-                            'dsb2018', conf_data_dsb2018,
-                            conf_eval, conf_eval,
-                            dry_run, no_eval)
-
-
-###################################################################################################
-#   EXPERIMENT HL60/Cityscapes
-###################################################################################################
-
-def _run_experiment_hl60_low_cityscapes(name, configs, dry_run, no_eval):
-    conf_backbone = configs.backbone.resnet_unet
-    conf_head_hl60 = configs.head.stardist
-    conf_head_cityscapes = configs.head.segm_cityscapes
-    conf_training = configs.training.default
-    conf_data_hl60 = configs.data.hl60_low_noise
-    conf_data_cityscapes = configs.data.cityscapes
-    conf_eval_hl60 = configs.evaluation.instance_segm
-    conf_eval_cityscapes = configs.evaluation.semantic_segm
-
-    _run_default_experiment(name, conf_training,
-                            'resnet-unet', conf_backbone,
-                            'stardist', conf_head_hl60,
-                            'segm', conf_head_cityscapes,
-                            'hl60-low-noise', conf_data_hl60,
-                            'cityscapes', conf_data_cityscapes,
-                            conf_eval_hl60, conf_eval_cityscapes,
-                            dry_run, no_eval)
-
-
-###################################################################################################
-#   EXPERIMENT DSB2018/Cityscapes
-###################################################################################################
-
-def _run_experiment_dsb2018_cityscapes(name, configs, dry_run, no_eval):
-    conf_backbone = configs.backbone.resnet_unet
-    conf_head_dsb2018 = configs.head.stardist
-    conf_head_cityscapes = configs.head.segm_cityscapes
-    conf_training = configs.training.default
-    conf_data_dsb2018 = configs.data.dsb2018
-    conf_data_cityscapes = configs.data.cityscapes
-    conf_eval_dsb2018 = configs.evaluation.instance_segm
-    conf_eval_cityscapes = configs.evaluation.semantic_segm
-
-    _run_default_experiment(name, conf_training,
-                            'resnet-unet', conf_backbone,
-                            'stardist', conf_head_dsb2018,
-                            'segm', conf_head_cityscapes,
-                            'dsb2018', conf_data_dsb2018,
-                            'cityscapes', conf_data_cityscapes,
-                            conf_eval_dsb2018, conf_eval_cityscapes,
-                            dry_run, no_eval)
-
-
-###################################################################################################
-#   EXPERIMENT DSB2018 MONSTER
-###################################################################################################
-
-def _run_experiment_dsb2018_monster(name, configs, dry_run, no_eval):
-    conf_backbone = configs.backbone.resnet_unet_big
-    conf_head = configs.head.fgbg_segm_weighted
-    conf_training = configs.training.small_bs
-    conf_data = configs.data.dsb2018_heavy_aug
-    conf_eval = configs.evaluation.instance_segm
-
+def _train_eval_pretrained_model(name_data, conf_data,
+                                 name_head, conf_head,
+                                 name_backbone, conf_backbone,
+                                 conf_training, conf_eval,
+                                 num_train, model_name_pre,
+                                 experiment_id, args):
     max_epochs = 1000
     input_shape = [None, None, 1]
-    name_model = _get_model_name(
-        name, 'resnet-unet-big', 'fgbg-weighted', 'dsb2018', False, 'F')
-    _train_model({
-        'name': name_model,
+
+    conf_backbone_pretrained = dict(conf_backbone)
+    conf_backbone_pretrained['weights'] = os.path.join(
+        'models', model_name_pre, 'weights_final.h5')
+    name_pre_data = model_name_pre.split('/')[2]
+
+    conf_data_limited = dict(conf_data)
+    if num_train != 'F':
+        conf_data_limited['num_train'] = num_train
+
+    model_name = _get_model_name_pretrained(name_pre_data, name_data, name_head, name_backbone,
+                                            num_train, experiment_id)
+
+    conf = {
+        'name': model_name,
         'input_shape': input_shape,
-        'backbone': conf_backbone,
+        'data': conf_data_limited,
         'head': conf_head,
+        'backbone': conf_backbone_pretrained,
         'training': conf_training,
-        'data': conf_data,
         'evaluation': conf_eval
-    }, max_epochs, dry_run)
-    if not no_eval:
-        _evaluate_model(name_model, dry_run)
+    }
+
+    _train_and_evaluate(conf, max_epochs, args)
 
 
-###################################################################################################
-#   EXPERIMENT Granulocyte/DSB2018
-###################################################################################################
-
-def _run_experiment_granulocyte_dsb2018_unet(name, configs, dry_run, no_eval):
-    conf_backbone = configs.backbone.resnet_unet
-    conf_head = configs.head.fgbg_segm_weighted
-    conf_training = configs.training.default
-    conf_data_granulocyte = configs.data.granulocyte
-    conf_data_dsb2018 = configs.data.dsb2018
-    conf_eval = configs.evaluation.instance_segm
-
-    _run_default_experiment(name, conf_training,
-                            'resnet-unet', conf_backbone,
-                            'fgbg-weighted', conf_head,
-                            'fgbg-weighted', conf_head,
-                            'granulocyte', conf_data_granulocyte,
-                            'dsb2018', conf_data_dsb2018,
-                            conf_eval, conf_eval,
-                            dry_run, no_eval)
+def _train_frankenstein_models(name_pre_data, conf_datas,
+                               name_head, conf_head,
+                               name_backbone, conf_backbone,
+                               conf_training, conf_eval,
+                               epochs_per_model, num_experiments,
+                               args):
+    for experiment_id in range(num_experiments):
+        _train_frankenstein_model(name_pre_data, conf_datas,
+                                  name_head, conf_head,
+                                  name_backbone, conf_backbone,
+                                  conf_training, conf_eval,
+                                  epochs_per_model, experiment_id,
+                                  args)
 
 
-###################################################################################################
-#   EXPERIMENT Frankenstein
-###################################################################################################
-
-def _run_experiment_frankenstein(name, configs, dry_run, no_eval):
-    conf_backbone = configs.backbone.resnet_unet
-    conf_head = configs.head.stardist
-    conf_training = configs.training.default
-    conf_eval = configs.evaluation.instance_segm
-    conf_data_dsb2018 = configs.data.dsb2018
-
-    # Pretrain the modell on all generated datasets
-    conf_datas = [
-        ('hl60-low-noise01', configs.data.hl60_low_noise),
-        ('hl60-high-noise02', configs.data.hl60_high_noise),
-        ('granulocyte03', configs.data.granulocyte),
-        ('hl60-low-noise04', configs.data.hl60_low_noise),
-        ('hl60-high-noise05', configs.data.hl60_high_noise),
-        ('granulocyte06', configs.data.granulocyte),
-        ('hl60-low-noise07', configs.data.hl60_low_noise),
-        ('hl60-high-noise08', configs.data.hl60_high_noise),
-        ('granulocyte09', configs.data.granulocyte),
-        ('hl60-low-noise10', configs.data.hl60_low_noise),
-        ('hl60-high-noise11', configs.data.hl60_high_noise),
-        ('granulocyte12', configs.data.granulocyte),
-        ('hl60-low-noise13', configs.data.hl60_low_noise),
-        ('hl60-high-noise14', configs.data.hl60_high_noise),
-        ('granulocyte15', configs.data.granulocyte),
-    ]
-
-    epochs_per_model = 15
+def _train_frankenstein_model(name_pre_data, conf_datas,
+                              name_head, conf_head,
+                              name_backbone, conf_backbone,
+                              conf_training, conf_eval,
+                              epochs_per_model, experiment_id,
+                              args):
     input_shape = [None, None, 1]
-    conf_backbone_pretrained = conf_backbone.copy()
+    conf_backbone_pretrained = dict(conf_backbone)
 
-    for name_data, conf_data in conf_datas:
-        name_model = _get_model_name(
-            name, 'resnet-unet', 'stardist', name_data, False, 'F')
-        _train_model({
-            'name': name_model,
+    for run_id, (name_data_current, conf_data) in enumerate(conf_datas, 1):
+
+        model_name = _get_model_name_transfer(name_pre_data, name_data_current, name_head,
+                                              name_backbone, experiment_id, run_id)
+
+        conf = {
+            'name': model_name,
             'input_shape': input_shape,
-            'backbone': conf_backbone_pretrained,
-            'head': conf_head,
-            'training': conf_training,
             'data': conf_data,
+            'head': conf_head,
+            'backbone': conf_backbone_pretrained,
+            'training': conf_training,
             'evaluation': conf_eval
-        }, epochs_per_model, dry_run)
+        }
 
-        # Update pretrained config
-        conf_backbone_pretrained = conf_backbone.copy()
+        _train_model(conf, epochs_per_model, args)
+
         conf_backbone_pretrained['weights'] = os.path.join(
-                        'models', name_model, 'weights_final.h5')
-
-    # Train the dsb2018 model
-    max_epochs = 1000
-    conf_data = conf_data_dsb2018.copy()
-    for num_train in [200, 50, 10, 5, 2]:
-        conf_data['num_train'] = num_train
-        name_model = _get_model_name(
-            name, 'resnet-unet', 'stardist', 'dsb2018', True, num_train)
-        _train_model({
-            'name': name_model,
-            'input_shape': input_shape,
-            'backbone': conf_backbone_pretrained,
-            'head': conf_head,
-            'training': conf_training,
-            'data': conf_data,
-            'evaluation': conf_eval
-        }, max_epochs, dry_run)
-        if not no_eval:
-            _evaluate_model(name_model, dry_run)
+            'models', model_name, 'weights_final.h5')
 
 
-###################################################################################################
-#   EXPERIMENT Frankenstein 2
-###################################################################################################
-
-def _run_experiment_frankenstein2(name, configs, dry_run, no_eval):
-    conf_backbone = configs.backbone.resnet_unet
-    conf_head = configs.head.stardist
-    conf_training = configs.training.default
-    conf_eval = configs.evaluation.instance_segm
-    conf_data_dsb2018 = configs.data.dsb2018
-
-    # Pretrain the modell on all generated datasets
-    conf_datas = [
-        ('hl60-01', configs.data.hl60_aug),
-        ('granulocyte-02', configs.data.granulocyte_aug),
-        ('hl60-03', configs.data.hl60_aug),
-        ('granulocyte-04', configs.data.granulocyte_aug),
-        ('hl60-05', configs.data.hl60_aug),
-        ('granulocyte-06', configs.data.granulocyte_aug),
-        ('hl60-07', configs.data.hl60_aug),
-        ('granulocyte-08', configs.data.granulocyte_aug),
-        ('hl60-09', configs.data.hl60_aug),
-        ('granulocyte-10', configs.data.granulocyte_aug),
-        ('hl60-11', configs.data.hl60_aug),
-        ('granulocyte-12', configs.data.granulocyte_aug),
-        ('hl60-13', configs.data.hl60_aug),
-        ('granulocyte-14', configs.data.granulocyte_aug),
-        ('hl60-15', configs.data.hl60_aug),
-        ('granulocyte-16', configs.data.granulocyte_aug),
-        ('hl60-17', configs.data.hl60_aug),
-        ('granulocyte-18', configs.data.granulocyte_aug),
-        ('hl60-19', configs.data.hl60_aug),
-        ('granulocyte-20', configs.data.granulocyte_aug),
-    ]
-
-    epochs_per_model = 15
-    input_shape = [None, None, 1]
-    conf_backbone_pretrained = conf_backbone.copy()
-
-    for name_data, conf_data in conf_datas:
-        name_model = _get_model_name(
-            name, 'resnet-unet', 'stardist', name_data, False, 'F')
-        _train_model({
-            'name': name_model,
-            'input_shape': input_shape,
-            'backbone': conf_backbone_pretrained,
-            'head': conf_head,
-            'training': conf_training,
-            'data': conf_data,
-            'evaluation': conf_eval
-        }, epochs_per_model, dry_run)
-
-        # Update pretrained config
-        conf_backbone_pretrained = conf_backbone.copy()
-        conf_backbone_pretrained['weights'] = os.path.join(
-                        'models', name_model, 'weights_final.h5')
-
-    # Train the dsb2018 model
-    max_epochs = 1000
-    conf_data = conf_data_dsb2018.copy()
-    for num_train in [200, 50, 10, 5, 2]:
-        conf_data['num_train'] = num_train
-        name_model = _get_model_name(
-            name, 'resnet-unet', 'stardist', 'dsb2018', True, num_train)
-        _train_model({
-            'name': name_model,
-            'input_shape': input_shape,
-            'backbone': conf_backbone_pretrained,
-            'head': conf_head,
-            'training': conf_training,
-            'data': conf_data,
-            'evaluation': conf_eval
-        }, max_epochs, dry_run)
-        if not no_eval:
-            _evaluate_model(name_model, dry_run)
+def _get_model_name_random(name_data, name_head, name_backbone, num_train, experiment_id):
+    return 'R/none/{}/{}/{}/{}/{:03d}'.format(name_data, name_head, name_backbone,
+                                              _format_num_train(num_train), experiment_id)
 
 
-###################################################################################################
-#   EXPERIMENT Granulocyte/DSB2018
-###################################################################################################
-
-def _run_experiment_hl60_dsb2018(name, configs, dry_run, no_eval):
-    conf_backbone = configs.backbone.unet_csbdeep
-    conf_head = configs.head.stardist
-    conf_training = configs.training.default
-    conf_data_hl60 = configs.data.hl60_low_noise
-    conf_data_dsb2018 = configs.data.dsb2018
-    conf_eval = configs.evaluation.instance_segm
-
-    _run_default_experiment(name, conf_training,
-                            'unet', conf_backbone,
-                            'stardist', conf_head,
-                            'stardist', conf_head,
-                            'hl60-low-noise', conf_data_hl60,
-                            'dsb2018', conf_data_dsb2018,
-                            conf_eval, conf_eval,
-                            dry_run, no_eval)
+def _get_model_name_pretrained(name_pre_data, name_data, name_head, name_backbone, num_train,
+                               experiment_id):
+    return 'P/{}/{}/{}/{}/{}/{:03d}'.format(name_pre_data, name_data, name_head, name_backbone,
+                                            _format_num_train(num_train), experiment_id)
 
 
-###################################################################################################
-#   Utils
-###################################################################################################
-
-def _run_default_experiment(name_experiment, conf_training,
-                            name_backbone, conf_backbone,
-                            name_head_1, conf_head_1,
-                            name_head_2, conf_head_2,
-                            name_data_1, conf_data_1,
-                            name_data_2, conf_data_2,
-                            conf_eval_1, conf_eval_2,
-                            dry_run, no_eval):
-    max_epochs = 1000
-    input_shape = [None, None, 1]
-    # Step 1:
-    # - Random init
-    # - Head 1 + Data 1
-    # - All data
-    name_model_1 = _get_model_name(
-        name_experiment, name_backbone, name_head_1, name_data_1, False, 'F')
-    _train_model({
-        'name': name_model_1,
-        'input_shape': input_shape,
-        'backbone': conf_backbone,
-        'head': conf_head_1,
-        'training': conf_training,
-        'data': conf_data_1,
-        'evaluation': conf_eval_1
-    }, max_epochs, dry_run)
-    if not no_eval:
-        _evaluate_model(name_model_1, dry_run)
-
-    # Step 2:
-    # - Random init
-    # - Head 2 + Data 2
-    # - All data
-    name_model_2 = _get_model_name(
-        name_experiment, name_backbone, name_head_2, name_data_2, False, 'F')
-    _train_model({
-        'name': name_model_2,
-        'input_shape': input_shape,
-        'backbone': conf_backbone,
-        'head': conf_head_2,
-        'training': conf_training,
-        'data': conf_data_2,
-        'evaluation': conf_eval_2
-    }, max_epochs, dry_run)
-    if not no_eval:
-        _evaluate_model(name_model_2, dry_run)
-
-    # Step 3:
-    # - Random init
-    # - Head 1 + Data 1
-    # - Parts of the data
-    conf_data = conf_data_1.copy()
-    for num_train in [200, 50, 10, 5, 2]:
-        conf_data['num_train'] = num_train
-        name = _get_model_name(
-            name_experiment, name_backbone, name_head_1, name_data_1, False, num_train)
-        _train_model({
-            'name': name,
-            'input_shape': input_shape,
-            'backbone': conf_backbone,
-            'head': conf_head_1,
-            'training': conf_training,
-            'data': conf_data,
-            'evaluation': conf_eval_1
-        }, max_epochs, dry_run)
-        if not no_eval:
-            _evaluate_model(name, dry_run)
-
-    # Step 4:
-    # - Random init
-    # - Head 2 + Data 2
-    # - Parts of the data
-    conf_data = conf_data_2.copy()
-    for num_train in [200, 50, 10, 5, 2]:
-        conf_data['num_train'] = num_train
-        name = _get_model_name(
-            name_experiment, name_backbone, name_head_2, name_data_2, False, num_train)
-        _train_model({
-            'name': name,
-            'input_shape': input_shape,
-            'backbone': conf_backbone,
-            'head': conf_head_2,
-            'training': conf_training,
-            'data': conf_data,
-            'evaluation': conf_eval_2
-        }, max_epochs, dry_run)
-        if not no_eval:
-            _evaluate_model(name, dry_run)
-
-    # Step 5:
-    # - Step 1 model init
-    # - Head 2 + Data 2
-    # - Parts of the data
-    conf_backbone_pretrained = conf_backbone.copy()
-    conf_backbone_pretrained['weights'] = os.path.join(
-        'models', name_model_1, 'weights_final.h5')
-    conf_data = conf_data_2.copy()
-    for num_train in [200, 50, 10, 5, 2]:
-        conf_data['num_train'] = num_train
-        name = _get_model_name(
-            name_experiment, name_backbone, name_head_2, name_data_2, True, num_train)
-        _train_model({
-            'name': name,
-            'input_shape': input_shape,
-            'backbone': conf_backbone_pretrained,
-            'head': conf_head_2,
-            'training': conf_training,
-            'data': conf_data,
-            'evaluation': conf_eval_2
-        }, max_epochs, dry_run)
-        if not no_eval:
-            _evaluate_model(name, dry_run)
-
-    # Step 6:
-    # - Step 2 model init
-    # - Head 1 + Data 1
-    # - Parts of the data
-    conf_backbone_pretrained = conf_backbone.copy()
-    conf_backbone_pretrained['weights'] = os.path.join(
-        'models', name_model_2, 'weights_final.h5')
-    conf_data = conf_data_1.copy()
-    for num_train in [200, 50, 10, 5, 2]:
-        conf_data['num_train'] = num_train
-        name = _get_model_name(
-            name_experiment, name_backbone, name_head_1, name_data_1, True, num_train)
-        _train_model({
-            'name': name,
-            'input_shape': input_shape,
-            'backbone': conf_backbone_pretrained,
-            'head': conf_head_1,
-            'training': conf_training,
-            'data': conf_data,
-            'evaluation': conf_eval_1
-        }, max_epochs, dry_run)
-        if not no_eval:
-            _evaluate_model(name, dry_run)
+def _get_model_name_transfer(name_pre_data, name_data, name_head, name_backbone,
+                             experiment_id, run_id):
+    return 'T/none/{}/{}/{}/F/{:03d}/{:03d}_{}'.format(name_pre_data, name_head, name_backbone,
+                                                       experiment_id, run_id, name_data)
 
 
-def _get_model_name(name_experiment, name_backbone, name_head, name_data, pretrained, num_train):
-    name_part = '{}_{}_{}_{}_{}_'.format(name_experiment, name_backbone, name_head, name_data,
-                                         'P' if pretrained else 'R')
+def _format_num_train(num_train):
     if num_train == 'F':
-        return name_part + 'F'
-    else:
-        return '{}{:03d}'.format(name_part, num_train)
+        return 'F'
+    return '{:03d}'.format(int(num_train))
 
 
-def _train_model(conf, epochs, dry_run):
-    print('Training model {} for {} epochs...'.format(
-        conf['name'], epochs))
-    if dry_run:
-        print(conf)
+def _train_and_evaluate(conf, epochs, args):
+    _train_model(conf, epochs, args)
+    if not args.no_eval and not args.check:
+        _evaluate_model(conf['name'], args)
+
+
+def _train_model(conf, epochs, args):
+    model_name = conf['name']
+    print('INFO: Training model {} for {} epochs...'.format(
+        model_name, epochs))
+
+    if args.dry_run:
+        # Dry run do not train
+        if args.verbose:
+            print(conf)
         return
 
-    if not os.path.isdir(os.path.join('models', conf['name'])):
+    if args.check:
+        if os.path.isfile(os.path.join('models', model_name, 'config.yaml')):
+            other_conf = utils.utils.yaml_load(
+                os.path.join('models', model_name, 'config.yaml'))
+            if other_conf != conf:
+                print(
+                    'ERROR: Model config different.'.format(model_name))
+                for k in conf.keys():
+                    if conf[k] != other_conf[k]:
+                        print('ERROR: Different key: {}'.format(k))
+            else:
+                print('INFO: Model is fine.')
+        else:
+            print('ERROR: Model does not exist.')
+
+        return
+
+    if not os.path.isdir(os.path.join('models', model_name)):
         try:
+            # Train the model
             train.train(conf, epochs=epochs)
         except Exception as e:
             print('ERROR: Training of model {} failed: {}'.format(
-                conf['name'], e))
+                model_name, e))
             traceback.print_tb(e.__traceback__)
     else:
-        print('Model {} already present.'.format(conf['name']))
+        # Check if the model has the same config
+        other_conf = utils.utils.yaml_load(
+            os.path.join('models', model_name, 'config.yaml'))
+        if other_conf != conf:
+            print(
+                'ERROR: Model {} already present but with other config.'.format(model_name))
+        else:
+            print('INFO: Model {} already present.'.format(model_name))
 
 
-def _evaluate_model(name, dry_run):
-    print('Evaluating model {}...'.format(name))
-    if dry_run:
+def _evaluate_model(name, args):
+    print('INFO: Evaluating model {}...'.format(name))
+    if args.dry_run:
         return
 
     try:
         results_file = os.path.join('models', name, 'results.csv')
         # Check if the results file already exists
         if os.path.isfile(results_file):
-            print('Model {} already evaluated.'.format(name))
+            print('INFO: Model {} already evaluated.'.format(name))
             return
 
         with open(os.path.join('models', name, 'config.yaml'), 'r') as f:
@@ -647,7 +777,7 @@ def _evaluate_model(name, dry_run):
         results_df = pd.DataFrame(results)
         results_df = results_df.set_index('epoch')
         results_df.to_csv(results_file)
-        print("Done evaluating model {}".format(name))
+        print("INFO: Done evaluating model {}".format(name))
     except Exception as e:
         print('ERROR: Evaluation of model {} failed: {}'.format(name, e))
         traceback.print_tb(e.__traceback__)

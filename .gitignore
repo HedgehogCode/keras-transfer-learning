@@ -1,7 +1,9 @@
 /models/
+/models.bak/
 /data/*
 !/data/utils
 /logs/
+/logs.bak/
 
 #### Python stuff
 
