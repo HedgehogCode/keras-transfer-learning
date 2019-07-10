@@ -446,6 +446,19 @@ def _run_pretrained_models(configs, args):
                                   model_names_pretrained,
                                   args)
 
+    # Cityscapes - segm - resnet-unet
+    model_names_pretrained = [
+        'R/none/dsb2018/stardist/resnet-unet/F/000',
+    ]
+    _train_eval_pretrained_models('cityscapes', configs.data.cityscapes,
+                                  'segm', configs.head.segm_cityscapes,
+                                  'resnet-unet', configs.backbone.resnet_unet,
+                                  configs.training.default,
+                                  configs.evaluation.semantic_segm,
+                                  num_train_options,
+                                  model_names_pretrained,
+                                  args)
+
     # ------------------------------------------------
     # Cityscapes
     # ------------------------------------------------
@@ -471,19 +484,6 @@ def _run_pretrained_models(configs, args):
                                   'resnet-unet', configs.backbone.resnet_unet,
                                   configs.training.default,
                                   configs.evaluation.instance_segm,
-                                  num_train_options,
-                                  model_names_pretrained,
-                                  args)
-
-    # Cityscapes - segm - resnet-unet
-    model_names_pretrained = [
-        'R/none/dsb2018/stardist/resnet-unet/F/000',
-    ]
-    _train_eval_pretrained_models('cityscapes', configs.data.cityscapes,
-                                  'segm', configs.head.segm_cityscapes,
-                                  'resnet-unet', configs.backbone.resnet_unet,
-                                  configs.training.default,
-                                  configs.evaluation.semantic_segm,
                                   num_train_options,
                                   model_names_pretrained,
                                   args)

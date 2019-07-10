@@ -1,8 +1,8 @@
 """Tools for visualizing results.
 """
 import os
-import glob
 import re
+import math
 
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -11,13 +11,23 @@ import numpy as np
 import pandas as pd
 from scipy.ndimage import filters
 
+from keras_transfer_learning import utils
+
+INIT_NAME = 'Initialization'
+PRE_DATA_NAME = 'Pretraining Data'
+DATA_NAME = 'Data'
+HEAD_NAME = 'Head'
+BACKBONE_NAME = 'Backbone'
+NUM_TRAIN_NAME = 'Num Train'
+RUN_NAME = 'Run'
 NAME_PARTS = [
-    'Experiment',
-    'Backbone',
-    'Head',
-    'Dataset',
-    'Initialization',
-    'Size'
+    INIT_NAME,
+    PRE_DATA_NAME,
+    DATA_NAME,
+    HEAD_NAME,
+    BACKBONE_NAME,
+    NUM_TRAIN_NAME,
+    RUN_NAME
 ]
 
 
@@ -34,71 +44,68 @@ def set_default_plotting():
                 'figure.titlesize': large_size})
 
 
-def get_models(pattern: str, model_dirs: list = None):
+def get_models(pattern: str):
     # Default model dirs
-    if model_dirs is None:
-        model_dirs = sorted(
-            [f for f in glob.glob(os.path.join('.', 'models', '*'))])
+    model_names = utils.utils.list_model_names()
 
     prog = re.compile(pattern)
-    selected_model_dirs = [
-        m for m in model_dirs if prog.match(m.split(os.path.sep)[-1])]
-    if selected_model_dirs == []:
+    selected_model_names = [m for m in model_names if prog.match(m)]
+    if selected_model_names == []:
         raise ValueError(
             'Could not find a model for the patter {}.'.format(pattern))
-    return selected_model_dirs
+    return selected_model_names
 
 
-def plot_over_epoch(pattern: str, metric :str, model_dirs: list = None, size: tuple = None):
-    selected_models = get_models(pattern, model_dirs)
+def plot_over_epoch(pattern: str, metric: str, size: tuple = None):
+    selected_models = get_models(pattern)
     return _plot_map_over_epoch_df(_get_results_df(selected_models, metric), size)
 
 
-def plot_last(pattern: str, metric: str, model_dirs: list = None, size: tuple = None,
-                  ignore_experiment=False, ignore_backbone=False, ignore_head=False,
-                  ignore_dataset=False, ignore_init=False, ignore_size=False):
+def plot_last(pattern: str, metric: str, size: tuple = None,
+              ignore_run=False, ignore_backbone=False, ignore_head=False,
+              ignore_dataset=False, ignore_init=False, ignore_num_train=False,
+              ignore_pre_data=False):
     ignored_vals = []
-    if ignore_experiment:
-        ignored_vals.append('Experiment')
+    if ignore_run:
+        ignored_vals.append(RUN_NAME)
     if ignore_backbone:
-        ignored_vals.append('Backbone')
+        ignored_vals.append(BACKBONE_NAME)
     if ignore_head:
-        ignored_vals.append('Head')
+        ignored_vals.append(HEAD_NAME)
     if ignore_dataset:
-        ignored_vals.append('Dataset')
+        ignored_vals.append(DATA_NAME)
     if ignore_init:
-        ignored_vals.append('Initialization')
-    if ignore_size:
-        ignored_vals.append('Size')
-    selected_model_dirs = get_models(pattern, model_dirs)
-    results_last = _get_results_last(selected_model_dirs, metric)
+        ignored_vals.append(INIT_NAME)
+    if ignore_num_train:
+        ignored_vals.append(NUM_TRAIN_NAME)
+    if ignore_pre_data:
+        ignored_vals.append(PRE_DATA_NAME)
+    selected_models = get_models(pattern)
+    results_last = _get_results_last(selected_models, metric)
     return _plot_last(results_last, size, ignored_vals)
 
 
 def _split_model_name(model_name):
-    vals = dict(zip(NAME_PARTS, model_name.split('_')))
+    vals = dict(zip(NAME_PARTS, model_name.split('/')))
     vals['Initialization'] = 'pretrained' if vals['Initialization'] == 'P' else 'random'
-    vals['Size'] = 'F' if vals['Size'] == 'F' else int(vals['Size'])
+    vals[NUM_TRAIN_NAME] = 'F' if vals[NUM_TRAIN_NAME] == 'F' \
+        else int(vals[NUM_TRAIN_NAME])
     return vals
 
 
-def _get_model_name(path):
-    return path.rpartition(os.path.sep)[-1]
-
-
-def _get_model_results(path):
-    results_file = os.path.join(path, 'results.csv')
+def _get_model_results(name):
+    results_file = os.path.join('models', name, 'results.csv')
     return pd.read_csv(results_file)
 
 
-def _get_results_df(dirs, metric: str):
-    results = {_get_model_name(p): _get_model_results(p) for p in dirs}
+def _get_results_df(names, metric: str):
+    results = {name: _get_model_results(name) for name in names}
     results_metric = {name: df[metric] for name, df in results.items()}
     return pd.DataFrame(results_metric)
 
 
-def _get_results_last(dirs, metric: str):
-    results = {_get_model_name(p): _get_model_results(p) for p in dirs}
+def _get_results_last(names, metric: str):
+    results = {name: _get_model_results(name) for name in names}
     return {n: df[metric].iloc[-1] for n, df in results.items()}
 
 
@@ -142,6 +149,13 @@ def _plot_last(results_last, size: tuple = None, ignored_vals: list = None):
     if different_vals[hue_label] == 1:
         hue_label = None
 
+    # Find the number of observations
+    if hue_label is not None:
+        nobs = df.groupby([x_label, hue_label])['mAP'].agg(['count'])
+    else:
+        nobs = df.groupby([x_label])['mAP'].agg(['count'])
+    nobs = np.reshape(nobs.values, [-1])
+
     # Draw the plot
     fig = _create_figure(size)
     ax = sns.barplot(data=df, y='mAP', x=x_label, hue=hue_label)
@@ -151,4 +165,12 @@ def _plot_last(results_last, size: tuple = None, ignored_vals: list = None):
     max_map = df['mAP'].max()
     buffer = (max_map - min_map) * 0.2
     ax.set(ylim=(min_map - buffer, max_map + buffer))
+
+    # Add the number of observations
+    positions = sorted([(a.get_x() + 0.5 * a.get_width(), a.get_height() - 0.3 * buffer)
+                        for a in ax.patches if not math.isnan(a.get_height())])
+    for (pos_x, pos_y), n in zip(positions, nobs):
+        if n > 1:
+            ax.text(pos_x, pos_y, 'n:' + str(n),
+                    ha='center', size='x-small', color='w')
     return fig

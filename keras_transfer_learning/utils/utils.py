@@ -115,5 +115,14 @@ def yaml_load(file_name: str):
         content = unsafe_load(f)
     return content
 
+
 def path_to_model_config(model_name):
     return os.path.join('.', 'models', model_name, 'config.yaml')
+
+
+def list_model_names(rootdir: str = 'models') -> list:
+    model_names = []
+    for root, _, files in os.walk(rootdir):
+        if 'config.yaml' in files:
+            model_names.append(root[7:])
+    return sorted(model_names)
