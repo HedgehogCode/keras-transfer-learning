@@ -25,14 +25,20 @@ class PadToMultiple(layers.Layer):
         factors = [1] + ([self.factor] * ndims) + \
             [1]  # Factor 1 for batch + channels
 
-        t_shape = tf.dtypes.cast(
-            tf.shape(t_x, out_type=tf.dtypes.int32), dtype=tf.dtypes.float32)
+        t_shape = tf.shape(t_x, out_type=tf.dtypes.int32)
         t_factors = tf.constant(factors, dtype=tf.dtypes.float32)
-        t_padded_shape = tf.math.ceil(t_shape / t_factors) * t_factors
-        t_paddings = tf.dtypes.cast(
-            tf.stack([tf.zeros_like(t_shape), t_padded_shape - t_shape], axis=1),
-            dtype=tf.dtypes.int32)
-        return tf.pad(t_x, t_paddings)
+        t_padded_shape = tf.math.ceil(
+            tf.cast(t_shape, dtype=tf.dtypes.float32) / t_factors) * t_factors
+        t_padded_shape = tf.cast(t_padded_shape, tf.dtypes.int32)
+        t_paddings = tf.stack(
+            [tf.zeros_like(t_shape), t_padded_shape - t_shape], axis=1)
+
+        # Get the number of features
+        num_features = t_x.get_shape().as_list()[-1]
+
+        return tf.slice(tf.pad(t_x, t_paddings),
+                        [0] * (ndims + 2),
+                        [-1] * (ndims + 1) + [num_features])
 
     def compute_output_shape(self, input_shape):
         ndims = len(input_shape) - 1  # - channel dim

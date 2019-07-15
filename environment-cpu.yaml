@@ -27,3 +27,5 @@ dependencies:
     - pycodestyle==2.5.0
     - pyparsing==2.4.0
     - rope==0.14.0
+    - segmentation-models==0.2.1
+    - image-classifiers==0.2.0
