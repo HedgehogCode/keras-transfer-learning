@@ -172,7 +172,7 @@ def _run_random_init_models(configs, args):
                                    args)
 
     # StarDist - ResNet50 Unet
-    num_experiments = 1
+    num_experiments = 2
     _train_eval_random_init_models('dsb2018', configs.data.dsb2018,
                                    'stardist', configs.head.stardist,
                                    'imagenet-resnet-unet-random', configs.backbone.imagenet_resnet_unet_random,
@@ -538,7 +538,7 @@ def _run_pretrained_models(configs, args):
     # ------------------------------------------------
     # ImageNet
     # ------------------------------------------------
-    num_experiments = 1
+    num_experiments = 2
     _train_eval_imagenet_init_models('dsb2018', configs.data.dsb2018,
                                      'stardist', configs.head.stardist,
                                      'imagenet-resnet-unet', configs.backbone.imagenet_resnet_unet,
