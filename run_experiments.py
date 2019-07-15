@@ -16,6 +16,8 @@ from keras_transfer_learning import train, evaluate, utils
 CONFIG_FILES = {
     'backbone': {
         'resnet_unet': ['backbones', 'resnet-unet.yaml'],
+        'imagenet_resnet_unet': ['backbones', 'imagenet-resnet-unet.yaml'],
+        'imagenet_resnet_unet_random': ['backbones', 'imagenet-resnet-unet-random.yaml'],
         'resnet_unet_big': ['backbones', 'resnet-unet-big.yaml'],
         'unet_csbdeep': ['backbones', 'unet-csbdeep.yaml'],
         'unet_very_small': ['backbones', 'unet-very-small.yaml']
@@ -164,6 +166,17 @@ def _run_random_init_models(configs, args):
                                    'fgbg-weighted', configs.head.fgbg_segm_weighted,
                                    'resnet-unet', configs.backbone.resnet_unet,
                                    configs.training.default,
+                                   configs.evaluation.instance_segm,
+                                   num_train_options,
+                                   num_experiments,
+                                   args)
+
+    # StarDist - ResNet50 Unet
+    num_experiments = 1
+    _train_eval_random_init_models('dsb2018', configs.data.dsb2018,
+                                   'stardist', configs.head.stardist,
+                                   'imagenet-resnet-unet-random', configs.backbone.imagenet_resnet_unet_random,
+                                   configs.training.small_bs,
                                    configs.evaluation.instance_segm,
                                    num_train_options,
                                    num_experiments,
@@ -522,6 +535,19 @@ def _run_pretrained_models(configs, args):
                                   model_names_pretrained,
                                   args)
 
+    # ------------------------------------------------
+    # ImageNet
+    # ------------------------------------------------
+    num_experiments = 1
+    _train_eval_imagenet_init_models('dsb2018', configs.data.dsb2018,
+                                     'stardist', configs.head.stardist,
+                                     'imagenet-resnet-unet', configs.backbone.imagenet_resnet_unet,
+                                     configs.training.small_bs,
+                                     configs.evaluation.instance_segm,
+                                     num_train_options,
+                                     num_experiments,
+                                     args)
+
 
 def _train_eval_random_init_models(name_data, conf_data,
                                    name_head, conf_head,
@@ -547,6 +573,46 @@ def _train_eval_random_init_model(name_data, conf_data,
     input_shape = [None, None, 1]
     model_name = _get_model_name_random(name_data, name_head, name_backbone, num_train,
                                         experiment_id)
+    conf_data_limited = dict(conf_data)
+    if num_train != 'F':
+        conf_data_limited['num_train'] = num_train
+    conf = {
+        'name': model_name,
+        'input_shape': input_shape,
+        'data': conf_data_limited,
+        'head': conf_head,
+        'backbone': conf_backbone,
+        'training': conf_training,
+        'evaluation': conf_eval
+    }
+
+    _train_and_evaluate(conf, max_epochs, args)
+
+
+def _train_eval_imagenet_init_models(name_data, conf_data,
+                                     name_head, conf_head,
+                                     name_backbone, conf_backbone,
+                                     conf_training, conf_eval,
+                                     num_train_options, num_experiments,
+                                     args):
+    for experiment_id in range(num_experiments):
+        for num_train in num_train_options:
+            _train_eval_imagenet_init_model(name_data, conf_data,
+                                            name_head, conf_head,
+                                            name_backbone, conf_backbone,
+                                            conf_training, conf_eval,
+                                            num_train, experiment_id, args)
+
+
+def _train_eval_imagenet_init_model(name_data, conf_data,
+                                    name_head, conf_head,
+                                    name_backbone, conf_backbone,
+                                    conf_training, conf_eval,
+                                    num_train, experiment_id, args):
+    max_epochs = 1000
+    input_shape = [None, None, 1]
+    model_name = _get_model_name_imagenet(name_data, name_head, name_backbone, num_train,
+                                          experiment_id)
     conf_data_limited = dict(conf_data)
     if num_train != 'F':
         conf_data_limited['num_train'] = num_train
@@ -661,6 +727,11 @@ def _train_frankenstein_model(name_pre_data, conf_datas,
 def _get_model_name_random(name_data, name_head, name_backbone, num_train, experiment_id):
     return 'R/none/{}/{}/{}/{}/{:03d}'.format(name_data, name_head, name_backbone,
                                               _format_num_train(num_train), experiment_id)
+
+
+def _get_model_name_imagenet(name_data, name_head, name_backbone, num_train, experiment_id):
+    return 'P/imagenet/{}/{}/{}/{}/{:03d}'.format(name_data, name_head, name_backbone,
+                                                  _format_num_train(num_train), experiment_id)
 
 
 def _get_model_name_pretrained(name_pre_data, name_data, name_head, name_backbone, num_train,

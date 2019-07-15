@@ -1,0 +1,5 @@
+name: 'imagenet-unet'
+args:
+  backbone_name: 'resnet50'
+  weights: null
+weights: null
