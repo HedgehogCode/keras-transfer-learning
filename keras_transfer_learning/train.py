@@ -10,18 +10,24 @@ import pandas as pd
 
 from keras import callbacks
 
-from keras_transfer_learning import model, dataset
+from keras_transfer_learning import model, dataset, utils
 
 ###################################################################################################
 #     TRAINING HELPERS
 ###################################################################################################
 
+
 def _create_callbacks(conf, model_dir):
     training_callbacks = []
 
+    def remove_old_checkpoints_fn(**kwargs):
+        return utils.callbacks.RemoveOldCheckpoints(
+            os.path.join('models', conf['name']), **kwargs)
+
     callback_fns = {
         'early_stopping': callbacks.EarlyStopping,
-        'reduce_lr_on_plateau': callbacks.ReduceLROnPlateau
+        'reduce_lr_on_plateau': callbacks.ReduceLROnPlateau,
+        'remove_old_checkpoints': remove_old_checkpoints_fn
     }
 
     # Default callbackse

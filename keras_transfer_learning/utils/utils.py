@@ -8,6 +8,7 @@ from yaml import unsafe_load
 
 from keras import models
 
+WEIGHTS_FILE_REGEX = r'.*_(\d{4})_\d+\.\d{4}\.h5'
 
 def get_last_weights(model_dir: str, epoch: int = None):
     """Finds the filename of the last weights file in a model directory.
@@ -30,7 +31,7 @@ def get_last_weights(model_dir: str, epoch: int = None):
     if weights == []:
         raise ValueError('Did not find a valid weights file.')
     last_weights = weights[-1]
-    matches = re.match(r'.*_(\d{4})_\d+\.\d{4}\.h5', last_weights)
+    matches = re.match(WEIGHTS_FILE_REGEX, last_weights)
     if matches is None:
         raise ValueError('Did not find a valid weights file.')
 
@@ -62,7 +63,7 @@ def get_epoch_weights(model_dir: str, epoch: int):
     if weights == []:
         raise ValueError('Did not find a valid weights file.')
     for epoch_weights in weights:
-        matches = re.match(r'.*_(\d{4})_\d+\.\d{4}\.h5', epoch_weights)
+        matches = re.match(WEIGHTS_FILE_REGEX, epoch_weights)
         if matches is None:
             raise ValueError('Did not find a valid weights file.')
         if int(matches.group(1)) == epoch:
@@ -87,7 +88,7 @@ def get_last_epoch(model_dir: str):
     if weights == []:
         raise ValueError('Did not find a valid weights file.')
     last_weights = weights[-1]
-    matches = re.match(r'.*_(\d{4})_\d+\.\d{4}\.h5', last_weights)
+    matches = re.match(WEIGHTS_FILE_REGEX, last_weights)
     if matches is None:
         raise ValueError('Did not find a valid weights file.')
 

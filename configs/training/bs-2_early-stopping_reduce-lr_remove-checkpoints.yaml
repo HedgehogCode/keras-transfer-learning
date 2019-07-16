@@ -1,0 +1,13 @@
+callbacks:
+- name: early_stopping
+  args:
+    patience: 40
+- name: reduce_lr_on_plateau
+  args:
+    patience: 30
+- name: remove_old_checkpoints
+  args:
+    keep_latest: 4
+    keep_period: 10
+batch_size: 2
+epoch_length: 512

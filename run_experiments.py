@@ -40,7 +40,8 @@ CONFIG_FILES = {
     },
     'training': {
         'default': ['training', 'bs-8_early-stopping_reduce-lr.yaml'],
-        'small_bs': ['training', 'bs-2_early-stopping_reduce-lr.yaml']
+        'small_bs': ['training', 'bs-2_early-stopping_reduce-lr.yaml'],
+        'small_bs_less_cp': ['training', 'bs-2_early-stopping_reduce-lr_remove-checkpoints.yaml']
     },
     'evaluation': {
         'instance_segm': ['eval', 'instance_segm.yaml'],
@@ -176,7 +177,7 @@ def _run_random_init_models(configs, args):
     _train_eval_random_init_models('dsb2018', configs.data.dsb2018,
                                    'stardist', configs.head.stardist,
                                    'imagenet-resnet-unet-random', configs.backbone.imagenet_resnet_unet_random,
-                                   configs.training.small_bs,
+                                   configs.training.small_bs_less_cp,
                                    configs.evaluation.instance_segm,
                                    num_train_options,
                                    num_experiments,
@@ -542,7 +543,7 @@ def _run_pretrained_models(configs, args):
     _train_eval_imagenet_init_models('dsb2018', configs.data.dsb2018,
                                      'stardist', configs.head.stardist,
                                      'imagenet-resnet-unet', configs.backbone.imagenet_resnet_unet,
-                                     configs.training.small_bs,
+                                     configs.training.small_bs_less_cp,
                                      configs.evaluation.instance_segm,
                                      num_train_options,
                                      num_experiments,
