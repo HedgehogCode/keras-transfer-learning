@@ -545,7 +545,7 @@ def _run_pretrained_models(configs, args):
                                      'imagenet-resnet-unet', configs.backbone.imagenet_resnet_unet,
                                      configs.training.small_bs_less_cp,
                                      configs.evaluation.instance_segm,
-                                     num_train_options,
+                                     num_train_options + ['F'],
                                      num_experiments,
                                      args)
 
