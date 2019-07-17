@@ -6,13 +6,14 @@
 import os
 import sys
 import argparse
-import glob
 import shutil
 import pandas as pd
+import re
 
 import yaml
 from yaml import unsafe_load as yaml_load
 
+from keras_transfer_learning import utils
 
 MODEL_NAME_MAP = {}
 
@@ -22,16 +23,17 @@ def main(arguments):
     parser = argparse.ArgumentParser(
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('-f', '--filter', type=str, default='*')
+    parser.add_argument('-f', '--filter', type=str, default='.*')
     parser.add_argument('--auto-rename', action='store_true')
     parser.add_argument('--add-eval', action='store_true')
     parser.add_argument('--remove-results', action='store_true')
     parser.add_argument('--results-set-index', action='store_true')
     parser.add_argument('--auto-rename-weights', action='store_true')
     args = parser.parse_args(arguments)
-    filter_glob = args.filter
+    filter_re = re.compile(args.filter)
 
-    model_dirs = sorted(glob.glob(os.path.join('.', 'models', filter_glob)))
+    model_dirs = utils.utils.list_model_dirs()
+    model_dirs = [d for d in model_dirs if filter_re.match(d)]
 
     for m in model_dirs:
         if args.auto_rename:
@@ -83,11 +85,13 @@ def process_model(model_dir):
                 yaml.dump(conf, f)
 
             # Move the model dir
+            os.makedirs(new_model_dir[:new_model_dir.rfind(os.path.sep)], exist_ok=True)
             os.rename(model_dir, new_model_dir)
             model_dir = new_model_dir
 
             # Move log dir
             new_log_dir = os.path.join('.', 'logs', new_model_name)
+            os.makedirs(new_log_dir[:new_log_dir.rfind(os.path.sep)], exist_ok=True)
             os.rename(os.path.join('.', 'logs', model_name), new_log_dir)
 
             model_name = new_model_name

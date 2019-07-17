@@ -127,3 +127,7 @@ def list_model_names(rootdir: str = 'models') -> list:
         if 'config.yaml' in files:
             model_names.append(root[7:])
     return sorted(model_names)
+
+
+def list_model_dirs(rootdir: str = 'models') -> list:
+    return [os.path.join(rootdir, n) for n in list_model_names(rootdir)]
