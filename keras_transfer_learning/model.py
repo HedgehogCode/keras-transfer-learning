@@ -15,21 +15,25 @@ from keras_transfer_learning.heads import segm, stardist, classification
 #     BACKBONE HELPERS
 ###################################################################################################
 
-def _create_backbone(conf, inp):
+def _create_backbone(conf, inp, for_exporting=False):
+    backbone_name = conf['backbone']['name']
+    backbone_args = dict(conf['backbone']['args'])
+    if for_exporting and backbone_name in ['unet', 'unet-csbdeep', 'resnet-unet', 'imagenet-unet']:
+        backbone_args['padding_fix'] = False
     return {
-        'unet': lambda: unet.unet(**conf['backbone']['args'])(inp),
-        'unet-csbdeep': lambda: unet.unet_csbdeep(**conf['backbone']['args'])(inp),
-        'convnet': lambda: convnet.convnet(**conf['backbone']['args'])(inp),
-        'resnet-unet': lambda: resnet_unet.resnet_unet(**conf['backbone']['args'])(inp),
-        'imagenet-unet': lambda: imagenet_unet.imagenet_unet(**conf['backbone']['args'])(inp)
-    }[conf['backbone']['name']]()
+        'unet': lambda: unet.unet(**backbone_args)(inp),
+        'unet-csbdeep': lambda: unet.unet_csbdeep(**backbone_args)(inp),
+        'convnet': lambda: convnet.convnet(**backbone_args)(inp),
+        'resnet-unet': lambda: resnet_unet.resnet_unet(**backbone_args)(inp),
+        'imagenet-unet': lambda: imagenet_unet.imagenet_unet(**backbone_args)(inp)
+    }[backbone_name]()
 
 
 ###################################################################################################
 #     HEAD HELPERS
 ###################################################################################################
 
-def _create_head(conf, backbone):
+def _create_head(conf, backbone, for_exporting=False):
     return {
         'segm': lambda c: segm.segm(num_classes=c['num_classes'], **c['args'])(backbone),
         'fgbg-segm': lambda c: segm.segm(num_classes=2, **c['args'])(backbone),
@@ -68,7 +72,8 @@ def _process_prediction(conf, pred):
 
 class Model:
 
-    def __init__(self, config=None, model_dir=None, load_weights=None, epoch=None):
+    def __init__(self, config=None, model_dir=None, load_weights=None, epoch=None,
+                 for_exporting=False):
         if config is None and model_dir is None:
             raise ValueError(
                 'Either the model directory or config must be given')
@@ -89,10 +94,10 @@ class Model:
             self.model_dir = model_dir
 
         # Create the input
-        inp = layers.Input(self.config['input_shape'])
+        inp = layers.Input(self.config['input_shape'], name='input')
 
         # Create the backbone
-        backbone = _create_backbone(self.config, inp)
+        backbone = _create_backbone(self.config, inp, for_exporting)
 
         # Load pretrained weights
         if load_weights == 'pretrained':
@@ -105,7 +110,7 @@ class Model:
                 print('Loaded no backbone weights')
 
         # Create the head
-        oups = _create_head(self.config, backbone)
+        oups = _create_head(self.config, backbone, for_exporting)
 
         # Create the model
         self.model = models.Model(inputs=inp, outputs=oups)
@@ -176,3 +181,6 @@ class Model:
 
     def predict_and_process(self, data):
         return self.process_prediction(self.predict(data))
+
+    def export_to(self, filepath):
+        self.model.save(filepath)
