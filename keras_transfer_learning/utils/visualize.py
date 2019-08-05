@@ -12,23 +12,8 @@ import pandas as pd
 from scipy.ndimage import filters
 
 from keras_transfer_learning import utils
-
-INIT_NAME = 'Initialization'
-PRE_DATA_NAME = 'Pretraining Data'
-DATA_NAME = 'Data'
-HEAD_NAME = 'Head'
-BACKBONE_NAME = 'Backbone'
-NUM_TRAIN_NAME = 'Num Train'
-RUN_NAME = 'Run'
-NAME_PARTS = [
-    INIT_NAME,
-    PRE_DATA_NAME,
-    DATA_NAME,
-    HEAD_NAME,
-    BACKBONE_NAME,
-    NUM_TRAIN_NAME,
-    RUN_NAME
-]
+from keras_transfer_learning.utils.utils import INIT_NAME, PRE_DATA_NAME, DATA_NAME, HEAD_NAME
+from keras_transfer_learning.utils.utils import BACKBONE_NAME, NUM_TRAIN_NAME, RUN_NAME, NAME_PARTS
 
 
 def set_default_plotting():
@@ -45,15 +30,12 @@ def set_default_plotting():
 
 
 def get_models(pattern: str):
-    # Default model dirs
-    model_names = utils.utils.list_model_names()
+    model_names = utils.utils.list_model_names(pattern=pattern)
 
-    prog = re.compile(pattern)
-    selected_model_names = [m for m in model_names if prog.match(m)]
-    if selected_model_names == []:
+    if model_names == []:
         raise ValueError(
             'Could not find a model for the patter {}.'.format(pattern))
-    return selected_model_names
+    return model_names
 
 
 def plot_over_epoch(pattern: str, metric: str, size: tuple = None):
@@ -64,7 +46,7 @@ def plot_over_epoch(pattern: str, metric: str, size: tuple = None):
 def plot_last(pattern: str, metric: str, size: tuple = None,
               ignore_run=False, ignore_backbone=False, ignore_head=False,
               ignore_dataset=False, ignore_init=False, ignore_num_train=False,
-              ignore_pre_data=False):
+              ignore_pre_data=False, plot_type='barplot'):
     ignored_vals = []
     if ignore_run:
         ignored_vals.append(RUN_NAME)
@@ -82,15 +64,7 @@ def plot_last(pattern: str, metric: str, size: tuple = None,
         ignored_vals.append(PRE_DATA_NAME)
     selected_models = get_models(pattern)
     results_last = _get_results_last(selected_models, metric)
-    return _plot_last(results_last, size, ignored_vals)
-
-
-def _split_model_name(model_name):
-    vals = dict(zip(NAME_PARTS, model_name.split('/')))
-    vals['Initialization'] = 'pretrained' if vals['Initialization'] == 'P' else 'random'
-    vals[NUM_TRAIN_NAME] = 'F' if vals[NUM_TRAIN_NAME] == 'F' \
-        else int(vals[NUM_TRAIN_NAME])
-    return vals
+    return _plot_last(results_last, size, ignored_vals, plot_type)
 
 
 def _get_model_results(name):
@@ -129,12 +103,13 @@ def _plot_map_over_epoch_df(df, size: tuple = None):
     return fig
 
 
-def _plot_last(results_last, size: tuple = None, ignored_vals: list = None):
+def _plot_last(results_last, size: tuple = None, ignored_vals: list = None,
+               plot_type: str = 'barplot'):
     if ignored_vals is None:
         ignored_vals = []
 
     def _create_datapoint(n, v):
-        desc = _split_model_name(n)
+        desc = utils.utils.split_model_name(n)
         desc['mAP'] = v
         return desc
 
@@ -158,7 +133,10 @@ def _plot_last(results_last, size: tuple = None, ignored_vals: list = None):
 
     # Draw the plot
     fig = _create_figure(size)
-    ax = sns.barplot(data=df, y='mAP', x=x_label, hue=hue_label)
+    if plot_type == 'barplot':
+        ax = sns.barplot(data=df, y='mAP', x=x_label, hue=hue_label)
+    elif plot_type == 'boxplot':
+        ax = sns.boxenplot(data=df, y='mAP', x=x_label, hue=hue_label)
 
     # Set ylim based on values
     min_map = df['mAP'].min()
@@ -167,10 +145,15 @@ def _plot_last(results_last, size: tuple = None, ignored_vals: list = None):
     ax.set(ylim=(min_map - buffer, max_map + buffer))
 
     # Add the number of observations
-    positions = sorted([(a.get_x() + 0.5 * a.get_width(), a.get_height() - 0.3 * buffer)
-                        for a in ax.patches if not math.isnan(a.get_height())])
-    for (pos_x, pos_y), n in zip(positions, nobs):
-        if n > 1:
-            ax.text(pos_x, pos_y, 'n:' + str(n),
-                    ha='center', size='x-small', color='w')
+    if plot_type == 'barplot':
+        x_pos = lambda a: a.get_x() + 0.5 * a.get_width()
+        y_pos = lambda a: a.get_height() - 0.3 * buffer
+        color = 'w'
+
+        positions = sorted([(x_pos(a), y_pos(a))
+                            for a in ax.patches if not math.isnan(a.get_height())])
+        for (pos_x, pos_y), n in zip(positions, nobs):
+            if n > 1:
+                ax.text(pos_x, pos_y, 'n:' + str(n),
+                        ha='center', size='x-small', color=color)
     return fig

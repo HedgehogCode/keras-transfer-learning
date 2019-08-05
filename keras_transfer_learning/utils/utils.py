@@ -10,6 +10,23 @@ from keras import models
 
 WEIGHTS_FILE_REGEX = r'.*_(\d{4})_\d+\.\d{4}\.h5'
 
+INIT_NAME = 'Initialization'
+PRE_DATA_NAME = 'Pretraining Data'
+DATA_NAME = 'Data'
+HEAD_NAME = 'Head'
+BACKBONE_NAME = 'Backbone'
+NUM_TRAIN_NAME = 'Num Train'
+RUN_NAME = 'Run'
+NAME_PARTS = [
+    INIT_NAME,
+    PRE_DATA_NAME,
+    DATA_NAME,
+    HEAD_NAME,
+    BACKBONE_NAME,
+    NUM_TRAIN_NAME,
+    RUN_NAME
+]
+
 def get_last_weights(model_dir: str, epoch: int = None):
     """Finds the filename of the last weights file in a model directory.
 
@@ -121,13 +138,28 @@ def path_to_model_config(model_name):
     return os.path.join('.', 'models', model_name, 'config.yaml')
 
 
-def list_model_names(rootdir: str = 'models') -> list:
+def list_model_names(rootdir: str = 'models', pattern: str = None) -> list:
     model_names = []
     for root, _, files in os.walk(rootdir):
         if 'config.yaml' in files:
             model_names.append(root[7:])
-    return sorted(model_names)
+    model_names = sorted(model_names)
+
+    # Filter by a given pattern
+    if pattern is not None:
+        prog = re.compile(pattern)
+        return [m for m in model_names if prog.match(m)]
+
+    return model_names
 
 
 def list_model_dirs(rootdir: str = 'models') -> list:
     return [os.path.join(rootdir, n) for n in list_model_names(rootdir)]
+
+
+def split_model_name(model_name):
+    vals = dict(zip(NAME_PARTS, model_name.split('/')))
+    vals['Initialization'] = 'pretrained' if vals['Initialization'] == 'P' else 'random'
+    vals[NUM_TRAIN_NAME] = 'F' if vals[NUM_TRAIN_NAME] == 'F' \
+        else int(vals[NUM_TRAIN_NAME])
+    return vals

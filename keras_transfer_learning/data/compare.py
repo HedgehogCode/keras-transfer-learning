@@ -3,7 +3,10 @@ import math
 import tqdm
 import numpy as np
 from skimage import measure, transform
-from scipy import linalg
+from scipy import linalg, stats
+from sklearn import mixture
+
+from keras import models
 
 from keras_transfer_learning import utils, dataset, model
 
@@ -133,43 +136,168 @@ def laplace_pyramids(dataset, levels=4):
     return pyramids
 
 
-def frechet_distance(mean_1, cov_1, mean_2, cov_2):
-    return np.real(np.sum(np.square(mean_1 - mean_2)) +
-                   np.trace(cov_1 + cov_2 - 2 *
-                            linalg.fractional_matrix_power(np.dot(cov_1, cov_2), 1/2)))
+def model_distance(model_config: dict, data_config: dict, feature_layer_name: str,
+                   distance_metrics: list, num_samples=20) -> list:
+
+    # Compute the features for the original data and the new data
+    orig_features, other_features = _model_features(
+        model_config, [model_config, {'data': data_config}], feature_layer_name, num_samples)
+
+    metric_funs = {
+        'frechet': frechet_distance,
+        'gmm_kl': gmm_kl,
+        'gmm_js': gmm_js,
+        'gmm': gmm,
+    }
+
+    res = []
+    for metric in distance_metrics:
+        if callable(metric):
+            res.append(metric(orig_features, other_features))
+        elif metric in metric_funs:
+            res.append(metric_funs[metric](orig_features, other_features))
+        else:
+            raise ValueError(f'There is no metric for {metric}.')
+    return res
+
+
+def frechet_distance(features_1, features_2):
+    # Compute the mean and covariance
+    mean_1 = np.mean(features_1, axis=0)
+    cov_1 = np.cov(features_1, rowvar=0)
+
+    mean_2 = np.mean(features_2, axis=0)
+    cov_2 = np.cov(features_2, rowvar=0)
+
+    # Compute the frechet distance
+    mean_dist = np.sum(np.square(mean_1 - mean_2))
+    cov_dist = np.trace(cov_1 + cov_2 - 2 *
+                        linalg.fractional_matrix_power(np.dot(cov_1, cov_2), 1/2))
+
+    return np.real(mean_dist + cov_dist)
+
+
+def gmm_kl(features_1, features_2):
+    n_features = 10000
+    # Only sample a few features
+    state = np.random.RandomState(10)
+    features_1_sample = features_1[
+        state.permutation(features_1.shape[0])[:n_features], ...]
+    features_2_sample = features_2[
+        state.permutation(features_2.shape[0])[:n_features], ...]
+
+    # Fit a GMM for each feature set
+    gmm_1 = mixture.GaussianMixture(5)
+    gmm_1.fit(features_1_sample)
+
+    gmm_2 = mixture.GaussianMixture(5)
+    gmm_2.fit(features_2_sample)
+
+    # https://stackoverflow.com/a/26079963
+    n_samples = 10**5
+    samples, _ = gmm_1.sample(n_samples)
+    log_1_samples = gmm_1.score_samples(samples)
+    log_2_samples = gmm_2.score_samples(samples)
+
+    return np.mean(log_1_samples) - np.mean(log_2_samples)
+
+
+def gmm(features_1, features_2, n_features_gmm=10**4, n_features_scoring=10**5):
+    # Only sample a few features
+    state = np.random.RandomState(10)
+    features_1_sample = features_1[
+        state.permutation(features_1.shape[0])[:n_features_gmm], ...]
+
+    # Fit a GMM for each feature set
+    gmm_model = mixture.GaussianMixture(5)
+    gmm_model.fit(features_1_sample)
+
+    # Score the second features with the gmm
+    features_2_sample = features_2[
+        state.permutation(features_2.shape[0])[:n_features_scoring], ...]
+    scores = gmm_model.score_samples(features_2_sample)
+    scores = _remove_outliers(scores)
+    scores = _remove_outliers(scores)
+    scores = _remove_outliers(scores)
+    return np.mean(scores)
+
+
+def _remove_outliers(values, std_threshold=3):
+    z_scores = np.abs(stats.zscore(values))
+    return values[z_scores <= std_threshold]
+
+
+def gmm_js(features_1, features_2):
+    n_features = 10000
+    # Only sample a few features
+    features_1_sample = features_1[
+        np.random.permutation(features_1.shape[0])[:n_features], ...]
+    features_2_sample = features_2[
+        np.random.permutation(features_2.shape[0])[:n_features], ...]
+
+    # Fit a GMM for each feature set
+    gmm_a = mixture.GaussianMixture(5)
+    gmm_a.fit(features_1_sample)
+
+    gmm_b = mixture.GaussianMixture(5)
+    gmm_b.fit(features_2_sample)
+
+    # https://stackoverflow.com/a/26079963
+    n_samples = 10**5
+    samples_1, _ = gmm_a.sample(n_samples)
+    log_a_samples_1 = gmm_a.score(samples_1)
+    log_b_samples_1 = gmm_b.score(samples_1)
+    log_mix_1 = np.logaddexp(log_a_samples_1, log_b_samples_1)
+
+    samples_2, _ = gmm_b.sample(n_samples)
+    log_a_samples_2 = gmm_b.score(samples_2)
+    log_b_samples_2 = gmm_b.score(samples_2)
+    log_mix_2 = np.logaddexp(log_a_samples_2, log_b_samples_2)
+
+    print('np.mean(log_a_samples_1)', log_a_samples_1)
+    print('np.mean(log_b_samples_1)', log_b_samples_1)
+    print('np.mean(log_mix_1)', np.mean(log_mix_1))
+    print('np.mean(log_b_samples_2)', log_b_samples_2)
+    print('np.mean(log_mix_2)', log_mix_2)
+
+    return (np.mean(log_a_samples_1) - (np.mean(log_mix_1) - np.log(2))
+            + np.mean(log_b_samples_2) - (np.mean(log_mix_2) - np.log(2))) / 2
 
 
 def frenchet_model_distance(model_config, data_config, feature_layer_name, num_samples=20):
+    return model_distance(model_config, data_config, feature_layer_name, ['frechet'], num_samples)[0]
+
+
+def _model_features(model_config: dict, data_configs: list, feature_layer_name: str,
+                    num_samples=20) -> list:
     # Create the feature model
     full_model = model.Model(model_config, load_weights='last')
     feature_model = utils.utils.model_up_to_layer(
         full_model.model, feature_layer_name)
+
+    # Compute the features for each data config
+    return [_model_features_for_data(feature_model, d, num_samples) for d in data_configs]
+
+
+def _model_features_for_data(feature_model: models.Model, data_config: dict,
+                             num_samples) -> np.ndarray:
+     # Get the size of the features
     features_size = feature_model.output.shape[-1].value
 
-    def get_mgf(data):
-        if num_samples is not None:
-            data = [data[i]
-                    for i in np.random.permutation(len(data))[:num_samples]]
+    # Load the data
+    data, _ = dataset.Dataset(data_config).create_test_dataset()
 
-        features_list = []
-        for img in tqdm.tqdm(data):
-            pred = feature_model.predict(img[None, ..., None])
-            features_list.append(np.reshape(pred, (-1, features_size)))
+    # Only use some samples
+    if isinstance(num_samples, int):
+        data = [data[i]
+                for i in np.random.permutation(len(data))[:num_samples]]
+    elif isinstance(num_samples, list):
+        data = [data[i] for i in num_samples]
 
-        features = np.concatenate(features_list)
-        mean = np.mean(features, axis=0)
-        cov = np.cov(features, rowvar=0)
-        return mean, cov
+    # Compute the features
+    features_list = []
+    for img in tqdm.tqdm(data):
+        pred = feature_model.predict(img[None, ..., None])
+        features_list.append(np.reshape(pred, (-1, features_size)))
 
-    # Compute a mgf on the original model data
-    orig_data = dataset.Dataset(model_config)
-    orig_x, _ = orig_data.create_test_dataset()
-    orig_mean, orig_cov = get_mgf(orig_x)
-
-    # Compute a mgf on the new dataset
-    other_data = dataset.Dataset({'data': data_config})
-    other_x, _ = other_data.create_test_dataset()
-    other_mean, other_cov = get_mgf(other_x)
-
-    # Compute the frenchet distance
-    return frechet_distance(orig_mean, orig_cov, other_mean, other_cov)
+    return np.concatenate(features_list)
