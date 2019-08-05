@@ -17,6 +17,7 @@ dependencies:
   - tqdm=4.31
   - jupyter=1.0.0
   - pip:
+    - scikit-learn==0.21.3
     - tifffile==2019.3.18
     - stardist==0.2.0
     - csbdeep==0.3.0
