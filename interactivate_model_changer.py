@@ -29,6 +29,7 @@ def main(arguments):
     parser.add_argument('--remove-results', action='store_true')
     parser.add_argument('--results-set-index', action='store_true')
     parser.add_argument('--auto-rename-weights', action='store_true')
+    parser.add_argument('--auto-remove', action='store_true')
     args = parser.parse_args(arguments)
     filter_re = re.compile(args.filter)
 
@@ -46,6 +47,8 @@ def main(arguments):
             results_set_index(m)
         elif args.auto_rename_weights:
             auto_rename_weights(m)
+        elif args.auto_remove:
+            auto_remove(m)
         else:
             process_model(m)
 
@@ -60,6 +63,11 @@ def process_model(model_dir):
     model_name = conf['name']
 
     print('Model name: "{}"'.format(model_name))
+    try:
+        utils.utils.get_last_weights(os.path.join('models', model_name))
+    except:
+        print("Couldn't find weights file")
+
 
     while (True):
         inp = input('> ')
@@ -147,6 +155,22 @@ def process_model(model_dir):
             print(yaml.dump(conf))
         else:
             print('Unsupported command. Supported commands are "n", "r" and "c"')
+
+
+def auto_remove(model_dir):
+    with open(os.path.join(model_dir, 'config.yaml'), 'r') as f:
+        conf = yaml_load(f)
+
+    model_name = conf['name']
+
+    try:
+        utils.utils.get_last_weights(model_dir)
+        print(f"Found weights for model {model_name}")
+    except ValueError:
+        print(f"Couldn't find weights file for model {model_name}")
+        shutil.rmtree(model_dir, ignore_errors=True)
+        shutil.rmtree(os.path.join('.', 'logs', model_name), ignore_errors=True)
+        print('Model deleted.')
 
 
 def auto_rename(model_dir):

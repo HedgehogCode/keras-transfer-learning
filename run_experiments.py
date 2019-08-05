@@ -88,7 +88,7 @@ def _run_random_init_models(configs, args):
                                    args)
 
     # ResNet Unet
-    num_experiments = 1
+    num_experiments = 3
     _train_eval_random_init_models('hl60low', configs.data.hl60_low_noise,
                                    'stardist', configs.head.stardist,
                                    'resnet-unet', configs.backbone.resnet_unet,
@@ -126,7 +126,7 @@ def _run_random_init_models(configs, args):
                                    args)
 
     # FGBG Weighted - ResNet Unet
-    num_experiments = 1
+    num_experiments = 3
     _train_eval_random_init_models('granulocyte', configs.data.granulocyte,
                                    'fgbg-weighted', configs.head.fgbg_segm_weighted,
                                    'resnet-unet', configs.backbone.resnet_unet,
@@ -151,7 +151,7 @@ def _run_random_init_models(configs, args):
                                    args)
 
     # Stardist - ResNet Unet
-    num_experiments = 1
+    num_experiments = 3
     _train_eval_random_init_models('dsb2018', configs.data.dsb2018,
                                    'stardist', configs.head.stardist,
                                    'resnet-unet', configs.backbone.resnet_unet,
@@ -162,7 +162,7 @@ def _run_random_init_models(configs, args):
                                    args)
 
     # FGBG Weighted - ResNet Unet
-    num_experiments = 1
+    num_experiments = 3
     _train_eval_random_init_models('dsb2018', configs.data.dsb2018,
                                    'fgbg-weighted', configs.head.fgbg_segm_weighted,
                                    'resnet-unet', configs.backbone.resnet_unet,
@@ -173,10 +173,10 @@ def _run_random_init_models(configs, args):
                                    args)
 
     # StarDist - ResNet50 Unet
-    num_experiments = 2
+    num_experiments = 3
     _train_eval_random_init_models('dsb2018', configs.data.dsb2018,
                                    'stardist', configs.head.stardist,
-                                   'imagenet-resnet-unet-random', configs.backbone.imagenet_resnet_unet_random,
+                                   'imagenet-resnet-unet', configs.backbone.imagenet_resnet_unet_random,
                                    configs.training.small_bs_less_cp,
                                    configs.evaluation.instance_segm,
                                    num_train_options,
@@ -198,7 +198,7 @@ def _run_random_init_models(configs, args):
     # ------------------------------------------------
     # Cityscapes
     # ------------------------------------------------
-    num_experiments = 2
+    num_experiments = 3
     _train_eval_random_init_models('cityscapes', configs.data.cityscapes,
                                    'segm', configs.head.segm_cityscapes,
                                    'resnet-unet', configs.backbone.resnet_unet,
@@ -300,6 +300,11 @@ def _run_pretrained_models(configs, args):
         'R/none/hl60low/stardist/unet/F/007',
         'R/none/hl60low/stardist/unet/F/008',
         'R/none/hl60low/stardist/unet/F/009',
+        'R/none/hl60low/stardist/unet/F/005',
+        'R/none/hl60low/stardist/unet/F/006',
+        'R/none/hl60low/stardist/unet/F/007',
+        'R/none/hl60low/stardist/unet/F/008',
+        'R/none/hl60low/stardist/unet/F/009',
     ]
     _train_eval_pretrained_models('granulocyte', configs.data.granulocyte,
                                   'stardist', configs.head.stardist,
@@ -312,6 +317,11 @@ def _run_pretrained_models(configs, args):
 
     # DSB2018
     model_names_pretrained = [
+        'R/none/hl60low/stardist/unet/F/010',
+        'R/none/hl60low/stardist/unet/F/011',
+        'R/none/hl60low/stardist/unet/F/012',
+        'R/none/hl60low/stardist/unet/F/013',
+        'R/none/hl60low/stardist/unet/F/014',
         'R/none/hl60low/stardist/unet/F/010',
         'R/none/hl60low/stardist/unet/F/011',
         'R/none/hl60low/stardist/unet/F/012',
@@ -370,6 +380,11 @@ def _run_pretrained_models(configs, args):
         'R/none/granulocyte/stardist/unet/F/002',
         'R/none/granulocyte/stardist/unet/F/003',
         'R/none/granulocyte/stardist/unet/F/004',
+        'R/none/granulocyte/stardist/unet/F/005',
+        'R/none/granulocyte/stardist/unet/F/006',
+        'R/none/granulocyte/stardist/unet/F/007',
+        'R/none/granulocyte/stardist/unet/F/008',
+        'R/none/granulocyte/stardist/unet/F/009',
     ]
     _train_eval_pretrained_models('hl60low', configs.data.hl60_low_noise,
                                   'stardist', configs.head.stardist,
@@ -382,6 +397,11 @@ def _run_pretrained_models(configs, args):
 
     # DSB2018
     model_names_pretrained = [
+        'R/none/granulocyte/stardist/unet/F/005',
+        'R/none/granulocyte/stardist/unet/F/006',
+        'R/none/granulocyte/stardist/unet/F/007',
+        'R/none/granulocyte/stardist/unet/F/008',
+        'R/none/granulocyte/stardist/unet/F/009',
         'R/none/granulocyte/stardist/unet/F/005',
         'R/none/granulocyte/stardist/unet/F/006',
         'R/none/granulocyte/stardist/unet/F/007',
@@ -400,6 +420,8 @@ def _run_pretrained_models(configs, args):
     # DSB2018
     model_names_pretrained = [
         'R/none/granulocyte/fgbg-weighted/resnet-unet/F/000',
+        'R/none/granulocyte/fgbg-weighted/resnet-unet/F/001',
+        'R/none/granulocyte/fgbg-weighted/resnet-unet/F/002',
     ]
     _train_eval_pretrained_models('dsb2018', configs.data.dsb2018,
                                   'fgbg-weighted', configs.head.fgbg_segm_weighted,
@@ -420,6 +442,11 @@ def _run_pretrained_models(configs, args):
         'R/none/dsb2018/stardist/unet/F/002',
         'R/none/dsb2018/stardist/unet/F/003',
         'R/none/dsb2018/stardist/unet/F/004',
+        'R/none/dsb2018/stardist/unet/F/005',
+        'R/none/dsb2018/stardist/unet/F/006',
+        'R/none/dsb2018/stardist/unet/F/007',
+        'R/none/dsb2018/stardist/unet/F/008',
+        'R/none/dsb2018/stardist/unet/F/009',
     ]
     _train_eval_pretrained_models('granulocyte', configs.data.granulocyte,
                                   'stardist', configs.head.stardist,
@@ -432,6 +459,11 @@ def _run_pretrained_models(configs, args):
 
     # HL60 Low Noise - StarDist - Unet
     model_names_pretrained = [
+        'R/none/dsb2018/stardist/unet/F/005',
+        'R/none/dsb2018/stardist/unet/F/006',
+        'R/none/dsb2018/stardist/unet/F/007',
+        'R/none/dsb2018/stardist/unet/F/008',
+        'R/none/dsb2018/stardist/unet/F/009',
         'R/none/dsb2018/stardist/unet/F/005',
         'R/none/dsb2018/stardist/unet/F/006',
         'R/none/dsb2018/stardist/unet/F/007',
@@ -450,6 +482,8 @@ def _run_pretrained_models(configs, args):
     # Granulocyte - fgbg-weighted - resnet-unet
     model_names_pretrained = [
         'R/none/dsb2018/fgbg-weighted/resnet-unet/F/000',
+        'R/none/dsb2018/fgbg-weighted/resnet-unet/F/001',
+        'R/none/dsb2018/fgbg-weighted/resnet-unet/F/002',
     ]
     _train_eval_pretrained_models('granulocyte', configs.data.granulocyte,
                                   'fgbg-weighted', configs.head.fgbg_segm_weighted,
@@ -479,6 +513,8 @@ def _run_pretrained_models(configs, args):
     # HL60 Low Noise - stardist - resnet-unet
     model_names_pretrained = [
         'R/none/cityscapes/segm/resnet-unet/F/000',
+        'R/none/cityscapes/segm/resnet-unet/F/001',
+        'R/none/cityscapes/segm/resnet-unet/F/002',
     ]
     _train_eval_pretrained_models('hl60low', configs.data.hl60_low_noise,
                                   'stardist', configs.head.stardist,
@@ -492,6 +528,8 @@ def _run_pretrained_models(configs, args):
     # DSB2018 - stardist - resnet-unet
     model_names_pretrained = [
         'R/none/cityscapes/segm/resnet-unet/F/001',
+        'R/none/cityscapes/segm/resnet-unet/F/001',
+        'R/none/cityscapes/segm/resnet-unet/F/002',
     ]
     _train_eval_pretrained_models('dsb2018', configs.data.dsb2018,
                                   'stardist', configs.head.stardist,
@@ -539,7 +577,7 @@ def _run_pretrained_models(configs, args):
     # ------------------------------------------------
     # ImageNet
     # ------------------------------------------------
-    num_experiments = 2
+    num_experiments = 3
     _train_eval_imagenet_init_models('dsb2018', configs.data.dsb2018,
                                      'stardist', configs.head.stardist,
                                      'imagenet-resnet-unet', configs.backbone.imagenet_resnet_unet,
