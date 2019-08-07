@@ -162,4 +162,5 @@ def split_model_name(model_name):
     vals['Initialization'] = 'pretrained' if vals['Initialization'] == 'P' else 'random'
     vals[NUM_TRAIN_NAME] = 'F' if vals[NUM_TRAIN_NAME] == 'F' \
         else int(vals[NUM_TRAIN_NAME])
+    vals[PRE_DATA_NAME] = None if vals[PRE_DATA_NAME] == 'none' else vals[PRE_DATA_NAME]
     return vals

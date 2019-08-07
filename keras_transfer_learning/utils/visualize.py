@@ -1,10 +1,10 @@
 """Tools for visualizing results.
 """
 import os
-import re
 import math
 
 import seaborn as sns
+from seaborn.categorical import _CategoricalPlotter
 import matplotlib.pyplot as plt
 
 import numpy as np
@@ -14,6 +14,9 @@ from scipy.ndimage import filters
 from keras_transfer_learning import utils
 from keras_transfer_learning.utils.utils import INIT_NAME, PRE_DATA_NAME, DATA_NAME, HEAD_NAME
 from keras_transfer_learning.utils.utils import BACKBONE_NAME, NUM_TRAIN_NAME, RUN_NAME, NAME_PARTS
+
+DEFAULT_FIGURE_SIZE = (6.4, 4.8)
+DEFAULT_FIGURE_SIZE_TEX = (2.1, 1.6)
 
 
 def set_default_plotting():
@@ -27,6 +30,41 @@ def set_default_plotting():
                 'ytick.labelsize': small_size,
                 'legend.fontsize': small_size,
                 'figure.titlesize': large_size})
+
+
+def set_default_plotting_tex():
+    scaling = 0.5
+    base_context = {
+        "font.size": 12,
+        "axes.labelsize": 12,
+        "axes.titlesize": 12,
+        "xtick.labelsize": 11,
+        "ytick.labelsize": 11,
+        "legend.fontsize": 11,
+
+        "axes.linewidth": 1.25,
+        "grid.linewidth": 1,
+        "lines.linewidth": 1.5,
+        "lines.markersize": 6,
+        "patch.linewidth": 1,
+
+        "xtick.major.width": 1.25,
+        "ytick.major.width": 1.25,
+        "xtick.minor.width": 1,
+        "ytick.minor.width": 1,
+
+        "xtick.major.size": 6,
+        "ytick.major.size": 6,
+        "xtick.minor.size": 4,
+        "ytick.minor.size": 4,
+    }
+    context_dict = {k: v * scaling for k, v in base_context.items()}
+    sns.set(font='serif')
+    sns.set_style("ticks", {
+        "font.family": "serif",
+        "font.serif": ["Times", "Palatino", "serif"]
+    })
+    sns.set_context(context_dict)
 
 
 def get_models(pattern: str):
@@ -63,8 +101,8 @@ def plot_last(pattern: str, metric: str, size: tuple = None,
     if ignore_pre_data:
         ignored_vals.append(PRE_DATA_NAME)
     selected_models = get_models(pattern)
-    results_last = _get_results_last(selected_models, metric)
-    return _plot_last(results_last, size, ignored_vals, plot_type)
+    results_last_df = _get_results_last_df(selected_models, metric)
+    return _plot_last(results_last_df, size, ignored_vals, plot_type)
 
 
 def _get_model_results(name):
@@ -83,9 +121,21 @@ def _get_results_last(names, metric: str):
     return {n: df[metric].iloc[-1] for n, df in results.items()}
 
 
+def _get_results_last_df(names, metric: str):
+    results_last = _get_results_last(names, metric)
+
+    def _create_datapoint(n, v):
+        desc = utils.utils.split_model_name(n)
+        desc['mAP'] = v
+        return desc
+
+    datapoints = [_create_datapoint(n, v) for n, v in results_last.items()]
+    return pd.DataFrame(datapoints)
+
+
 def _create_figure(size: tuple = None):
     if size is None:
-        size = (6.4, 4.8)
+        size = DEFAULT_FIGURE_SIZE
     return plt.figure(figsize=size, dpi=300)
 
 
@@ -103,21 +153,13 @@ def _plot_map_over_epoch_df(df, size: tuple = None):
     return fig
 
 
-def _plot_last(results_last, size: tuple = None, ignored_vals: list = None,
+def _plot_last(results_last_df, size: tuple = None, ignored_vals: list = None,
                plot_type: str = 'barplot'):
     if ignored_vals is None:
         ignored_vals = []
 
-    def _create_datapoint(n, v):
-        desc = utils.utils.split_model_name(n)
-        desc['mAP'] = v
-        return desc
-
-    datapoints = [_create_datapoint(n, v) for n, v in results_last.items()]
-    df = pd.DataFrame(datapoints)
-
     # Find x and hue
-    different_vals = {n: len(df[n].unique())
+    different_vals = {n: len(results_last_df[n].unique())
                       for n in NAME_PARTS if n not in ignored_vals}
     x_label, hue_label = sorted(
         different_vals, key=different_vals.get, reverse=True)[:2]
@@ -126,28 +168,36 @@ def _plot_last(results_last, size: tuple = None, ignored_vals: list = None,
 
     # Find the number of observations
     if hue_label is not None:
-        nobs = df.groupby([x_label, hue_label])['mAP'].agg(['count'])
+        nobs = results_last_df.groupby([x_label, hue_label])[
+            'mAP'].agg(['count'])
     else:
-        nobs = df.groupby([x_label])['mAP'].agg(['count'])
+        nobs = results_last_df.groupby([x_label])['mAP'].agg(['count'])
     nobs = np.reshape(nobs.values, [-1])
 
     # Draw the plot
     fig = _create_figure(size)
     if plot_type == 'barplot':
-        ax = sns.barplot(data=df, y='mAP', x=x_label, hue=hue_label)
+        ax = sns.barplot(data=results_last_df, y='mAP',
+                         x=x_label, hue=hue_label)
     elif plot_type == 'boxplot':
-        ax = sns.boxenplot(data=df, y='mAP', x=x_label, hue=hue_label)
+        ax = sns.boxenplot(data=results_last_df, y='mAP',
+                           x=x_label, hue=hue_label)
+    elif plot_type == 'swarmplot':
+        ax = sns.swarmplot(data=results_last_df, y='mAP',
+                           x=x_label, hue=hue_label, dodge=True)
+    else:
+        raise ValueError(f'Unknown plot type: {plot_type}')
 
     # Set ylim based on values
-    min_map = df['mAP'].min()
-    max_map = df['mAP'].max()
+    min_map = results_last_df['mAP'].min()
+    max_map = results_last_df['mAP'].max()
     buffer = (max_map - min_map) * 0.2
     ax.set(ylim=(min_map - buffer, max_map + buffer))
 
     # Add the number of observations
     if plot_type == 'barplot':
-        x_pos = lambda a: a.get_x() + 0.5 * a.get_width()
-        y_pos = lambda a: a.get_height() - 0.3 * buffer
+        def x_pos(a): return a.get_x() + 0.5 * a.get_width()
+        def y_pos(a): return a.get_height() - 0.3 * buffer
         color = 'w'
 
         positions = sorted([(x_pos(a), y_pos(a))
@@ -157,3 +207,67 @@ def _plot_last(results_last, size: tuple = None, ignored_vals: list = None,
                 ax.text(pos_x, pos_y, 'n:' + str(n),
                         ha='center', size='x-small', color=color)
     return fig
+
+
+def save(fig, file):
+    fig.savefig(file, bbox_inches='tight')
+
+
+# Copy of seaborn.catplot (BSD-3-Clause) withou the deprectaion handling
+# And with a fixed plot type
+def catplot(x=None, y=None, hue=None, data=None, row=None, col=None,
+            col_wrap=None, order=None, hue_order=None, row_order=None,
+            col_order=None, height=5, aspect=1,
+            orient=None, color=None, palette=None,
+            legend=True, legend_out=True, sharex=True, sharey=True,
+            margin_titles=False, facet_kws=None, **kwargs):
+
+    # Determine the plotting function
+    plot_func = sns.swarmplot
+
+    # Alias the input variables to determine categorical order and palette
+    # correctly in the case of a count plot
+    x_, y_ = x, y
+
+    # Determine the order for the whole dataset, which will be used in all
+    # facets to ensure representation of all data in the final plot
+    p = _CategoricalPlotter()
+    p.establish_variables(x_, y_, hue, data, orient, order, hue_order)
+    order = p.group_names
+    hue_order = p.hue_names
+
+    # Determine the palette to use
+    # (FacetGrid will pass a value for ``color`` to the plotting function
+    # so we need to define ``palette`` to get default behavior for the
+    # categorical functions
+    p.establish_colors(color, palette, 1)
+
+    # Determine keyword arguments for the facets
+    facet_kws = {} if facet_kws is None else facet_kws
+    facet_kws.update(
+        data=data, row=row, col=col,
+        row_order=row_order, col_order=col_order,
+        col_wrap=col_wrap, height=height, aspect=aspect,
+        sharex=sharex, sharey=sharey,
+        legend_out=legend_out, margin_titles=margin_titles,
+        dropna=False,
+    )
+
+    # Determine keyword arguments for the plotting function
+    plot_kws = dict(
+        order=order, hue_order=hue_order,
+        orient=orient, color=color, palette=palette,
+    )
+    plot_kws.update(kwargs)
+
+    # Initialize the facets
+    g = sns.FacetGrid(**facet_kws)
+
+    # Draw the plot onto the facets
+    g.map_dataframe(plot_func, x, y, hue, **plot_kws)
+
+    # Special case axis labels for a count type plot
+    if legend and (hue is not None) and (hue not in [x, row, col]):
+        g.add_legend(title=hue, label_order=hue_order)
+
+    return g
