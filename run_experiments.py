@@ -200,7 +200,7 @@ def _run_random_init_models(configs, args):
     # STARDIST_DSB2018
     # ------------------------------------------------
     # Stardist - Unet
-    num_experiments = 2
+    num_experiments = 4
     _train_eval_random_init_models('stardist-dsb2018', configs.data.stardist_dsb2018,
                                    'stardist', configs.head.stardist,
                                    'unet', configs.backbone.unet_csbdeep,
@@ -211,7 +211,7 @@ def _run_random_init_models(configs, args):
                                    args)
 
     # Stardist - ResNet Unet
-    num_experiments = 2
+    num_experiments = 4
     _train_eval_random_init_models('stardist-dsb2018', configs.data.stardist_dsb2018,
                                    'stardist', configs.head.stardist,
                                    'resnet-unet', configs.backbone.resnet_unet,
