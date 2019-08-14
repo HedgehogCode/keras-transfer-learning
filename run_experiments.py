@@ -88,7 +88,7 @@ def _run_random_init_models(configs, args):
                                    args)
 
     # ResNet Unet
-    num_experiments = 3
+    num_experiments = 5
     _train_eval_random_init_models('hl60low', configs.data.hl60_low_noise,
                                    'stardist', configs.head.stardist,
                                    'resnet-unet', configs.backbone.resnet_unet,
@@ -151,7 +151,7 @@ def _run_random_init_models(configs, args):
                                    args)
 
     # Stardist - ResNet Unet
-    num_experiments = 3
+    num_experiments = 5
     _train_eval_random_init_models('dsb2018', configs.data.dsb2018,
                                    'stardist', configs.head.stardist,
                                    'resnet-unet', configs.backbone.resnet_unet,
@@ -198,7 +198,7 @@ def _run_random_init_models(configs, args):
     # ------------------------------------------------
     # Cityscapes
     # ------------------------------------------------
-    num_experiments = 3
+    num_experiments = 5
     _train_eval_random_init_models('cityscapes', configs.data.cityscapes,
                                    'segm', configs.head.segm_cityscapes,
                                    'resnet-unet', configs.backbone.resnet_unet,
@@ -228,7 +228,7 @@ def _run_frankenstein_models(configs, args):
         ('hl60high', configs.data.hl60_high_noise),
         ('granulocyte', configs.data.granulocyte)
     ]
-    num_experiments = 3
+    num_experiments = 5
     epochs_per_model = 15
     _train_frankenstein_models('hl60low-hl60high-granulocyte', conf_datas,
                                'stardist', configs.head.stardist,
@@ -260,7 +260,7 @@ def _run_frankenstein_models(configs, args):
         ('hl60low', configs.data.hl60_aug),
         ('granulocyte', configs.data.granulocyte_aug),
     ]
-    num_experiments = 3
+    num_experiments = 5
     epochs_per_model = 15
     _train_frankenstein_models('hl60low-granulocyte-aug', conf_datas,
                                'stardist', configs.head.stardist,
@@ -370,6 +370,40 @@ def _run_pretrained_models(configs, args):
                                   model_names_pretrained,
                                   args)
 
+    # Granulocyte
+    model_names_pretrained = [
+        'R/none/hl60high/stardist/unet/F/000',
+        'R/none/hl60high/stardist/unet/F/001',
+        'R/none/hl60high/stardist/unet/F/002',
+        'R/none/hl60high/stardist/unet/F/003',
+        'R/none/hl60high/stardist/unet/F/004',
+    ]
+    _train_eval_pretrained_models('granulocyte', configs.data.granulocyte,
+                                  'stardist', configs.head.stardist,
+                                  'unet', configs.backbone.unet_csbdeep,
+                                  configs.training.default,
+                                  configs.evaluation.instance_segm,
+                                  num_train_options,
+                                  model_names_pretrained,
+                                  args)
+
+    # DSB2018
+    model_names_pretrained = [
+        'R/none/hl60high/stardist/unet/F/000',
+        'R/none/hl60high/stardist/unet/F/001',
+        'R/none/hl60high/stardist/unet/F/002',
+        'R/none/hl60high/stardist/unet/F/003',
+        'R/none/hl60high/stardist/unet/F/004',
+    ]
+    _train_eval_pretrained_models('dsb2018', configs.data.dsb2018,
+                                  'stardist', configs.head.stardist,
+                                  'unet', configs.backbone.unet_csbdeep,
+                                  configs.training.default,
+                                  configs.evaluation.instance_segm,
+                                  num_train_options,
+                                  model_names_pretrained,
+                                  args)
+
     # ------------------------------------------------
     # Granulocyte
     # ------------------------------------------------
@@ -387,6 +421,28 @@ def _run_pretrained_models(configs, args):
         'R/none/granulocyte/stardist/unet/F/009',
     ]
     _train_eval_pretrained_models('hl60low', configs.data.hl60_low_noise,
+                                  'stardist', configs.head.stardist,
+                                  'unet', configs.backbone.unet_csbdeep,
+                                  configs.training.default,
+                                  configs.evaluation.instance_segm,
+                                  num_train_options,
+                                  model_names_pretrained,
+                                  args)
+
+    # HL60 Low Noise
+    model_names_pretrained = [
+        'R/none/granulocyte/stardist/unet/F/000',
+        'R/none/granulocyte/stardist/unet/F/001',
+        'R/none/granulocyte/stardist/unet/F/002',
+        'R/none/granulocyte/stardist/unet/F/003',
+        'R/none/granulocyte/stardist/unet/F/004',
+        # 'R/none/granulocyte/stardist/unet/F/005',
+        # 'R/none/granulocyte/stardist/unet/F/006',
+        # 'R/none/granulocyte/stardist/unet/F/007',
+        # 'R/none/granulocyte/stardist/unet/F/008',
+        # 'R/none/granulocyte/stardist/unet/F/009',
+    ]
+    _train_eval_pretrained_models('hl60high', configs.data.hl60_high_noise,
                                   'stardist', configs.head.stardist,
                                   'unet', configs.backbone.unet_csbdeep,
                                   configs.training.default,
@@ -479,6 +535,28 @@ def _run_pretrained_models(configs, args):
                                   model_names_pretrained,
                                   args)
 
+    # HL60 High Noise - StarDist - Unet
+    model_names_pretrained = [
+        'R/none/dsb2018/stardist/unet/F/000',
+        'R/none/dsb2018/stardist/unet/F/001',
+        'R/none/dsb2018/stardist/unet/F/002',
+        'R/none/dsb2018/stardist/unet/F/003',
+        'R/none/dsb2018/stardist/unet/F/004',
+        # 'R/none/dsb2018/stardist/unet/F/005',
+        # 'R/none/dsb2018/stardist/unet/F/006',
+        # 'R/none/dsb2018/stardist/unet/F/007',
+        # 'R/none/dsb2018/stardist/unet/F/008',
+        # 'R/none/dsb2018/stardist/unet/F/009',
+    ]
+    _train_eval_pretrained_models('hl60high', configs.data.hl60_high_noise,
+                                  'stardist', configs.head.stardist,
+                                  'unet', configs.backbone.unet_csbdeep,
+                                  configs.training.default,
+                                  configs.evaluation.instance_segm,
+                                  num_train_options,
+                                  model_names_pretrained,
+                                  args)
+
     # Granulocyte - fgbg-weighted - resnet-unet
     model_names_pretrained = [
         'R/none/dsb2018/fgbg-weighted/resnet-unet/F/000',
@@ -515,6 +593,8 @@ def _run_pretrained_models(configs, args):
         'R/none/cityscapes/segm/resnet-unet/F/000',
         'R/none/cityscapes/segm/resnet-unet/F/001',
         'R/none/cityscapes/segm/resnet-unet/F/002',
+        'R/none/cityscapes/segm/resnet-unet/F/003',
+        'R/none/cityscapes/segm/resnet-unet/F/004',
     ]
     _train_eval_pretrained_models('hl60low', configs.data.hl60_low_noise,
                                   'stardist', configs.head.stardist,
@@ -530,6 +610,8 @@ def _run_pretrained_models(configs, args):
         'R/none/cityscapes/segm/resnet-unet/F/001',
         'R/none/cityscapes/segm/resnet-unet/F/001',
         'R/none/cityscapes/segm/resnet-unet/F/002',
+        'R/none/cityscapes/segm/resnet-unet/F/003',
+        'R/none/cityscapes/segm/resnet-unet/F/004',
     ]
     _train_eval_pretrained_models('dsb2018', configs.data.dsb2018,
                                   'stardist', configs.head.stardist,
@@ -547,6 +629,8 @@ def _run_pretrained_models(configs, args):
         'T/none/hl60low-hl60high-granulocyte/stardist/resnet-unet/F/000/015_granulocyte',
         'T/none/hl60low-hl60high-granulocyte/stardist/resnet-unet/F/001/015_granulocyte',
         'T/none/hl60low-hl60high-granulocyte/stardist/resnet-unet/F/002/015_granulocyte',
+        'T/none/hl60low-hl60high-granulocyte/stardist/resnet-unet/F/003/015_granulocyte',
+        'T/none/hl60low-hl60high-granulocyte/stardist/resnet-unet/F/004/015_granulocyte',
     ]
     _train_eval_pretrained_models('dsb2018', configs.data.dsb2018,
                                   'stardist', configs.head.stardist,
@@ -564,6 +648,8 @@ def _run_pretrained_models(configs, args):
         'T/none/hl60low-granulocyte-aug/stardist/resnet-unet/F/000/020_granulocyte',
         'T/none/hl60low-granulocyte-aug/stardist/resnet-unet/F/001/020_granulocyte',
         'T/none/hl60low-granulocyte-aug/stardist/resnet-unet/F/002/020_granulocyte',
+        'T/none/hl60low-granulocyte-aug/stardist/resnet-unet/F/003/020_granulocyte',
+        'T/none/hl60low-granulocyte-aug/stardist/resnet-unet/F/004/020_granulocyte',
     ]
     _train_eval_pretrained_models('dsb2018', configs.data.dsb2018,
                                   'stardist', configs.head.stardist,
