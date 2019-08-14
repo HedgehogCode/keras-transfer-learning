@@ -6,6 +6,7 @@ import math
 import seaborn as sns
 from seaborn.categorical import _CategoricalPlotter
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 
 import numpy as np
 import pandas as pd
@@ -105,6 +106,19 @@ def plot_last(pattern: str, metric: str, size: tuple = None,
     return _plot_last(results_last_df, size, ignored_vals, plot_type)
 
 
+def plot_history(pattern: str, metric: str, hue: str, style: str, size: tuple = None):
+    selected_models = get_models(pattern)
+    history_df = _get_model_histories_df(selected_models)
+    fig = _create_figure(size)
+    ax = sns.lineplot(data=history_df, x='Step',
+                      y=metric, hue=hue, style=style)
+    # ax.set(ylim=(0.06, 0.15))
+    # Cheating to make it look more impressive!
+    # They did it in the U-Net Fiji Plugin paper
+    # ax.set(xscale='log')
+    return fig
+
+
 def _get_model_results(name):
     results_file = os.path.join('models', name, 'results.csv')
     return pd.read_csv(results_file)
@@ -131,6 +145,27 @@ def _get_results_last_df(names, metric: str):
 
     datapoints = [_create_datapoint(n, v) for n, v in results_last.items()]
     return pd.DataFrame(datapoints)
+
+
+def _get_model_history_df(name):
+    history_file = os.path.join('models', name, 'history.csv')
+    history_df = pd.read_csv(history_file)
+    history_df = history_df.rename(columns={'Unnamed: 0': 'Step'})
+    model_desc = utils.utils.split_model_name(name)
+    for k, v in model_desc.items():
+        history_df[k] = v
+    return history_df
+
+
+def _get_model_histories_df(names):
+    history_df: pd.DataFrame = None
+    for name in names:
+        current_df = _get_model_history_df(name)
+        if history_df is None:
+            history_df = current_df
+        else:
+            history_df = history_df.append(current_df)
+    return history_df.reset_index()
 
 
 def _create_figure(size: tuple = None):
