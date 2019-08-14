@@ -30,7 +30,8 @@ CONFIG_FILES = {
         'hl60_high_noise': ['data', 'hl60_high-noise.yaml'],
         'hl60_low_noise': ['data', 'hl60_low-noise.yaml'],
         'hl60_aug': ['data', 'hl60-aug.yaml'],
-        'granulocyte_aug': ['data', 'granulocyte-aug.yaml']
+        'granulocyte_aug': ['data', 'granulocyte-aug.yaml'],
+        'stardist_dsb2018': ['data', 'stardist-dsb2018.yaml'],
     },
     'head': {
         'fgbg_segm_weighted': ['heads', 'fgbg-segm-weighted.yaml'],
@@ -194,6 +195,31 @@ def _run_random_init_models(configs, args):
     #                                ['F'],
     #                                num_experiments,
     #                                args)
+
+    # ------------------------------------------------
+    # STARDIST_DSB2018
+    # ------------------------------------------------
+    # Stardist - Unet
+    num_experiments = 2
+    _train_eval_random_init_models('stardist-dsb2018', configs.data.stardist_dsb2018,
+                                   'stardist', configs.head.stardist,
+                                   'unet', configs.backbone.unet_csbdeep,
+                                   configs.training.default,
+                                   configs.evaluation.instance_segm,
+                                   ['F'],
+                                   num_experiments,
+                                   args)
+
+    # Stardist - ResNet Unet
+    num_experiments = 2
+    _train_eval_random_init_models('stardist-dsb2018', configs.data.stardist_dsb2018,
+                                   'stardist', configs.head.stardist,
+                                   'resnet-unet', configs.backbone.resnet_unet,
+                                   configs.training.default,
+                                   configs.evaluation.instance_segm,
+                                   ['F'],
+                                   num_experiments,
+                                   args)
 
     # ------------------------------------------------
     # Cityscapes
