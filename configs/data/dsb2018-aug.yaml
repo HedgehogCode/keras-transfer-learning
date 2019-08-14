@@ -9,11 +9,27 @@ dataaug:
     - name: 'Affine'
       args:
         scale: !!python/tuple [0.5, 2]
-        # rotate: !!python/tuple [0, 360]
-        # shear: !!python/tuple [-16, 16]
+        rotate: !!python/tuple [0, 360]
+        shear: !!python/tuple [-16, 16]
     - name: 'CropToFixedSize'
       args: { width: 256, height: 256 }
     - name: 'Fliplr'
       args: { p: 0.5 }
     - name: 'Flipud'
       args: { p: 0.5 }
+    - name: 'GammaContrast'
+      args:
+        gamma: !!python/tuple [0.5, 2.0]
+      onsegm: false
+    - name: 'Sharpen'
+      args:
+        alpha: !!python/tuple [0, 1]
+      onsegm: false
+    - name: 'Add'
+      args:
+        value: !!python/tuple [-0.1, 0.1]
+      onsegm: false
+    - name: 'Invert'
+      args: { p: 0.5 }
+      onsegm: false
+
