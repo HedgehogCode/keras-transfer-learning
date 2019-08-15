@@ -27,6 +27,7 @@ NAME_PARTS = [
     RUN_NAME
 ]
 
+
 def get_last_weights(model_dir: str, epoch: int = None):
     """Finds the filename of the last weights file in a model directory.
 
@@ -164,3 +165,19 @@ def split_model_name(model_name):
         else int(vals[NUM_TRAIN_NAME])
     vals[PRE_DATA_NAME] = None if vals[PRE_DATA_NAME] == 'none' else vals[PRE_DATA_NAME]
     return vals
+
+
+def model_name_regex(prefix=None, pre_data=None, data=None, head=None, backbone=None,
+                     num_train=None, experiment_id=None):
+
+    def reg(val):
+        if val is None:
+            return '.*'
+        if isinstance(val, str):
+            return val
+        if isinstance(val, list):
+            return '(' + '|'.join(val) + ')'
+        raise ValueError(
+            f'Value must be a None, str or list but is {type(val)}')
+
+    return f'{reg(prefix)}/{reg(pre_data)}/{reg(data)}/{reg(head)}/{reg(backbone)}/{reg(num_train)}/{reg(experiment_id)}'
