@@ -135,12 +135,15 @@ def _get_results_last(names, metric: str):
     return {n: df[metric].iloc[-1] for n, df in results.items()}
 
 
-def _get_results_last_df(names, metric: str):
-    results_last = _get_results_last(names, metric)
+def _get_results_last_df(names, metric: str = None):
+    results = {name: _get_model_results(name) for name in names}
+    results_last = {name: df.iloc[-1] for name, df in results.items()}
 
     def _create_datapoint(n, v):
         desc = utils.utils.split_model_name(n)
-        desc['mAP'] = v
+        desc.update(v.to_dict())
+        if metric is not None:
+            desc['mAP'] = desc[metric]
         return desc
 
     datapoints = [_create_datapoint(n, v) for n, v in results_last.items()]
