@@ -16,6 +16,7 @@ from keras_transfer_learning import train, evaluate, utils
 CONFIG_FILES = {
     'backbone': {
         'resnet_unet': ['backbones', 'resnet-unet.yaml'],
+        'plain_unet': ['backbones', 'plain-unet.yaml'],
         'imagenet_resnet_unet': ['backbones', 'imagenet-resnet-unet.yaml'],
         'imagenet_resnet_unet_random': ['backbones', 'imagenet-resnet-unet-random.yaml'],
         'resnet_unet_big': ['backbones', 'resnet-unet-big.yaml'],
@@ -159,6 +160,17 @@ def _run_random_init_models(configs, args):
                                    configs.training.default,
                                    configs.evaluation.instance_segm,
                                    num_train_options,
+                                   num_experiments,
+                                   args)
+
+    # Stardist - Plain Unet
+    num_experiments = 5
+    _train_eval_random_init_models('dsb2018', configs.data.dsb2018,
+                                   'stardist', configs.head.stardist,
+                                   'plain-unet', configs.backbone.plain_unet,
+                                   configs.training.default,
+                                   configs.evaluation.instance_segm,
+                                   ['F'],
                                    num_experiments,
                                    args)
 
