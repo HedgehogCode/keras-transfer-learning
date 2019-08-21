@@ -9,7 +9,7 @@ from . import unet, resnet
 from .layers import PadToMultiple, CropLike
 
 
-def resnet_unet(filters=None, blocks=None, ndims=2, padding_fix=True):
+def resnet_unet(filters=None, blocks=None, ndims=2, padding_fix=True, shortcut=True):
     """Creates a ResNet U-Net. Padding is applied for convolutions. Therefore the input and
     output has the same size.
 
@@ -25,7 +25,7 @@ def resnet_unet(filters=None, blocks=None, ndims=2, padding_fix=True):
         function -- a function which applies a ResNet U-Net to an input tensor
     """
     def _res_conv_block(ndims, filters, blocks=2, name=None):
-        return resnet.stack(filters, blocks, stride1=1, ndims=ndims, name=name)
+        return resnet.stack(filters, blocks, stride1=1, ndims=ndims, name=name, shortcut=shortcut)
 
     if filters is None:
         filters = [32, 64, 128, 256]

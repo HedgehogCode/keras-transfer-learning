@@ -85,7 +85,8 @@ def resnet(stack_fn):
 #     BLOCK
 ##############################################################################
 
-def block(filters, kernel_size=3, stride=1, conv_shortcut=True, ndims=2, name=None):
+def block(filters, kernel_size=3, stride=1, conv_shortcut=True, ndims=2, name=None,
+          shortcut_con=True):
     """A residual block.
 
     # Arguments
@@ -129,7 +130,8 @@ def block(filters, kernel_size=3, stride=1, conv_shortcut=True, ndims=2, name=No
             x = layers.BatchNormalization(axis=bn_axis, epsilon=1.001e-5,
                                           name=name + '_3_bn')(x)
 
-            x = layers.Add(name=name + '_add')([shortcut, x])
+            if shortcut_con:
+                x = layers.Add(name=name + '_add')([shortcut, x])
             x = layers.Activation('relu', name=name + '_out')(x)
         return x
 
@@ -140,7 +142,7 @@ def block(filters, kernel_size=3, stride=1, conv_shortcut=True, ndims=2, name=No
 #     STACK
 ##############################################################################
 
-def stack(filters, blocks, stride1=2, ndims=2, name=None):
+def stack(filters, blocks, stride1=2, ndims=2, name=None, shortcut=True):
     """A set of stacked residual blocks.
 
     # Arguments
@@ -155,9 +157,9 @@ def stack(filters, blocks, stride1=2, ndims=2, name=None):
     def build(x):
         with K.name_scope(name):
             x = block(filters, stride=stride1, ndims=ndims,
-                      name=name + '_block1')(x)
+                      name=name + '_block1', shortcut_con=shortcut)(x)
             for i in range(2, blocks + 1):
                 x = block(filters, conv_shortcut=False, ndims=ndims,
-                          name=name + '_block' + str(i))(x)
+                          name=name + '_block' + str(i), shortcut_con=shortcut)(x)
         return x
     return build
