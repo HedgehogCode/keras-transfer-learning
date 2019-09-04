@@ -286,6 +286,38 @@ def _run_frankenstein_models(configs, args):
                                configs.evaluation.instance_segm,
                                epochs_per_model, num_experiments, args)
 
+    # HL60_LOW_NOISE + GRANULOCYTE - NO Data augmentation
+    conf_datas = [
+        ('hl60low', configs.data.hl60_low_noise),
+        ('granulocyte', configs.data.granulocyte),
+        ('hl60low', configs.data.hl60_low_noise),
+        ('granulocyte', configs.data.granulocyte),
+        ('hl60low', configs.data.hl60_low_noise),
+        ('granulocyte', configs.data.granulocyte),
+        ('hl60low', configs.data.hl60_low_noise),
+        ('granulocyte', configs.data.granulocyte),
+        ('hl60low', configs.data.hl60_low_noise),
+        ('granulocyte', configs.data.granulocyte),
+        ('hl60low', configs.data.hl60_low_noise),
+        ('granulocyte', configs.data.granulocyte),
+        ('hl60low', configs.data.hl60_low_noise),
+        ('granulocyte', configs.data.granulocyte),
+        ('hl60low', configs.data.hl60_low_noise),
+        ('granulocyte', configs.data.granulocyte),
+        ('hl60low', configs.data.hl60_low_noise),
+        ('granulocyte', configs.data.granulocyte),
+        ('hl60low', configs.data.hl60_low_noise),
+        ('granulocyte', configs.data.granulocyte),
+    ]
+    num_experiments = 5
+    epochs_per_model = 15
+    _train_frankenstein_models('hl60low-granulocyte', conf_datas,
+                               'stardist', configs.head.stardist,
+                               'resnet-unet', configs.backbone.resnet_unet,
+                               configs.training.default,
+                               configs.evaluation.instance_segm,
+                               epochs_per_model, num_experiments, args)
+
     # Data augmentation
     conf_datas = [
         ('hl60low', configs.data.hl60_aug),
@@ -680,6 +712,22 @@ def _run_pretrained_models(configs, args):
         'T/none/hl60low-hl60high-granulocyte/stardist/resnet-unet/F/002/015_granulocyte',
         'T/none/hl60low-hl60high-granulocyte/stardist/resnet-unet/F/003/015_granulocyte',
         'T/none/hl60low-hl60high-granulocyte/stardist/resnet-unet/F/004/015_granulocyte',
+    ]
+    _train_eval_pretrained_models('dsb2018', configs.data.dsb2018,
+                                  'stardist', configs.head.stardist,
+                                  'resnet-unet', configs.backbone.resnet_unet,
+                                  configs.training.default,
+                                  configs.evaluation.instance_segm,
+                                  num_train_options,
+                                  model_names_pretrained,
+                                  args)
+
+    model_names_pretrained = [
+        'T/none/hl60low-granulocyte/stardist/resnet-unet/F/000/020_granulocyte',
+        'T/none/hl60low-granulocyte/stardist/resnet-unet/F/001/020_granulocyte',
+        'T/none/hl60low-granulocyte/stardist/resnet-unet/F/002/020_granulocyte',
+        'T/none/hl60low-granulocyte/stardist/resnet-unet/F/003/020_granulocyte',
+        'T/none/hl60low-granulocyte/stardist/resnet-unet/F/004/020_granulocyte',
     ]
     _train_eval_pretrained_models('dsb2018', configs.data.dsb2018,
                                   'stardist', configs.head.stardist,
