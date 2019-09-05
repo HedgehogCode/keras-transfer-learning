@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-"""Train a deep learning model according to a configuration file.
+"""Train a deep learning model according to configuration files.
 """
 
 import sys
