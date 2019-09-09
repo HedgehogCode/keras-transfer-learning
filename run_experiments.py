@@ -51,6 +51,7 @@ CONFIG_FILES = {
     }
 }
 
+NUM_EXPERIMENTS_UNET = 3
 
 def main(arguments):
 
@@ -100,12 +101,34 @@ def _run_random_init_models(configs, args):
                                    num_experiments,
                                    args)
 
+    # U-Net fgbg-weighted
+    num_experiments = NUM_EXPERIMENTS_UNET
+    _train_eval_random_init_models('hl60low', configs.data.hl60_low_noise,
+                                   'fgbg-weighted', configs.head.fgbg_segm_weighted,
+                                   'unet', configs.backbone.unet_csbdeep,
+                                   configs.training.default,
+                                   configs.evaluation.instance_segm,
+                                   num_train_options,
+                                   num_experiments,
+                                   args)
+
     # ------------------------------------------------
     # HL60 High Noise
     # ------------------------------------------------
     num_experiments = 5
     _train_eval_random_init_models('hl60high', configs.data.hl60_high_noise,
                                    'stardist', configs.head.stardist,
+                                   'unet', configs.backbone.unet_csbdeep,
+                                   configs.training.default,
+                                   configs.evaluation.instance_segm,
+                                   num_train_options,
+                                   num_experiments,
+                                   args)
+
+    # U-Net fgbg-weighted
+    num_experiments = NUM_EXPERIMENTS_UNET
+    _train_eval_random_init_models('hl60high', configs.data.hl60_high_noise,
+                                   'fgbg-weighted', configs.head.fgbg_segm_weighted,
                                    'unet', configs.backbone.unet_csbdeep,
                                    configs.training.default,
                                    configs.evaluation.instance_segm,
@@ -132,6 +155,17 @@ def _run_random_init_models(configs, args):
     _train_eval_random_init_models('granulocyte', configs.data.granulocyte,
                                    'fgbg-weighted', configs.head.fgbg_segm_weighted,
                                    'resnet-unet', configs.backbone.resnet_unet,
+                                   configs.training.default,
+                                   configs.evaluation.instance_segm,
+                                   num_train_options,
+                                   num_experiments,
+                                   args)
+
+    # U-Net fgbg-weighted
+    num_experiments = NUM_EXPERIMENTS_UNET
+    _train_eval_random_init_models('granulocyte', configs.data.granulocyte,
+                                   'fgbg-weighted', configs.head.fgbg_segm_weighted,
+                                   'unet', configs.backbone.unet_csbdeep,
                                    configs.training.default,
                                    configs.evaluation.instance_segm,
                                    num_train_options,
@@ -191,6 +225,17 @@ def _run_random_init_models(configs, args):
                                    'stardist', configs.head.stardist,
                                    'imagenet-resnet-unet', configs.backbone.imagenet_resnet_unet_random,
                                    configs.training.small_bs_less_cp,
+                                   configs.evaluation.instance_segm,
+                                   num_train_options,
+                                   num_experiments,
+                                   args)
+
+    # U-Net fgbg-weighted
+    num_experiments = NUM_EXPERIMENTS_UNET
+    _train_eval_random_init_models('dsb2018', configs.data.dsb2018,
+                                   'fgbg-weighted', configs.head.fgbg_segm_weighted,
+                                   'unet', configs.backbone.unet_csbdeep,
+                                   configs.training.default,
                                    configs.evaluation.instance_segm,
                                    num_train_options,
                                    num_experiments,
@@ -662,6 +707,51 @@ def _run_pretrained_models(configs, args):
                                   'resnet-unet', configs.backbone.resnet_unet,
                                   configs.training.default,
                                   configs.evaluation.semantic_segm,
+                                  num_train_options,
+                                  model_names_pretrained,
+                                  args)
+
+    # HL60 low noise - FGBG-Weighted - Unet
+    model_names_pretrained = [
+        'R/none/dsb2018/fgbg-weighted/unet/F/000',
+        'R/none/dsb2018/fgbg-weighted/unet/F/001',
+        'R/none/dsb2018/fgbg-weighted/unet/F/002',
+    ]
+    _train_eval_pretrained_models('hl60low', configs.data.hl60_low_noise,
+                                  'fgbg-weighted', configs.head.fgbg_segm_weighted,
+                                  'unet', configs.backbone.unet_csbdeep,
+                                  configs.training.default,
+                                  configs.evaluation.instance_segm,
+                                  num_train_options,
+                                  model_names_pretrained,
+                                  args)
+
+    # HL60 high noise - FGBG-Weighted - Unet
+    model_names_pretrained = [
+        'R/none/dsb2018/fgbg-weighted/unet/F/000',
+        'R/none/dsb2018/fgbg-weighted/unet/F/001',
+        'R/none/dsb2018/fgbg-weighted/unet/F/002',
+    ]
+    _train_eval_pretrained_models('hl60high', configs.data.hl60_high_noise,
+                                  'fgbg-weighted', configs.head.fgbg_segm_weighted,
+                                  'unet', configs.backbone.unet_csbdeep,
+                                  configs.training.default,
+                                  configs.evaluation.instance_segm,
+                                  num_train_options,
+                                  model_names_pretrained,
+                                  args)
+
+    # Granulocyte - FGBG-Weighted - Unet
+    model_names_pretrained = [
+        'R/none/dsb2018/fgbg-weighted/unet/F/000',
+        'R/none/dsb2018/fgbg-weighted/unet/F/001',
+        'R/none/dsb2018/fgbg-weighted/unet/F/002',
+    ]
+    _train_eval_pretrained_models('granulocyte', configs.data.granulocyte,
+                                  'fgbg-weighted', configs.head.fgbg_segm_weighted,
+                                  'unet', configs.backbone.unet_csbdeep,
+                                  configs.training.default,
+                                  configs.evaluation.instance_segm,
                                   num_train_options,
                                   model_names_pretrained,
                                   args)
